@@ -87,6 +87,7 @@ public class FrameMenu {
         positionlistMenu.addSeparator();
         positionlistMenu.add(createItem("split-positionlist"));
         positionlistMenu.add(createItem("split-at-day"));
+        positionlistMenu.add(createItem("merge-all-to-one"));
         positionlistMenu.add(createMenu("merge-positionlist"));
         positionlistMenu.add(createItem("import-positionlist"));
         positionlistMenu.add(createItem("export-positionlist"));

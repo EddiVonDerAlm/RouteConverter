@@ -407,7 +407,8 @@ public class ConvertPanel implements PanelInTab {
         actionManager.register("add-number", new AddNumberToPositionsAction(tablePositions, getPositionsModel(), positionAugmenter));
         SplitPositionListAction splitAction = new SplitPositionListAction(tablePositions, getPositionsModel(), formatAndRoutesModel);
         actionManager.register("split-positionlist", splitAction);
-        actionManager.register("split-at-day", new SplitToDays(tablePositions, formatAndRoutesModel, splitAction));
+        actionManager.register("split-at-day", new SplitToDays(tablePositions, getPositionsModel(), formatAndRoutesModel, splitAction));
+        actionManager.register("merge-all-to-one", new MergeRoutesAction(getPositionsModel(), formatAndRoutesModel));
         actionManager.register("import-positionlist", new ImportPositionListAction(this));
         actionManager.register("export-positionlist", new ExportPositionListAction(this));
         actionManager.register("sort-time", new SortByTimeAction(getPositionsModel()));

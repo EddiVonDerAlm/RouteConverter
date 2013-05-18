@@ -16,17 +16,20 @@ import slash.navigation.base.BaseNavigationFormat;
 import slash.navigation.base.BaseNavigationPosition;
 import slash.navigation.base.BaseRoute;
 import slash.navigation.converter.gui.models.FormatAndRoutesModel;
+import slash.navigation.converter.gui.models.PositionsModel;
 import slash.navigation.gui.actions.FrameAction;
 
 
 public class SplitToDays extends FrameAction {
     private final JTable table;
+    private final PositionsModel positionsModel;
     private final FormatAndRoutesModel formatAndRoutesModel;
     private final SplitPositionListAction splitAction;
 
-    public SplitToDays(JTable table, FormatAndRoutesModel formatAndRoutesModel,
+    public SplitToDays(JTable table, PositionsModel positionsModel, FormatAndRoutesModel formatAndRoutesModel,
                                              SplitPositionListAction splitAction) {
         this.table = table;
+        this.positionsModel = positionsModel;
         this.formatAndRoutesModel = formatAndRoutesModel;
         this.splitAction = splitAction;
     }
@@ -85,6 +88,7 @@ public class SplitToDays extends FrameAction {
         selectTableRows(startDaysIndizes);
         this.splitAction.run();
         renameRoutes();
+        this.positionsModel.fireTableRowsUpdated(0, Integer.MAX_VALUE, 0);
     }
 
 }
