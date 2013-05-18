@@ -86,6 +86,7 @@ public class FrameMenu {
         positionlistMenu.add(createItem("convert-track-to-route"));
         positionlistMenu.addSeparator();
         positionlistMenu.add(createItem("split-positionlist"));
+        positionlistMenu.add(createItem("split-at-day"));
         positionlistMenu.add(createMenu("merge-positionlist"));
         positionlistMenu.add(createItem("import-positionlist"));
         positionlistMenu.add(createItem("export-positionlist"));
