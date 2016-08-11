@@ -8,7 +8,11 @@
 
 package slash.navigation.kml.binding22;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,7 +104,7 @@ public class LatLonBoxType
      */
     public List<Object> getLatLonBoxSimpleExtensionGroup() {
         if (latLonBoxSimpleExtensionGroup == null) {
-            latLonBoxSimpleExtensionGroup = new ArrayList<Object>();
+            latLonBoxSimpleExtensionGroup = new ArrayList<>();
         }
         return this.latLonBoxSimpleExtensionGroup;
     }
@@ -129,7 +133,7 @@ public class LatLonBoxType
      */
     public List<AbstractObjectType> getLatLonBoxObjectExtensionGroup() {
         if (latLonBoxObjectExtensionGroup == null) {
-            latLonBoxObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            latLonBoxObjectExtensionGroup = new ArrayList<>();
         }
         return this.latLonBoxObjectExtensionGroup;
     }

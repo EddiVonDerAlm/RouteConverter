@@ -19,13 +19,8 @@
 */
 package slash.navigation.simple;
 
-import slash.common.type.CompactCalendar;
-import slash.navigation.base.NavigationPosition;
-import slash.navigation.base.RouteCharacteristics;
-import slash.navigation.base.SimpleLineBasedFormat;
-import slash.navigation.base.SimpleRoute;
-import slash.navigation.base.Wgs84Position;
-import slash.navigation.base.Wgs84Route;
+import slash.navigation.base.*;
+import slash.navigation.common.NavigationPosition;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -33,6 +28,7 @@ import java.util.regex.Pattern;
 
 import static slash.common.io.Transfer.parseDouble;
 import static slash.common.io.Transfer.trim;
+import static slash.navigation.base.RouteCalculations.asWgs84Position;
 
 /**
  * The base of all Sygic formats.
@@ -70,17 +66,16 @@ public abstract class SygicFormat extends SimpleLineBasedFormat<SimpleRoute> {
         return matcher.matches();
     }
 
-    protected Wgs84Position parsePosition(String line, CompactCalendar startDate) {
+    protected Wgs84Position parsePosition(String line, ParserContext context) {
         Matcher lineMatcher = LINE_PATTERN.matcher(line);
         if (!lineMatcher.matches())
             throw new IllegalArgumentException("'" + line + "' does not match");
         String longitude = lineMatcher.group(1);
         String latitude = lineMatcher.group(2);
-        String comment = trim(lineMatcher.group(3));
+        String description = trim(lineMatcher.group(3));
         String phone = trim(lineMatcher.group(4));
         if (phone != null)
-            comment = comment + " " + phone;
-        return new Wgs84Position(parseDouble(longitude), parseDouble(latitude),
-                null, null, null, comment);
+            description = description + " " + phone;
+        return asWgs84Position(parseDouble(longitude), parseDouble(latitude), description);
     }
 }

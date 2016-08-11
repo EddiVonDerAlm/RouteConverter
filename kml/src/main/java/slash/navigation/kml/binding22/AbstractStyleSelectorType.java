@@ -8,7 +8,12 @@
 
 package slash.navigation.kml.binding22;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlSeeAlso;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,7 +81,7 @@ public abstract class AbstractStyleSelectorType
      */
     public List<Object> getAbstractStyleSelectorSimpleExtensionGroup() {
         if (abstractStyleSelectorSimpleExtensionGroup == null) {
-            abstractStyleSelectorSimpleExtensionGroup = new ArrayList<Object>();
+            abstractStyleSelectorSimpleExtensionGroup = new ArrayList<>();
         }
         return this.abstractStyleSelectorSimpleExtensionGroup;
     }
@@ -105,7 +110,7 @@ public abstract class AbstractStyleSelectorType
      */
     public List<AbstractObjectType> getAbstractStyleSelectorObjectExtensionGroup() {
         if (abstractStyleSelectorObjectExtensionGroup == null) {
-            abstractStyleSelectorObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            abstractStyleSelectorObjectExtensionGroup = new ArrayList<>();
         }
         return this.abstractStyleSelectorObjectExtensionGroup;
     }

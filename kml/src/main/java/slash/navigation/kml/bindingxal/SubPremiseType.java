@@ -8,7 +8,15 @@
 
 package slash.navigation.kml.bindingxal;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAnyAttribute;
+import javax.xml.bind.annotation.XmlAnyElement;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlValue;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import javax.xml.namespace.QName;
@@ -168,7 +176,7 @@ public class SubPremiseType {
     @XmlSchemaType(name = "anySimpleType")
     protected String type;
     @XmlAnyAttribute
-    private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+    private Map<QName, String> otherAttributes = new HashMap<>();
 
     /**
      * Gets the value of the addressLine property.
@@ -194,7 +202,7 @@ public class SubPremiseType {
      */
     public List<AddressLine> getAddressLine() {
         if (addressLine == null) {
-            addressLine = new ArrayList<AddressLine>();
+            addressLine = new ArrayList<>();
         }
         return this.addressLine;
     }
@@ -223,7 +231,7 @@ public class SubPremiseType {
      */
     public List<SubPremiseType.SubPremiseName> getSubPremiseName() {
         if (subPremiseName == null) {
-            subPremiseName = new ArrayList<SubPremiseType.SubPremiseName>();
+            subPremiseName = new ArrayList<>();
         }
         return this.subPremiseName;
     }
@@ -276,7 +284,7 @@ public class SubPremiseType {
      */
     public List<SubPremiseType.SubPremiseNumber> getSubPremiseNumber() {
         if (subPremiseNumber == null) {
-            subPremiseNumber = new ArrayList<SubPremiseType.SubPremiseNumber>();
+            subPremiseNumber = new ArrayList<>();
         }
         return this.subPremiseNumber;
     }
@@ -305,7 +313,7 @@ public class SubPremiseType {
      */
     public List<SubPremiseType.SubPremiseNumberPrefix> getSubPremiseNumberPrefix() {
         if (subPremiseNumberPrefix == null) {
-            subPremiseNumberPrefix = new ArrayList<SubPremiseType.SubPremiseNumberPrefix>();
+            subPremiseNumberPrefix = new ArrayList<>();
         }
         return this.subPremiseNumberPrefix;
     }
@@ -334,7 +342,7 @@ public class SubPremiseType {
      */
     public List<SubPremiseType.SubPremiseNumberSuffix> getSubPremiseNumberSuffix() {
         if (subPremiseNumberSuffix == null) {
-            subPremiseNumberSuffix = new ArrayList<SubPremiseType.SubPremiseNumberSuffix>();
+            subPremiseNumberSuffix = new ArrayList<>();
         }
         return this.subPremiseNumberSuffix;
     }
@@ -363,7 +371,7 @@ public class SubPremiseType {
      */
     public List<BuildingNameType> getBuildingName() {
         if (buildingName == null) {
-            buildingName = new ArrayList<BuildingNameType>();
+            buildingName = new ArrayList<>();
         }
         return this.buildingName;
     }
@@ -488,7 +496,7 @@ public class SubPremiseType {
      */
     public List<Object> getAny() {
         if (any == null) {
-            any = new ArrayList<Object>();
+            any = new ArrayList<>();
         }
         return this.any;
     }
@@ -660,7 +668,7 @@ public class SubPremiseType {
         @XmlSchemaType(name = "anySimpleType")
         protected String code;
         @XmlAnyAttribute
-        private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+        private Map<QName, String> otherAttributes = new HashMap<>();
 
         /**
          * Gets the value of the content property.
@@ -842,7 +850,7 @@ public class SubPremiseType {
         @XmlSchemaType(name = "anySimpleType")
         protected String code;
         @XmlAnyAttribute
-        private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+        private Map<QName, String> otherAttributes = new HashMap<>();
 
         /**
          * Gets the value of the content property.
@@ -1070,7 +1078,7 @@ public class SubPremiseType {
         @XmlSchemaType(name = "anySimpleType")
         protected String code;
         @XmlAnyAttribute
-        private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+        private Map<QName, String> otherAttributes = new HashMap<>();
 
         /**
          * Gets the value of the content property.
@@ -1226,7 +1234,7 @@ public class SubPremiseType {
         @XmlSchemaType(name = "anySimpleType")
         protected String code;
         @XmlAnyAttribute
-        private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+        private Map<QName, String> otherAttributes = new HashMap<>();
 
         /**
          * Gets the value of the content property.

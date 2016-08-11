@@ -8,7 +8,14 @@
 
 package slash.navigation.kml.binding20;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAnyAttribute;
+import javax.xml.bind.annotation.XmlAnyElement;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlValue;
 import javax.xml.namespace.QName;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -76,7 +83,7 @@ public class FirmType {
     @XmlAttribute(name = "Type")
     protected String type;
     @XmlAnyAttribute
-    private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+    private Map<QName, String> otherAttributes = new HashMap<>();
 
     /**
      * Gets the value of the addressLine property.
@@ -102,7 +109,7 @@ public class FirmType {
      */
     public List<AddressLine> getAddressLine() {
         if (addressLine == null) {
-            addressLine = new ArrayList<AddressLine>();
+            addressLine = new ArrayList<>();
         }
         return this.addressLine;
     }
@@ -131,7 +138,7 @@ public class FirmType {
      */
     public List<FirmType.FirmName> getFirmName() {
         if (firmName == null) {
-            firmName = new ArrayList<FirmType.FirmName>();
+            firmName = new ArrayList<>();
         }
         return this.firmName;
     }
@@ -160,7 +167,7 @@ public class FirmType {
      */
     public List<Department> getDepartment() {
         if (department == null) {
-            department = new ArrayList<Department>();
+            department = new ArrayList<>();
         }
         return this.department;
     }
@@ -237,7 +244,7 @@ public class FirmType {
      */
     public List<Object> getAny() {
         if (any == null) {
-            any = new ArrayList<Object>();
+            any = new ArrayList<>();
         }
         return this.any;
     }
@@ -316,7 +323,7 @@ public class FirmType {
         @XmlAttribute(name = "Code")
         protected String code;
         @XmlAnyAttribute
-        private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+        private Map<QName, String> otherAttributes = new HashMap<>();
 
         /**
          * Gets the value of the content property.

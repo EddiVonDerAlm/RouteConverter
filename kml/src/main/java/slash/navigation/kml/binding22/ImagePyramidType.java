@@ -8,7 +8,11 @@
 
 package slash.navigation.kml.binding22;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -184,7 +188,7 @@ public class ImagePyramidType
      */
     public List<Object> getImagePyramidSimpleExtensionGroup() {
         if (imagePyramidSimpleExtensionGroup == null) {
-            imagePyramidSimpleExtensionGroup = new ArrayList<Object>();
+            imagePyramidSimpleExtensionGroup = new ArrayList<>();
         }
         return this.imagePyramidSimpleExtensionGroup;
     }
@@ -213,7 +217,7 @@ public class ImagePyramidType
      */
     public List<AbstractObjectType> getImagePyramidObjectExtensionGroup() {
         if (imagePyramidObjectExtensionGroup == null) {
-            imagePyramidObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            imagePyramidObjectExtensionGroup = new ArrayList<>();
         }
         return this.imagePyramidObjectExtensionGroup;
     }

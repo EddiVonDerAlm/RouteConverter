@@ -27,6 +27,11 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Vector;
 
+import static java.io.File.createTempFile;
+
+import static slash.common.io.Directories.ensureDirectory;
+import static slash.common.io.Directories.getTemporaryDirectory;
+
 /**
  * Fallback implementation of a FileSystemView.
  * <p/>
@@ -133,9 +138,9 @@ class RestrictedFileSystemView extends FileSystemView {
     public File getDefaultDirectory() {
         if (defaultDirectory == null) {
             try {
-                File tempFile = File.createTempFile("filesystemview", "restricted");
-                tempFile.deleteOnExit();
-                defaultDirectory = tempFile.getParentFile();
+                File temp = createTempFile("filesystemview", "restricted", getTemporaryDirectory());
+                temp.deleteOnExit();
+                defaultDirectory = temp.getParentFile();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -160,7 +165,7 @@ class RestrictedFileSystemView extends FileSystemView {
     }
 
     public File[] getFiles(File dir, boolean useFileHiding) {
-        Vector<File> files = new Vector<File>();
+        Vector<File> files = new Vector<>();
 
         File[] names;
         names = dir.listFiles();
@@ -233,10 +238,8 @@ class RestrictedFileSystemView extends FileSystemView {
         if (newFolder.exists()) {
             throw new IOException("Directory already exists:" + newFolder.getAbsolutePath());
         } else {
-            if (!newFolder.mkdirs())
-                throw new IOException("Could not create directories: " + newFolder.getAbsolutePath());
+            newFolder = ensureDirectory(newFolder);
         }
-
         return newFolder;
     }
 }

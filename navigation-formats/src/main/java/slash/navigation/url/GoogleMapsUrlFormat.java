@@ -21,6 +21,7 @@
 package slash.navigation.url;
 
 import slash.navigation.base.BaseUrlParsingFormat;
+import slash.navigation.base.ParserContext;
 import slash.navigation.base.Wgs84Position;
 import slash.navigation.base.Wgs84Route;
 
@@ -35,9 +36,10 @@ import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static slash.common.io.Transfer.formatDoubleAsString;
-import static slash.common.io.Transfer.parseDouble;
-import static slash.common.io.Transfer.trim;
+import static java.lang.Math.max;
+import static slash.common.io.Transfer.*;
+import static slash.navigation.base.RouteCalculations.asWgs84Position;
+import static slash.navigation.base.RouteCharacteristics.Route;
 
 /**
  * Reads and writes Google Maps URLs from/to files.
@@ -48,7 +50,7 @@ import static slash.common.io.Transfer.trim;
 public class GoogleMapsUrlFormat extends BaseUrlParsingFormat {
     private static final Logger log = Logger.getLogger(GoogleMapsUrlFormat.class.getName());
     private static final Preferences preferences = Preferences.userNodeForPackage(GoogleMapsUrlFormat.class);
-    private static final Pattern URL_PATTERN = Pattern.compile(".*http[s]?://.+\\.google\\..+/maps[\\?/]([^\\s]+).*");
+    private static final Pattern URL_PATTERN = Pattern.compile(".*http[s]?://.+\\.google\\..+/maps([^\\s]+).*");
     private static final Pattern BOOKMARK_PATTERN = Pattern.compile(".*InternetShortcut(.+)IconFile.*");
     private static final Pattern PLAIN_POSITION_PATTERN = Pattern.compile("(\\s*[-|\\d|\\.]+\\s*),(\\s*[-|\\d|\\.]+\\s*)");
     private static final Pattern COMMENT_POSITION_PATTERN = Pattern.
@@ -69,8 +71,14 @@ public class GoogleMapsUrlFormat extends BaseUrlParsingFormat {
         return preferences.getInt("maximumGoogleMapsUrlPositionCount", 15);
     }
 
-    public static boolean isGoogleMapsUrl(URL url) {
-        return internalFindUrl(url.toExternalForm()) != null;
+    public static boolean isGoogleMapsLinkUrl(URL url) {
+        String found = internalFindUrl(url.toExternalForm());
+        return found != null && (found.startsWith("?") || found.startsWith("/dir/"));
+    }
+
+    public static boolean isGoogleMapsProfileUrl(URL url) {
+        String found = internalFindUrl(url.toExternalForm());
+        return found != null && found.startsWith("/ms?");
     }
 
     private static String internalFindUrl(String text) {
@@ -84,6 +92,26 @@ public class GoogleMapsUrlFormat extends BaseUrlParsingFormat {
         return trim(urlMatcher.group(1));
     }
 
+    protected void processURL(String url, String encoding, ParserContext<Wgs84Route> context) {
+        if (url.startsWith("/dir/")) {
+            List<Wgs84Position> positions = parsePositions(url.substring(5));
+            if (positions.size() > 0)
+                context.appendRoute(createRoute(Route, null, positions));
+        } else
+            super.processURL(url, encoding, context);
+    }
+
+    List<Wgs84Position> parsePositions(String url) {
+        List<Wgs84Position> result = new ArrayList<>();
+        String[] segments = url.split("/");
+        for (String segment : segments) {
+            if (segment.startsWith("@") || segment.startsWith("data"))
+                break;
+            result.add(asWgs84Position(null, null, decodeUri(segment)));
+        }
+        return result;
+    }
+
     protected String findURL(String text) {
         return internalFindUrl(text);
     }
@@ -94,7 +122,7 @@ public class GoogleMapsUrlFormat extends BaseUrlParsingFormat {
             throw new IllegalArgumentException("'" + coordinates + "' does not match");
         Double latitude = parseDouble(matcher.group(1));
         Double longitude = parseDouble(matcher.group(2));
-        return new Wgs84Position(longitude, latitude, null, null, null, null);
+        return asWgs84Position(longitude, latitude);
     }
 
     Wgs84Position parseCommentPosition(String position) {
@@ -104,11 +132,11 @@ public class GoogleMapsUrlFormat extends BaseUrlParsingFormat {
         String comment = trim(matcher.group(1));
         Double latitude = parseDouble(matcher.group(3));
         Double longitude = parseDouble(matcher.group(4));
-        return new Wgs84Position(longitude, latitude, null, null, null, comment);
+        return asWgs84Position(longitude, latitude, comment);
     }
 
     List<Wgs84Position> parseDestinationPositions(String destinationComments) {
-        List<Wgs84Position> result = new ArrayList<Wgs84Position>();
+        List<Wgs84Position> result = new ArrayList<>();
         int startIndex = 0;
         while (startIndex < destinationComments.length()) {
             int endIndex = destinationComments.indexOf(DESTINATION_SEPARATOR, startIndex);
@@ -122,17 +150,17 @@ public class GoogleMapsUrlFormat extends BaseUrlParsingFormat {
     }
 
     List<Wgs84Position> extractGeocodePositions(List<Wgs84Position> positions) {
-        List<Wgs84Position> result = new ArrayList<Wgs84Position>(positions);
+        List<Wgs84Position> result = new ArrayList<>(positions);
         for (int i = result.size() - 1; i >= 0; i--) {
             Wgs84Position position = result.get(i);
-            if (trim(position.getComment()) == null)
+            if (trim(position.getDescription()) == null)
                 result.remove(i);
         }
         return result;
     }
 
     protected List<Wgs84Position> parsePositions(Map<String, List<String>> parameters) {
-        List<Wgs84Position> result = new ArrayList<Wgs84Position>();
+        List<Wgs84Position> result = new ArrayList<>();
         if (parameters == null)
             return result;
 
@@ -184,7 +212,7 @@ public class GoogleMapsUrlFormat extends BaseUrlParsingFormat {
             Wgs84Position position = positions.get(i);
             String longitude = position.getLongitude() != null ? formatDoubleAsString(position.getLongitude(), 6) : null;
             String latitude = position.getLatitude() != null ? formatDoubleAsString(position.getLatitude(), 6) : null;
-            String comment = encodeComment(trim(position.getComment()));
+            String comment = encodeDescription(trim(position.getDescription()));
             if (i == startIndex) {
                 buffer.append("saddr=").append(comment);
                 if(longitude != null && latitude != null)
@@ -207,7 +235,7 @@ public class GoogleMapsUrlFormat extends BaseUrlParsingFormat {
         writer.println("[InternetShortcut]");
         // idea from forum: add start point from previous route section since your not at the
         // last position of the previous segment heading for the first position of the next segment
-        startIndex = Math.max(startIndex - 1, 0);
+        startIndex = max(startIndex - 1, 0);
         writer.println("URL=" + createURL(positions, startIndex, endIndex));
         writer.println();
     }

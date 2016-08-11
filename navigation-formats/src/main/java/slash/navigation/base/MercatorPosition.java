@@ -22,10 +22,7 @@ package slash.navigation.base;
 
 import slash.common.type.CompactCalendar;
 
-import static slash.navigation.common.NavigationConversion.mercatorXToWgs84Longitude;
-import static slash.navigation.common.NavigationConversion.mercatorYToWgs84Latitude;
-import static slash.navigation.common.NavigationConversion.wgs84LatitudeToMercatorY;
-import static slash.navigation.common.NavigationConversion.wgs84LongitudeToMercatorX;
+import static slash.navigation.common.NavigationConversion.*;
 
 /**
  * Represents a Mercator position in a route.
@@ -35,22 +32,22 @@ import static slash.navigation.common.NavigationConversion.wgs84LongitudeToMerca
 
 public class MercatorPosition extends BaseNavigationPosition {
     protected Long x, y;
-    protected String comment;
+    protected String description;
     private Double elevation;
     private Double speed;
     private CompactCalendar time;
 
-    public MercatorPosition(Double longitude, Double latitude, Double elevation, Double speed, CompactCalendar time, String comment) {
-        this(asX(longitude), asY(latitude), elevation, speed, time, comment);
+    public MercatorPosition(Double longitude, Double latitude, Double elevation, Double speed, CompactCalendar time, String description) {
+        this(asX(longitude), asY(latitude), elevation, speed, time, description);
     }
 
-    public MercatorPosition(Long x, Long y, Double elevation, Double speed, CompactCalendar time, String comment) {
+    public MercatorPosition(Long x, Long y, Double elevation, Double speed, CompactCalendar time, String description) {
         setElevation(elevation);
         setSpeed(speed);
         setTime(time);
         this.x = x;
         this.y = y;
-        setComment(comment);
+        setDescription(description);
     }
 
     public Double getLongitude() {
@@ -69,12 +66,12 @@ public class MercatorPosition extends BaseNavigationPosition {
         this.y = asY(latitude);
     }
 
-    public String getComment() {
-        return comment;
+    public String getDescription() {
+        return description;
     }
 
-    public void setComment(String comment) {
-        this.comment = comment;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Double getElevation() {
@@ -124,11 +121,11 @@ public class MercatorPosition extends BaseNavigationPosition {
 
         MercatorPosition that = (MercatorPosition) o;
 
-        return !(comment != null ? !comment.equals(that.comment) : that.comment != null) &&
+        return !(description != null ? !description.equals(that.description) : that.description != null) &&
                 !(getElevation() != null ? !getElevation().equals(that.getElevation()) : that.getElevation() != null) &&
                 !(x != null ? !x.equals(that.x) : that.x != null) &&
                 !(y != null ? !y.equals(that.y) : that.y != null) &&
-                !(getTime() != null ? !getTime().equals(that.getTime()) : that.getTime() != null);
+                !(hasTime() ? !getTime().equals(that.getTime()) : that.hasTime());
     }
 
     public int hashCode() {
@@ -136,8 +133,8 @@ public class MercatorPosition extends BaseNavigationPosition {
         result = (x != null ? x.hashCode() : 0);
         result = 31 * result + (y != null ? y.hashCode() : 0);
         result = 31 * result + (getElevation() != null ? getElevation().hashCode() : 0);
-        result = 31 * result + (comment != null ? comment.hashCode() : 0);
-        result = 31 * result + (getTime() != null ? getTime().hashCode() : 0);
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (hasTime() ? getTime().hashCode() : 0);
         return result;
     }
 }

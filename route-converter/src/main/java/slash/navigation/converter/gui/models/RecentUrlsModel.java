@@ -42,13 +42,21 @@ import static java.lang.Math.min;
 
 public class RecentUrlsModel {
     private static final Logger log = Logger.getLogger(RecentUrlsModel.class.getName());
-    private static final Preferences preferences = Preferences.userNodeForPackage(RecentUrlsModel.class);
     private static final String RECENT_URLS_PREFERENCE = "recentUrls";
     private static final String RECENT_URL_PREFERENCE = "recentUrl";
     private static final String MAXIMUM_RECENT_URL_COUNT_PREFERENCE = "maximumRecentUrlCount";
     private static final char FIRST_CHAR = 'a';
 
+    private final Preferences preferences;
     private EventListenerList listenerList = new EventListenerList();
+
+    public RecentUrlsModel() {
+        this(Preferences.userNodeForPackage(RecentUrlsModel.class));
+    }
+
+    public RecentUrlsModel(Preferences preferences) {
+        this.preferences = preferences;
+    }
 
     private int getMaximumCount() {
         return preferences.getInt(MAXIMUM_RECENT_URL_COUNT_PREFERENCE, 10);
@@ -95,7 +103,7 @@ public class RecentUrlsModel {
     }
 
     public List<URL> getUrls() {
-        List<URL> result = new ArrayList<URL>();
+        List<URL> result = new ArrayList<>();
         String recentUrls = preferences.get(RECENT_URLS_PREFERENCE, "");
         for(char c : recentUrls.toCharArray()) {
             String urlString = preferences.get(RECENT_URL_PREFERENCE + c, null);
@@ -106,7 +114,7 @@ public class RecentUrlsModel {
                     if (file == null || file.exists())
                         result.add(0, url);
                 } catch (MalformedURLException e) {
-                    log.warning("Recent URL '" + urlString + "' is malformed: " + e.getMessage());
+                    log.warning("Recent URL '" + urlString + "' is malformed: " + e);
                 }
             }
         }

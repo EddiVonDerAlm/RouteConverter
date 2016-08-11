@@ -8,7 +8,14 @@
 
 package slash.navigation.kml.binding22beta;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAnyAttribute;
+import javax.xml.bind.annotation.XmlAnyElement;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlValue;
 import javax.xml.namespace.QName;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -98,7 +105,7 @@ public class LargeMailUserType {
     @XmlAttribute(name = "Type")
     protected String type;
     @XmlAnyAttribute
-    private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+    private Map<QName, String> otherAttributes = new HashMap<>();
 
     /**
      * Gets the value of the addressLine property.
@@ -124,7 +131,7 @@ public class LargeMailUserType {
      */
     public List<AddressLine> getAddressLine() {
         if (addressLine == null) {
-            addressLine = new ArrayList<AddressLine>();
+            addressLine = new ArrayList<>();
         }
         return this.addressLine;
     }
@@ -153,7 +160,7 @@ public class LargeMailUserType {
      */
     public List<LargeMailUserType.LargeMailUserName> getLargeMailUserName() {
         if (largeMailUserName == null) {
-            largeMailUserName = new ArrayList<LargeMailUserType.LargeMailUserName>();
+            largeMailUserName = new ArrayList<>();
         }
         return this.largeMailUserName;
     }
@@ -206,7 +213,7 @@ public class LargeMailUserType {
      */
     public List<BuildingNameType> getBuildingName() {
         if (buildingName == null) {
-            buildingName = new ArrayList<BuildingNameType>();
+            buildingName = new ArrayList<>();
         }
         return this.buildingName;
     }
@@ -331,7 +338,7 @@ public class LargeMailUserType {
      */
     public List<Object> getAny() {
         if (any == null) {
-            any = new ArrayList<Object>();
+            any = new ArrayList<>();
         }
         return this.any;
     }
@@ -413,7 +420,7 @@ public class LargeMailUserType {
         @XmlAttribute(name = "Code")
         protected String code;
         @XmlAnyAttribute
-        private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+        private Map<QName, String> otherAttributes = new HashMap<>();
 
         /**
          * Gets the value of the content property.
@@ -563,7 +570,7 @@ public class LargeMailUserType {
         @XmlAttribute(name = "Type")
         protected String type;
         @XmlAnyAttribute
-        private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+        private Map<QName, String> otherAttributes = new HashMap<>();
 
         /**
          * Gets the value of the content property.

@@ -20,16 +20,16 @@
 
 package slash.navigation.nmn;
 
-import slash.common.type.CompactCalendar;
+import slash.navigation.base.ParserContext;
 import slash.navigation.base.Wgs84Position;
 
 import java.io.PrintWriter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static slash.navigation.common.NavigationConversion.formatPositionAsString;
 import static slash.common.io.Transfer.parseDouble;
 import static slash.common.io.Transfer.trim;
+import static slash.navigation.common.NavigationConversion.formatPositionAsString;
 
 /**
  * Reads and writes Navigon Mobile Navigator 6 (.rte) files.
@@ -68,25 +68,25 @@ public class Nmn6Format extends NmnFormat {
         return matcher.matches();
     }
 
-    protected NmnPosition parsePosition(String line, CompactCalendar startDate) {
+    protected NmnPosition parsePosition(String line, ParserContext context) {
         Matcher lineMatcher = POSITION_PATTERN.matcher(line);
         if (!lineMatcher.matches())
             throw new IllegalArgumentException("'" + line + "' does not match");
-        String comment = lineMatcher.group(1);
+        String description = lineMatcher.group(1);
         String longitude = lineMatcher.group(2);
         String latitude = lineMatcher.group(3);
-        return new NmnPosition(parseDouble(longitude), parseDouble(latitude), (Double)null, null, null, trim(comment));
+        return new NmnPosition(parseDouble(longitude), parseDouble(latitude), (Double)null, null, null, trim(description));
     }
 
-    private static String formatComment(String string) {
+    private static String escapeBraces(String string) {
         return string != null ? string.replaceAll("[\\" + LEFT_BRACE + "|" + REGEX_SEPARATOR + "|\\" + RIGHT_BRACE + "]", ";") : "";
     }
 
     protected void writePosition(Wgs84Position position, PrintWriter writer, int index, boolean firstPosition) {
         String longitude = formatPositionAsString(position.getLongitude());
         String latitude = formatPositionAsString(position.getLatitude());
-        String comment = formatComment(position.getComment());
-        writer.println(LEFT_BRACE + comment + SEPARATOR + RIGHT_BRACE +
+        String description = escapeBraces(position.getDescription());
+        writer.println(LEFT_BRACE + description + SEPARATOR + RIGHT_BRACE +
                 LEFT_BRACE + "0" + RIGHT_BRACE + LEFT_BRACE + "10" + RIGHT_BRACE +
                 SEPARATOR + SEPARATOR + SEPARATOR +
                 longitude + SEPARATOR + latitude + SEPARATOR + SEPARATOR);

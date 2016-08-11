@@ -22,11 +22,7 @@
 
 package slash.navigation.common;
 
-import static slash.navigation.common.UnitConversion.kilometerToNauticMiles;
-import static slash.navigation.common.UnitConversion.kilometerToStatuteMiles;
-import static slash.navigation.common.UnitConversion.meterToFeets;
-import static slash.navigation.common.UnitConversion.nauticMilesToKilometer;
-import static slash.navigation.common.UnitConversion.statuteMilesToKilometer;
+import static slash.navigation.common.UnitConversion.*;
 
 /**
  * Enumeration of supported unit systems.
@@ -35,7 +31,7 @@ import static slash.navigation.common.UnitConversion.statuteMilesToKilometer;
  */
 
 public enum UnitSystem {
-    Metric("Km", "m", "Km/h", new UnitTransfer() {
+    Metric("km", "m", "km/h", new UnitTransfer() {
         public Double distanceToUnit(Double distance) {
             return distance;
         }
@@ -52,38 +48,38 @@ public enum UnitSystem {
 
     Statute("mi", "ft", "mi/h", new UnitTransfer() {
         public Double distanceToUnit(Double distance) {
-            return distance != null ? kilometerToStatuteMiles(distance) : null;
+            return distance != null ? kiloMeterToStatuteMiles(distance) : null;
         }
         public Double distanceToDefault(Double distance) {
-            return distance != null ? statuteMilesToKilometer(distance) : null;
+            return distance != null ? statuteMilesToKiloMeter(distance) : null;
         }
         public Double valueToUnit(Double value) {
             return value != null ? meterToFeets(value) : null;
         }
         public Double valueToDefault(Double value) {
-            return value != null ? statuteMilesToKilometer(value) : null;
+            return value != null ? feetToMeters(value) : null;
         }
     }),
 
     Nautic("nm", "m", "knots", new UnitTransfer() {
         public Double distanceToUnit(Double distance) {
-            return distance != null ? kilometerToNauticMiles(distance) : null;
+            return distance != null ? kiloMeterToNauticMiles(distance) : null;
         }
         public Double distanceToDefault(Double distance) {
-            return distance != null ? nauticMilesToKilometer(distance) : null;
+            return distance != null ? nauticMilesToKiloMeter(distance) : null;
         }
         public Double valueToUnit(Double value) {
             return value;
         }
         public Double valueToDefault(Double value) {
-            return value != null ? nauticMilesToKilometer(value) : null;
+            return value;
         }
     });
 
     private String distanceName, elevationName, speedName;
     private UnitTransfer unitTransfer;
 
-    private UnitSystem(String distanceName, String elevationName, String speedName, UnitTransfer unitTransfer) {
+    UnitSystem(String distanceName, String elevationName, String speedName, UnitTransfer unitTransfer) {
         this.distanceName = distanceName;
         this.elevationName = elevationName;
         this.speedName = speedName;

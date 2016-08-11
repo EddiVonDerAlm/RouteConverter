@@ -1,20 +1,20 @@
 package slash.navigation.url;
 
 import org.junit.Test;
+import slash.navigation.base.AllNavigationFormatRegistry;
 import slash.navigation.base.NavigationFormatParser;
 import slash.navigation.base.ParserResult;
 import slash.navigation.gpx.Gpx11Format;
-import slash.navigation.kml.Kml20Format;
 
 import java.io.File;
 import java.io.IOException;
 
-import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertNotNull;
 import static slash.common.TestCase.assertEquals;
 import static slash.navigation.base.NavigationTestCase.TEST_PATH;
 
 public class UrlFormatIT {
-    private NavigationFormatParser parser = new NavigationFormatParser();
+    private NavigationFormatParser parser = new NavigationFormatParser(new AllNavigationFormatRegistry());
 
     @Test
     public void readRouteCatalogUrl() throws IOException {

@@ -8,7 +8,11 @@
 
 package slash.navigation.kml.binding22;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -98,7 +102,7 @@ public class BoundaryType {
      */
     public List<Object> getBoundarySimpleExtensionGroup() {
         if (boundarySimpleExtensionGroup == null) {
-            boundarySimpleExtensionGroup = new ArrayList<Object>();
+            boundarySimpleExtensionGroup = new ArrayList<>();
         }
         return this.boundarySimpleExtensionGroup;
     }
@@ -127,7 +131,7 @@ public class BoundaryType {
      */
     public List<AbstractObjectType> getBoundaryObjectExtensionGroup() {
         if (boundaryObjectExtensionGroup == null) {
-            boundaryObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            boundaryObjectExtensionGroup = new ArrayList<>();
         }
         return this.boundaryObjectExtensionGroup;
     }

@@ -21,28 +21,23 @@
 package slash.navigation.nmea;
 
 import slash.common.type.CompactCalendar;
-import slash.navigation.base.NavigationPosition;
 import slash.navigation.base.RouteCharacteristics;
+import slash.navigation.common.NavigationPosition;
 import slash.navigation.common.ValueAndOrientation;
 
 import java.io.PrintWriter;
-import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.List;
-import java.util.Locale;
-import java.util.logging.Logger;
+import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static slash.common.io.Transfer.escape;
-import static slash.common.io.Transfer.formatIntAsString;
-import static slash.common.io.Transfer.parseDouble;
-import static slash.common.io.Transfer.parseInt;
-import static slash.common.io.Transfer.trim;
-import static slash.navigation.common.UnitConversion.kilometerToNauticMiles;
-import static slash.navigation.common.UnitConversion.nauticMilesToKilometer;
+import static java.util.Locale.US;
+import static slash.common.io.Transfer.*;
+import static slash.common.type.CompactCalendar.createDateFormat;
+import static slash.navigation.common.UnitConversion.kiloMeterToNauticMiles;
+import static slash.navigation.common.UnitConversion.nauticMilesToKiloMeter;
 
 /**
  * Reads and writes NMEA 0183 Sentences (.nmea) files.
@@ -53,28 +48,21 @@ import static slash.navigation.common.UnitConversion.nauticMilesToKilometer;
  */
 
 public class NmeaFormat extends BaseNmeaFormat {
-    static {
-        log = Logger.getLogger(NmeaFormat.class.getName());
-    }
+    private static final Preferences preferences = Preferences.userNodeForPackage(NmeaFormat.class);
 
-    private static final NumberFormat ALTITUDE_AND_SPEED_NUMBER_FORMAT = DecimalFormat.getNumberInstance(Locale.US);
+    private static final NumberFormat ALTITUDE_AND_SPEED_NUMBER_FORMAT = DecimalFormat.getNumberInstance(US);
     static {
+        int maximumFractionDigits = preferences.getInt("altitudeSpeedMaximumFractionDigits", 1);
         ALTITUDE_AND_SPEED_NUMBER_FORMAT.setGroupingUsed(false);
         ALTITUDE_AND_SPEED_NUMBER_FORMAT.setMinimumFractionDigits(1);
-        ALTITUDE_AND_SPEED_NUMBER_FORMAT.setMaximumFractionDigits(1);
+        ALTITUDE_AND_SPEED_NUMBER_FORMAT.setMaximumFractionDigits(maximumFractionDigits);
         ALTITUDE_AND_SPEED_NUMBER_FORMAT.setMinimumIntegerDigits(1);
         ALTITUDE_AND_SPEED_NUMBER_FORMAT.setMaximumIntegerDigits(6);
     }
 
-    private static final DateFormat DAY_FORMAT = new SimpleDateFormat("dd");
-    private static final DateFormat MONTH_FORMAT = new SimpleDateFormat("MM");
-    private static final DateFormat YEAR_FORMAT = new SimpleDateFormat("yy");
-
-    static {
-        DAY_FORMAT.setTimeZone(CompactCalendar.UTC);
-        MONTH_FORMAT.setTimeZone(CompactCalendar.UTC);
-        YEAR_FORMAT.setTimeZone(CompactCalendar.UTC);
-    }
+    private static final String DAY_FORMAT = "dd";
+    private static final String MONTH_FORMAT = "MM";
+    private static final String YEAR_FORMAT = "yyyy";
 
     // $GPGGA,130441.89,5239.3154,N,00907.7011,E,1,08,1.25,16.76,M,46.79,M,,*6D
     // $GPGGA,162611,3554.2367,N,10619.4966,W,1,03,06.7,02300.3,M,-022.4,M,,*7F
@@ -113,12 +101,13 @@ public class NmeaFormat extends BaseNmeaFormat {
                     END_OF_LINE);
 
     // $GPWPL,5334.169,N,01001.920,E,STATN1*22
+    // $GPWPL,3018.000,S,15309.000,E,Coffs Harbor (Sidney)
     private static final Pattern WPL_PATTERN = Pattern.
             compile(BEGIN_OF_LINE + "WPL" + SEPARATOR +
                     "([\\s\\d\\.]+)" + SEPARATOR + "([NS])" + SEPARATOR +
                     "([\\s\\d\\.]+)" + SEPARATOR + "([WE])" + SEPARATOR +
-                    "(.*)" +
-                    END_OF_LINE);
+                    "([^\\*]*)" +
+                    "(\\*[0-9A-Fa-f][0-9A-Fa-f])?$");
 
     // $GPZDA,032910.542,07,08,2004,00,00*48
     private static final Pattern ZDA_PATTERN = Pattern.
@@ -192,7 +181,7 @@ public class NmeaFormat extends BaseNmeaFormat {
 
         Matcher wplMatcher = WPL_PATTERN.matcher(line);
         if (wplMatcher.matches())
-            return hasValidChecksum(line);
+            return wplMatcher.group(6) == null || hasValidChecksum(line);
 
         Matcher zdaMatcher = ZDA_PATTERN.matcher(line);
         if (zdaMatcher.matches())
@@ -219,7 +208,7 @@ public class NmeaFormat extends BaseNmeaFormat {
             if (speedStr != null) {
                 Double miles = parseDouble(speedStr);
                 if (miles != null)
-                    speed = nauticMilesToKilometer(miles);
+                    speed = nauticMilesToKiloMeter(miles);
             }
             String date = rmcMatcher.group(7);
             return new NmeaPosition(parseDouble(longitude), westOrEast, parseDouble(latitude), northOrSouth,
@@ -237,7 +226,7 @@ public class NmeaFormat extends BaseNmeaFormat {
             String altitude = ggaMatcher.group(8);
             NmeaPosition position = new NmeaPosition(parseDouble(longitude), westOrEast, parseDouble(latitude), northOrSouth,
                     parseDouble(altitude), null, null, parseTime(time), null);
-            position.setSatellites(parseInt(satellites));
+            position.setSatellites(parseInteger(satellites));
             return position;
         }
 
@@ -247,9 +236,9 @@ public class NmeaFormat extends BaseNmeaFormat {
             String northOrSouth = wplMatcher.group(2);
             String longitude = wplMatcher.group(3);
             String westOrEast = wplMatcher.group(4);
-            String comment = wplMatcher.group(5);
+            String description = wplMatcher.group(5);
             return new NmeaPosition(parseDouble(longitude), westOrEast, parseDouble(latitude), northOrSouth,
-                    null, null, null, null, trim(comment));
+                    null, null, null, null, trim(description));
         }
 
         Matcher zdaMatcher = ZDA_PATTERN.matcher(line);
@@ -273,7 +262,7 @@ public class NmeaFormat extends BaseNmeaFormat {
             }
             Double speed = parseDouble(speedStr);
             if (miles && speed != null)
-                speed = nauticMilesToKilometer(speed);
+                speed = nauticMilesToKiloMeter(speed);
             return new NmeaPosition(null, null, null, null, null, speed, heading, null, null);
         }
 
@@ -296,19 +285,19 @@ public class NmeaFormat extends BaseNmeaFormat {
     private String formatDay(CompactCalendar date) {
         if (date == null)
             return "";
-        return DAY_FORMAT.format(date.getTime());
+        return createDateFormat(DAY_FORMAT).format(date.getTime());
     }
 
     private String formatMonth(CompactCalendar date) {
         if (date == null)
             return "";
-        return MONTH_FORMAT.format(date.getTime());
+        return createDateFormat(MONTH_FORMAT).format(date.getTime());
     }
 
     private String formatYear(CompactCalendar date) {
         if (date == null)
             return "";
-        return YEAR_FORMAT.format(date.getTime());
+        return createDateFormat(YEAR_FORMAT).format(date.getTime());
     }
 
     private String formatAltitude(Double altitude) {
@@ -329,19 +318,19 @@ public class NmeaFormat extends BaseNmeaFormat {
         return ALTITUDE_AND_SPEED_NUMBER_FORMAT.format(accuracy);
     }
 
-    protected void writePosition(NmeaPosition position, PrintWriter writer, int index) {
+    protected void writePosition(NmeaPosition position, PrintWriter writer) {
         ValueAndOrientation longitudeAsValueAndOrientation = position.getLongitudeAsValueAndOrientation();
         String longitude = formatLongitude(longitudeAsValueAndOrientation.getValue());
         String westOrEast = longitudeAsValueAndOrientation.getOrientation().value();
         ValueAndOrientation latitudeAsValueAndOrientation = position.getLatitudeAsValueAndOrientation();
-        String latitude = formatLatititude(latitudeAsValueAndOrientation.getValue());
+        String latitude = formatLatitude(latitudeAsValueAndOrientation.getValue());
         String northOrSouth = latitudeAsValueAndOrientation.getOrientation().value();
         String satellites = position.getSatellites() != null ? formatIntAsString(position.getSatellites()) : "";
-        String comment = escape(position.getComment(), SEPARATOR, ';');
+        String description = escape(position.getDescription(), SEPARATOR, ';');
         String time = formatTime(position.getTime());
         String date = formatDate(position.getTime());
         String altitude = formatAltitude(position.getElevation());
-        String speedKnots = position.getSpeed() != null ? formatSpeed(kilometerToNauticMiles(position.getSpeed())) : "";
+        String speedKnots = position.getSpeed() != null ? formatSpeed(kiloMeterToNauticMiles(position.getSpeed())) : "";
 
         // $GPGGA,130441.89,5239.3154,N,00907.7011,E,1,08,1.25,16.76,M,46.79,M,,*6D
         String gga = "GPGGA" + SEPARATOR + time + SEPARATOR +
@@ -353,7 +342,7 @@ public class NmeaFormat extends BaseNmeaFormat {
         // $GPWPL,5334.169,N,01001.920,E,STATN1*22
         String wpl = "GPWPL" + SEPARATOR +
                 latitude + SEPARATOR + northOrSouth + SEPARATOR + longitude + SEPARATOR + westOrEast + SEPARATOR +
-                comment;
+                description;
         writeSentence(writer, wpl);
 
         // $GPRMC,180114,A,4808.9490,N,00928.9610,E,000.0,000.0,160607,,A*76
@@ -363,7 +352,7 @@ public class NmeaFormat extends BaseNmeaFormat {
                 date + SEPARATOR + SEPARATOR + "A";
         writeSentence(writer, rmc);
 
-        if(position.getTime() != null) {
+        if(position.hasTime()) {
             // $GPZDA,032910,07,08,2004,00,00*48
             String day = formatDay(position.getTime());
             String month = formatMonth(position.getTime());

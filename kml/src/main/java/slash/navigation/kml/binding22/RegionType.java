@@ -8,7 +8,11 @@
 
 package slash.navigation.kml.binding22;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -128,7 +132,7 @@ public class RegionType
      */
     public List<Object> getRegionSimpleExtensionGroup() {
         if (regionSimpleExtensionGroup == null) {
-            regionSimpleExtensionGroup = new ArrayList<Object>();
+            regionSimpleExtensionGroup = new ArrayList<>();
         }
         return this.regionSimpleExtensionGroup;
     }
@@ -157,7 +161,7 @@ public class RegionType
      */
     public List<AbstractObjectType> getRegionObjectExtensionGroup() {
         if (regionObjectExtensionGroup == null) {
-            regionObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            regionObjectExtensionGroup = new ArrayList<>();
         }
         return this.regionObjectExtensionGroup;
     }

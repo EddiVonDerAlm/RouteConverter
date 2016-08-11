@@ -20,12 +20,9 @@
 
 package slash.navigation.nmn;
 
-import slash.navigation.base.BaseNavigationFormat;
-import slash.navigation.base.BaseNavigationPosition;
-import slash.navigation.base.BaseRoute;
-import slash.navigation.base.NavigationPosition;
-import slash.navigation.base.RouteCharacteristics;
-import slash.navigation.base.SimpleLineBasedFormat;
+import slash.common.io.Transfer;
+import slash.navigation.base.*;
+import slash.navigation.common.NavigationPosition;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -43,7 +40,7 @@ public abstract class NmnFormat extends SimpleLineBasedFormat<NmnRoute> {
     static final char LEFT_BRACE = '[';
     static final char RIGHT_BRACE = ']';
 
-    static final Pattern COMMENT_PATTERN = Pattern.compile("(\\d+ )?(.[^,;]+),(.[^ ,;]+)( .[^,;]+)?");
+    static final Pattern DESCRIPTION_PATTERN = Pattern.compile("(\\d+ )?(.[^,;]+),(.[^ ,;]+)( .[^,;]+)?");
 
     private static final double DUPLICATE_OFFSET = 0.0001;
     
@@ -60,6 +57,10 @@ public abstract class NmnFormat extends SimpleLineBasedFormat<NmnRoute> {
         List<BaseNavigationPosition> positions = route.getPositions();
         NavigationPosition first = positions.get(0);
         return new NmnPosition(first.getLongitude() + DUPLICATE_OFFSET,
-                first.getLatitude() + DUPLICATE_OFFSET, (Double)null, null, null, "Start:" + first.getComment());
+                first.getLatitude() + DUPLICATE_OFFSET, (Double)null, null, null, "Start:" + first.getDescription());
+    }
+
+    protected String escape(String string) {
+        return Transfer.escape(string, SEPARATOR, ';', "-");
     }
 }

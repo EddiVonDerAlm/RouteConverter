@@ -8,7 +8,11 @@
 
 package slash.navigation.kml.binding22;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -99,7 +103,7 @@ public class TimeStampType
      */
     public List<Object> getTimeStampSimpleExtensionGroup() {
         if (timeStampSimpleExtensionGroup == null) {
-            timeStampSimpleExtensionGroup = new ArrayList<Object>();
+            timeStampSimpleExtensionGroup = new ArrayList<>();
         }
         return this.timeStampSimpleExtensionGroup;
     }
@@ -128,7 +132,7 @@ public class TimeStampType
      */
     public List<AbstractObjectType> getTimeStampObjectExtensionGroup() {
         if (timeStampObjectExtensionGroup == null) {
-            timeStampObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            timeStampObjectExtensionGroup = new ArrayList<>();
         }
         return this.timeStampObjectExtensionGroup;
     }

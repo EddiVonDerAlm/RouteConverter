@@ -20,8 +20,11 @@
 
 package slash.common.helpers;
 
+import static javax.swing.SwingUtilities.invokeLater;
+import static javax.swing.SwingUtilities.isEventDispatchThread;
+
 /**
- * Helpers used throughout the UI
+ * Provides thread helpers
  *
  * @author Christian Pesch
  */
@@ -31,5 +34,16 @@ public class ThreadHelper {
         thread.join(500);
         thread.interrupt();
         thread.join();
+    }
+
+    public static void invokeInAwtEventQueue(final Runnable runnable) {
+        if (!isEventDispatchThread())
+            invokeLater(new Runnable() {
+                public void run() {
+                    runnable.run();
+                }
+            });
+        else
+            runnable.run();
     }
 }

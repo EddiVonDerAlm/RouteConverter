@@ -11,7 +11,12 @@ package slash.navigation.kml.binding22;
 import slash.navigation.kml.binding22gx.LatLonQuadType;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -112,7 +117,7 @@ public class GroundOverlayType
      *     
      */
     public void setAltitudeModeGroup(JAXBElement<?> value) {
-        this.altitudeModeGroup = ((JAXBElement<?> ) value);
+        this.altitudeModeGroup = value;
     }
 
     /**
@@ -163,7 +168,7 @@ public class GroundOverlayType
      */
     public List<Object> getGroundOverlaySimpleExtensionGroup() {
         if (groundOverlaySimpleExtensionGroup == null) {
-            groundOverlaySimpleExtensionGroup = new ArrayList<Object>();
+            groundOverlaySimpleExtensionGroup = new ArrayList<>();
         }
         return this.groundOverlaySimpleExtensionGroup;
     }
@@ -193,7 +198,7 @@ public class GroundOverlayType
      */
     public List<JAXBElement<? extends AbstractObjectType>> getGroundOverlayObjectExtensionGroup() {
         if (groundOverlayObjectExtensionGroup == null) {
-            groundOverlayObjectExtensionGroup = new ArrayList<JAXBElement<? extends AbstractObjectType>>();
+            groundOverlayObjectExtensionGroup = new ArrayList<>();
         }
         return this.groundOverlayObjectExtensionGroup;
     }

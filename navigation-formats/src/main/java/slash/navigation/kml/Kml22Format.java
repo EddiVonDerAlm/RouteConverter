@@ -21,11 +21,9 @@
 package slash.navigation.kml;
 
 import slash.common.type.CompactCalendar;
-import slash.common.type.ISO8601;
-import slash.navigation.base.NavigationPosition;
 import slash.navigation.base.ParserContext;
 import slash.navigation.base.RouteCharacteristics;
-import slash.navigation.common.BasicPosition;
+import slash.navigation.common.NavigationPosition;
 import slash.navigation.kml.binding22.AbstractContainerType;
 import slash.navigation.kml.binding22.AbstractFeatureType;
 import slash.navigation.kml.binding22.AbstractGeometryType;
@@ -51,6 +49,7 @@ import slash.navigation.kml.binding22.UnitsEnumType;
 import slash.navigation.kml.binding22.Vec2Type;
 import slash.navigation.kml.binding22gx.AbstractTourPrimitiveType;
 import slash.navigation.kml.binding22gx.FlyToType;
+import slash.navigation.kml.binding22gx.MultiTrackType;
 import slash.navigation.kml.binding22gx.TourType;
 import slash.navigation.kml.binding22gx.TrackType;
 import slash.navigation.kml.bindingatom.Link;
@@ -72,16 +71,22 @@ import static java.lang.Math.sin;
 import static java.lang.Math.toDegrees;
 import static java.lang.Math.toRadians;
 import static java.lang.String.valueOf;
-import static slash.navigation.common.NavigationConversion.formatPositionAsString;
+import static java.util.Collections.singletonList;
 import static slash.common.io.Transfer.isEmpty;
+import static slash.common.io.Transfer.toDouble;
 import static slash.common.io.Transfer.trim;
 import static slash.common.type.HexadecimalNumber.decodeBytes;
-import static slash.common.util.Bearing.EARTH_RADIUS;
+import static slash.common.type.ISO8601.formatDate;
+import static slash.navigation.base.RouteCharacteristics.Route;
 import static slash.navigation.base.RouteCharacteristics.Track;
 import static slash.navigation.base.RouteCharacteristics.Waypoints;
-import static slash.navigation.common.BasicPosition.parseExtensionPositions;
+import static slash.navigation.common.Bearing.EARTH_RADIUS;
+import static slash.navigation.common.NavigationConversion.formatPositionAsString;
+import static slash.navigation.common.PositionParser.parseExtensionPositions;
 import static slash.navigation.kml.KmlUtil.marshal22;
 import static slash.navigation.kml.KmlUtil.unmarshal22;
+import static slash.navigation.kml.binding22.UnitsEnumType.FRACTION;
+import static slash.navigation.kml.binding22.UnitsEnumType.PIXELS;
 
 /**
  * Reads and writes Google Earth 5 (.kml) files.
@@ -96,28 +101,30 @@ public class Kml22Format extends KmlFormat {
         return "Google Earth 5 (*" + getExtension() + ")";
     }
 
-    public void read(InputStream source, CompactCalendar startDate, ParserContext<KmlRoute> context) throws Exception {
+    public void read(InputStream source, ParserContext<KmlRoute> context) throws Exception {
         KmlType kmlType = unmarshal22(source);
-        process(kmlType, startDate, context);
+        process(kmlType, context);
     }
 
-    protected void process(KmlType kmlType, CompactCalendar startDate, ParserContext<KmlRoute> context) throws IOException {
+    protected void process(KmlType kmlType, ParserContext<KmlRoute> context) throws IOException {
         if (kmlType == null || kmlType.getAbstractFeatureGroup() == null)
             return;
-        extractTracks(kmlType, startDate, context);
+        extractTracks(kmlType, context);
     }
 
     @SuppressWarnings({"UnusedDeclaration", "unchecked"})
     private <T> List<JAXBElement<T>> find(List<JAXBElement<? extends AbstractFeatureType>> elements, String name, Class<T> resultClass) {
-        List<JAXBElement<T>> result = new ArrayList<JAXBElement<T>>();
-        for (JAXBElement<? extends AbstractFeatureType> element : elements) {
-            if (name.equals(element.getName().getLocalPart()))
-                result.add((JAXBElement<T>) element);
+        List<JAXBElement<T>> result = new ArrayList<>();
+        if(elements != null) {
+            for (JAXBElement<? extends AbstractFeatureType> element : elements) {
+                if (name.equals(element.getName().getLocalPart()))
+                    result.add((JAXBElement<T>) element);
+            }
         }
         return result;
     }
 
-    protected void extractTracks(KmlType kmlType, CompactCalendar startDate, ParserContext<KmlRoute> context) throws IOException {
+    protected void extractTracks(KmlType kmlType, ParserContext<KmlRoute> context) throws IOException {
         AbstractFeatureType feature = kmlType.getAbstractFeatureGroup().getValue();
         if (feature instanceof AbstractContainerType) {
             AbstractContainerType containerType = (AbstractContainerType) feature;
@@ -126,35 +133,35 @@ public class Kml22Format extends KmlFormat {
                 features = ((FolderType) containerType).getAbstractFeatureGroup();
             else if (containerType instanceof DocumentType)
                 features = ((DocumentType) containerType).getAbstractFeatureGroup();
-            extractTracks(trim(containerType.getName()), trim(containerType.getDescription()), features, startDate, context);
+            extractTracks(trim(containerType.getName()), trim(containerType.getDescription()), features, context);
         }
 
         if (feature instanceof PlacemarkType) {
             PlacemarkType placemarkType = (PlacemarkType) feature;
-            String placemarkName = asComment(trim(placemarkType.getName()), trim(placemarkType.getDescription()));
+            String placemarkName = asDescription(trim(placemarkType.getName()), trim(placemarkType.getDescription()));
 
             List<KmlPosition> positions = extractPositionsFromGeometry(placemarkType.getAbstractGeometryGroup());
             for (KmlPosition position : positions) {
-                enrichPosition(position, extractTime(placemarkType.getAbstractTimePrimitiveGroup()), placemarkName, placemarkType.getDescription(), startDate);
+                enrichPosition(position, extractTime(placemarkType.getAbstractTimePrimitiveGroup()), placemarkName, placemarkType.getDescription(), context.getStartDate());
             }
             context.appendRoute(new KmlRoute(this, Waypoints, placemarkName, null, positions));
         }
 
         if (feature instanceof TourType) {
             TourType tourType = (TourType) feature;
-            String tourName = asComment(trim(tourType.getName()), trim(tourType.getDescription()));
+            String tourName = asDescription(trim(tourType.getName()), trim(tourType.getDescription()));
 
             List<KmlPosition> positions = extractPositionsFromTour(tourType.getPlaylist().getAbstractTourPrimitiveGroup());
             for (KmlPosition position : positions) {
-                enrichPosition(position, extractTime(tourType.getAbstractTimePrimitiveGroup()), tourName, tourType.getDescription(), startDate);
+                enrichPosition(position, extractTime(tourType.getAbstractTimePrimitiveGroup()), tourName, tourType.getDescription(), context.getStartDate());
             }
             context.appendRoute(new KmlRoute(this, Track, tourName, null, positions));
         }
     }
 
-    private void extractTracks(String name, String description, List<JAXBElement<? extends AbstractFeatureType>> features, CompactCalendar startDate, ParserContext<KmlRoute> context) throws IOException {
+    private void extractTracks(String name, String description, List<JAXBElement<? extends AbstractFeatureType>> features, ParserContext<KmlRoute> context) throws IOException {
         List<JAXBElement<PlacemarkType>> placemarks = find(features, "Placemark", PlacemarkType.class);
-        extractWayPointsAndTracksFromPlacemarks(name, description, placemarks, startDate, context);
+        extractWayPointsAndTracksFromPlacemarks(name, description, placemarks, context);
 
         List<JAXBElement<NetworkLinkType>> networkLinks = find(features, "NetworkLink", NetworkLinkType.class);
         extractWayPointsAndTracksFromNetworkLinks(networkLinks, context);
@@ -165,14 +172,14 @@ public class Kml22Format extends KmlFormat {
             String folderName = trim(folderTypeValue.getName());
             // ignore speed and marks folders
             if (folderName == null || (!folderName.equals(SPEED) && !folderName.equals(MARKS)))
-                extractTracks(concatPath(name, folderName), description, folderTypeValue.getAbstractFeatureGroup(), startDate, context);
+                extractTracks(concatPath(name, folderName), description, folderTypeValue.getAbstractFeatureGroup(), context);
         }
 
         List<JAXBElement<DocumentType>> documents = find(features, "Document", DocumentType.class);
         for (JAXBElement<DocumentType> document : documents) {
             DocumentType documentTypeValue = document.getValue();
             String documentName = concatPath(name, documentTypeValue.getName());
-            extractTracks(documentName, description, documentTypeValue.getAbstractFeatureGroup(), startDate, context);
+            extractTracks(documentName, description, documentTypeValue.getAbstractFeatureGroup(), context);
         }
     }
 
@@ -190,11 +197,11 @@ public class Kml22Format extends KmlFormat {
         return null;
     }
 
-    private void extractWayPointsAndTracksFromPlacemarks(String name, String description, List<JAXBElement<PlacemarkType>> placemarkTypes, CompactCalendar startDate, ParserContext<KmlRoute> context) {
-        List<KmlPosition> waypoints = new ArrayList<KmlPosition>();
+    private void extractWayPointsAndTracksFromPlacemarks(String name, String description, List<JAXBElement<PlacemarkType>> placemarkTypes, ParserContext<KmlRoute> context) {
+        List<KmlPosition> waypoints = new ArrayList<>();
         for (JAXBElement<PlacemarkType> placemarkType : placemarkTypes) {
             PlacemarkType placemarkTypeValue = placemarkType.getValue();
-            String placemarkName = asComment(trim(placemarkTypeValue.getName()), trim(placemarkTypeValue.getDescription()));
+            String placemarkName = asDescription(trim(placemarkTypeValue.getName()), trim(placemarkTypeValue.getDescription()));
 
             JAXBElement<? extends AbstractGeometryType> abstractGeometryGroup = placemarkTypeValue.getAbstractGeometryGroup();
             if (abstractGeometryGroup == null)
@@ -204,7 +211,7 @@ public class Kml22Format extends KmlFormat {
             if (positions.size() == 1) {
                 // all placemarks with one position form one waypoint route
                 KmlPosition wayPoint = positions.get(0);
-                enrichPosition(wayPoint, extractTime(placemarkTypeValue.getAbstractTimePrimitiveGroup()), placemarkName, placemarkTypeValue.getDescription(), startDate);
+                enrichPosition(wayPoint, extractTime(placemarkTypeValue.getAbstractTimePrimitiveGroup()), placemarkName, placemarkTypeValue.getDescription(), context.getStartDate());
                 waypoints.add(wayPoint);
             } else {
                 // each placemark with more than one position is one track
@@ -241,16 +248,18 @@ public class Kml22Format extends KmlFormat {
     }
 
     private List<KmlPosition> asExtendedKmlPositions(List<String> strings) {
-        List<KmlPosition> result = new ArrayList<KmlPosition>();
+        List<KmlPosition> result = new ArrayList<>();
         for (String string : strings) {
-            for (BasicPosition position : parseExtensionPositions(string)) {
+            for (NavigationPosition position : parseExtensionPositions(string)) {
                 result.add(asKmlPosition(position));
             }
         }
         return result;
     }
 
-    private List<KmlPosition> extractPositions(List<String> coords, List<String> whens) {
+    private List<KmlPosition> extractPositions(TrackType trackType) {
+        List<String> coords = trackType.getCoord();
+        List<String> whens = trackType.getWhen();
         List<KmlPosition> result = asExtendedKmlPositions(coords);
         for (int i = 0; i < whens.size(); i++) {
             String when = whens.get(i);
@@ -264,7 +273,7 @@ public class Kml22Format extends KmlFormat {
     }
 
     private List<KmlPosition> extractPositionsFromGeometry(JAXBElement<? extends AbstractGeometryType> geometryType) {
-        List<KmlPosition> positions = new ArrayList<KmlPosition>();
+        List<KmlPosition> positions = new ArrayList<>();
         AbstractGeometryType geometryTypeValue = geometryType.getValue();
         if (geometryTypeValue instanceof PointType) {
             PointType point = (PointType) geometryTypeValue;
@@ -281,17 +290,22 @@ public class Kml22Format extends KmlFormat {
                 positions.addAll(extractPositionsFromGeometry(geometryType2));
             }
         }
+        if (geometryTypeValue instanceof MultiTrackType) {
+            MultiTrackType multiTrackType = (MultiTrackType) geometryTypeValue;
+            List<TrackType> tracks = multiTrackType.getTrack();
+            for (TrackType track : tracks) {
+                positions.addAll(extractPositions(track));
+            }
+        }
         if (geometryTypeValue instanceof TrackType) {
             TrackType trackType = (TrackType) geometryTypeValue;
-            List<String> coord = trackType.getCoord();
-            List<String> when = trackType.getWhen();
-            positions.addAll(extractPositions(coord, when));
+            positions.addAll(extractPositions(trackType));
         }
         return positions;
     }
 
     private List<KmlPosition> extractPositionsFromTour(List<JAXBElement<? extends AbstractTourPrimitiveType>> tourPrimitives) {
-        List<KmlPosition> positions = new ArrayList<KmlPosition>();
+        List<KmlPosition> positions = new ArrayList<>();
         for (JAXBElement<? extends AbstractTourPrimitiveType> tourPrimitive : tourPrimitives) {
             AbstractTourPrimitiveType tourPrimitiveValue = tourPrimitive.getValue();
             if (tourPrimitiveValue instanceof FlyToType) {
@@ -320,11 +334,11 @@ public class Kml22Format extends KmlFormat {
             KmlPosition position = positions.get(i);
             PlacemarkType placemarkType = objectFactory.createPlacemarkType();
             folderType.getAbstractFeatureGroup().add(objectFactory.createPlacemark(placemarkType));
-            placemarkType.setName(asName(isWriteName() ? position.getComment() : null));
-            placemarkType.setDescription(asDesc(isWriteDesc() ? position.getComment() : null));
-            if (position.getTime() != null) {
+            placemarkType.setName(asName(isWriteName() ? position.getDescription() : null));
+            placemarkType.setDescription(asDesc(isWriteDesc() ? position.getDescription() : null));
+            if (position.hasTime()) {
                 TimeStampType timeStampType = objectFactory.createTimeStampType();
-                timeStampType.setWhen(ISO8601.format(position.getTime()));
+                timeStampType.setWhen(formatDate(position.getTime()));
                 placemarkType.setAbstractTimePrimitiveGroup(objectFactory.createTimeStamp(timeStampType));
             }
             PointType pointType = objectFactory.createPointType();
@@ -364,7 +378,7 @@ public class Kml22Format extends KmlFormat {
             List<KmlPosition> positions = route.getPositions();
             for (int i = startIndex; i < endIndex; i++) {
                 KmlPosition position = positions.get(i);
-                String time = position.getTime() != null ? ISO8601.format(position.getTime()) : "";
+                String time = position.hasTime() ? formatDate(position.getTime()) : "";
                 trackType.getWhen().add(time);
             }
             for (int i = startIndex; i < endIndex; i++) {
@@ -388,7 +402,7 @@ public class Kml22Format extends KmlFormat {
     private boolean containTime(KmlRoute route) {
         int foundTime = 0;
         for (NavigationPosition position : route.getPositions()) {
-            if (position.getTime() != null)
+            if (position.hasTime())
                 foundTime++;
         }
         return foundTime > 1;
@@ -400,6 +414,13 @@ public class Kml22Format extends KmlFormat {
 
     private boolean isWriteSpeed() {
         return preferences.getBoolean("writeSpeed", true);
+    }
+
+    private boolean hasCharacteristics(List<KmlRoute> routes, RouteCharacteristics characteristics) {
+        for(KmlRoute route : routes)
+            if(route.getCharacteristics().equals(characteristics))
+                return true;
+        return false;
     }
 
     private static final String[] SPEED_COLORS = {
@@ -445,7 +466,7 @@ public class Kml22Format extends KmlFormat {
     }
 
     private List<StyleType> createSpeedTrackColors(float width) {
-        List<StyleType> styleTypeList = new ArrayList<StyleType>();
+        List<StyleType> styleTypeList = new ArrayList<>();
         for (int i = 0; i < SPEED_COLORS.length; i++) {
             String styleName = getSpeedColor(i);
             StyleType styleType = createLineStyle(styleName, width, decodeBytes(SPEED_COLORS[i]));
@@ -487,40 +508,44 @@ public class Kml22Format extends KmlFormat {
         folderType.setOpen(FALSE);
         folderType.getAbstractFeatureGroup().add(objectFactory.createScreenOverlay(createSpeedbar()));
 
-        boolean foundSpeed = false;
-        int currentSegment = 1;
-        int previousSpeedClass = -1;
-        List<String> coordinates = new ArrayList<String>();
+        int segmentIndex = 0;
+        List<String> coordinates = new ArrayList<>();
+        Integer previousSpeedClass = null;
+        Double previousSpeed = null;
+        KmlPosition previous = null;
         List<KmlPosition> positions = route.getPositions();
-        for (int i = startIndex; i < endIndex - 1; i++) {
-            KmlPosition nextPosition = positions.get(i + 1);
-            Double speed = positions.get(i).calculateSpeed(nextPosition);
+
+        // since the speed of a position is the average speed of the previous segment
+        for (int i = startIndex; i < endIndex; i++) {
+            KmlPosition position = positions.get(i);
+
+            Double speed = null;
+            if(position.hasSpeed())
+                speed = position.getSpeed();
+            else if (previous != null)
+                speed = previous.calculateSpeed(position);
+            if (speed == null)
+                speed = previousSpeed;
             if (speed == null)
                 continue;
-            foundSpeed = true;
+
+            coordinates.add(createCoordinates(position, false));
 
             int speedClass = getSpeedClass(speed);
-            if (previousSpeedClass != speedClass && previousSpeedClass != -1) {
-                PlacemarkType placemarkType = createSpeedSegment(currentSegment, speedClass, coordinates);
+            if (previousSpeedClass != null && previousSpeedClass != speedClass) {
+                PlacemarkType placemarkType = createSpeedSegment(++segmentIndex, previousSpeedClass, coordinates);
                 folderType.getAbstractFeatureGroup().add(objectFactory.createPlacemark(placemarkType));
 
                 coordinates.clear();
-                currentSegment++;
+                coordinates.add(createCoordinates(position, false));
             }
 
             previousSpeedClass = speedClass;
-            coordinates.add(createCoordinates(positions.get(i), false));
+            previousSpeed = speed;
+            previous = position;
         }
 
-        if (!foundSpeed)
-            return null;
-
-        KmlPosition lastPosition = positions.get(positions.size() - 1);
-        coordinates.add(createCoordinates(lastPosition, false));
-        PlacemarkType placemarkType = createSpeedSegment(currentSegment, previousSpeedClass, coordinates);
-        folderType.getAbstractFeatureGroup().add(objectFactory.createPlacemark(placemarkType));
-
-        return folderType;
+        return segmentIndex > 0 ? folderType : null;
     }
 
     private PlacemarkType createSpeedSegment(int currentSegment, int speedClass, List<String> coordinates) {
@@ -539,9 +564,9 @@ public class Kml22Format extends KmlFormat {
     private ScreenOverlayType createSpeedbar() {
         ScreenOverlayType speedbar = createScreenOverlayImage("Speedbar",
                 SPEEDBAR_URL,
-                createVec2Type(0.0, 0.01, UnitsEnumType.FRACTION, UnitsEnumType.FRACTION),
-                createVec2Type(0.0, 0.01, UnitsEnumType.FRACTION, UnitsEnumType.FRACTION),
-                createVec2Type(250, 0, UnitsEnumType.PIXELS, UnitsEnumType.PIXELS));
+                createVec2Type(0.0, 0.01, FRACTION, FRACTION),
+                createVec2Type(0.0, 0.01, FRACTION, FRACTION),
+                createVec2Type(250, 0, PIXELS, PIXELS));
         speedbar.setVisibility(FALSE);
         return speedbar;
     }
@@ -555,14 +580,14 @@ public class Kml22Format extends KmlFormat {
         marks.setOpen(FALSE);
 
         double currentDistance = 0, previousDistance = 0;
-        int currentKilometer = 1;
+        int currentKiloMeter = 1;
         List<KmlPosition> positions = route.getPositions();
         for (int i = startIndex + 1; i < endIndex; i++) {
             KmlPosition previousPosition = positions.get(i - 1);
             KmlPosition currentPosition = positions.get(i);
 
             Double distance = currentPosition.calculateDistance(previousPosition);
-            if (distance == null)
+            if (isEmpty(distance))
                 continue;
 
             currentDistance += distance;
@@ -586,11 +611,11 @@ public class Kml22Format extends KmlFormat {
                     intermediate.setLatitude(toDegrees(latitude2));
                     intermediate.setLongitude(toDegrees(longitude2));
 
-                    PlacemarkType placeMark = createMark(currentKilometer++, intermediate.getLongitude(), intermediate.getLatitude());
+                    PlacemarkType placeMark = createMark(currentKiloMeter++, intermediate.getLongitude(), intermediate.getLatitude());
                     marks.getAbstractFeatureGroup().add(objectFactory.createPlacemark(placeMark));
 
                     remainingDistance = METERS_BETWEEN_MARKS;
-                } while (intermediate.calculateDistance(currentPosition) > METERS_BETWEEN_MARKS);
+                } while (toDouble(intermediate.calculateDistance(currentPosition)) > METERS_BETWEEN_MARKS);
 
                 currentDistance = currentDistance % METERS_BETWEEN_MARKS;
             }
@@ -599,10 +624,10 @@ public class Kml22Format extends KmlFormat {
         return marks;
     }
 
-    private PlacemarkType createMark(int kilometer, double longitude, double latitude) {
+    private PlacemarkType createMark(int kiloMeter, double longitude, double latitude) {
         ObjectFactory objectFactory = new ObjectFactory();
         PlacemarkType placeMark = objectFactory.createPlacemarkType();
-        placeMark.setName(kilometer + ". Km");
+        placeMark.setName(kiloMeter + ". Km");
         placeMark.setVisibility(FALSE);
         PointType point = objectFactory.createPointType();
         point.getCoordinates().add(formatPositionAsString(longitude) + "," + formatPositionAsString(latitude) + ",0");
@@ -630,11 +655,14 @@ public class Kml22Format extends KmlFormat {
         documentType.setDescription(asDescription(route.getDescription()));
         documentType.setOpen(TRUE);
 
-        documentType.getAbstractStyleSelectorGroup().add(objectFactory.createStyle(createLineStyle(ROUTE_LINE_STYLE, getLineWidth(), getRouteLineColor())));
-        documentType.getAbstractStyleSelectorGroup().add(objectFactory.createStyle(createLineStyle(TRACK_LINE_STYLE, getLineWidth(), getTrackLineColor())));
-        if (isWriteSpeed())
-            for (StyleType style : createSpeedTrackColors(getSpeedLineWidth()))
-                documentType.getAbstractStyleSelectorGroup().add(objectFactory.createStyle(style));
+        if (hasCharacteristics(singletonList(route), Route))
+            documentType.getAbstractStyleSelectorGroup().add(objectFactory.createStyle(createLineStyle(ROUTE_LINE_STYLE, getLineWidth(), getRouteLineColor())));
+        if (hasCharacteristics(singletonList(route), Track)) {
+            documentType.getAbstractStyleSelectorGroup().add(objectFactory.createStyle(createLineStyle(TRACK_LINE_STYLE, getLineWidth(), getTrackLineColor())));
+            if (isWriteSpeed())
+                for (StyleType style : createSpeedTrackColors(getSpeedLineWidth()))
+                    documentType.getAbstractStyleSelectorGroup().add(objectFactory.createStyle(style));
+        }
 
         FolderType folderType = createWayPoints(route, startIndex, endIndex);
         documentType.getAbstractFeatureGroup().add(objectFactory.createFolder(folderType));
@@ -642,7 +670,7 @@ public class Kml22Format extends KmlFormat {
         PlacemarkType placemarkTrack = createTrack(route, startIndex, endIndex);
         documentType.getAbstractFeatureGroup().add(objectFactory.createPlacemark(placemarkTrack));
 
-        if (route.getCharacteristics().equals(Track) && isWriteSpeed()) {
+        if (hasCharacteristics(singletonList(route), Track)) {
             FolderType speed = createSpeed(route, startIndex, endIndex);
             if (speed != null)
                 documentType.getAbstractFeatureGroup().add(objectFactory.createFolder(speed));
@@ -659,13 +687,23 @@ public class Kml22Format extends KmlFormat {
         KmlType kmlType = objectFactory.createKmlType();
         DocumentType documentType = objectFactory.createDocumentType();
         kmlType.setAbstractFeatureGroup(objectFactory.createDocument(documentType));
+        /* might make sense for Waypoint lists with one position lists in the file
+        if(routes.size() == 1) {
+            KmlRoute route = routes.get(0);
+            documentType.setName(createDocumentName(route));
+            documentType.setDescription(asDescription(route.getDescription()));
+        }
+        */
         documentType.setOpen(TRUE);
 
-        documentType.getAbstractStyleSelectorGroup().add(objectFactory.createStyle(createLineStyle(ROUTE_LINE_STYLE, getLineWidth(), getRouteLineColor())));
-        documentType.getAbstractStyleSelectorGroup().add(objectFactory.createStyle(createLineStyle(TRACK_LINE_STYLE, getLineWidth(), getTrackLineColor())));
-        if (isWriteSpeed())
-            for (StyleType style : createSpeedTrackColors(getSpeedLineWidth()))
-                documentType.getAbstractStyleSelectorGroup().add(objectFactory.createStyle(style));
+        if (hasCharacteristics(routes, Route))
+            documentType.getAbstractStyleSelectorGroup().add(objectFactory.createStyle(createLineStyle(ROUTE_LINE_STYLE, getLineWidth(), getRouteLineColor())));
+        if (hasCharacteristics(routes, Track)) {
+            documentType.getAbstractStyleSelectorGroup().add(objectFactory.createStyle(createLineStyle(TRACK_LINE_STYLE, getLineWidth(), getTrackLineColor())));
+            if (isWriteSpeed())
+                for (StyleType style : createSpeedTrackColors(getSpeedLineWidth()))
+                    documentType.getAbstractStyleSelectorGroup().add(objectFactory.createStyle(style));
+        }
 
         for (KmlRoute route : routes) {
             switch (route.getCharacteristics()) {

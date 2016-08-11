@@ -24,17 +24,10 @@ import org.junit.Test;
 import slash.navigation.base.ParserContext;
 import slash.navigation.base.ParserContextImpl;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringReader;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static slash.common.TestCase.assertDoubleEquals;
 import static slash.common.io.Transfer.ISO_LATIN1_ENCODING;
 
@@ -48,7 +41,7 @@ public class MagellanRouteFormatTest {
         assertTrue(format.isValidLine("$PMGNRTE,3,2,c,1,Muenchen_Route,Engl-Garten-2,a,Ifflandstrasse,a*1B"));
         assertTrue(format.isValidLine("$PMGNCMD,END*3D"));
 
-        assertFalse(format.isValidLine("# Comment"));
+        assertFalse(format.isValidLine("# Description"));
     }
 
     @Test
@@ -93,11 +86,11 @@ public class MagellanRouteFormatTest {
         assertDoubleEquals(1135.84141, position.getLongitudeAsValueAndOrientation().getValue());
         assertEquals("N", position.getLatitudeAsValueAndOrientation().getOrientation().value());
         assertEquals("E", position.getLongitudeAsValueAndOrientation().getOrientation().value());
-        assertDoubleEquals(11.5973568, position.getLongitude());
-        assertDoubleEquals(48.1497101, position.getLatitude());
+        assertDoubleEquals(11.5973568333, position.getLongitude());
+        assertDoubleEquals(48.1497101667, position.getLatitude());
         assertDoubleEquals(54.5, position.getElevation());
         assertNull(position.getTime());
-        assertEquals("Ifflandstrasse", position.getComment());
+        assertEquals("Ifflandstrasse", position.getDescription());
     }
 
     @Test
@@ -114,8 +107,8 @@ public class MagellanRouteFormatTest {
                         "$PMGNWPL,4816.58588,N,01133.75379,E,0,M,2-geradeaus,,a*30\n" +
                         "$PMGNWPL,4816.68827,N,01133.85421,E,0,M,3-rechtsab,,a*50\n"
         );
-        ParserContext<NmeaRoute> context = new ParserContextImpl<NmeaRoute>();
-        format.read(new BufferedReader(reader), null, ISO_LATIN1_ENCODING, context);
+        ParserContext<NmeaRoute> context = new ParserContextImpl<>();
+        format.read(new BufferedReader(reader), ISO_LATIN1_ENCODING, context);
         List<NmeaRoute> routes = context.getRoutes();
         assertEquals(1, routes.size());
         NmeaRoute route = routes.get(0);
@@ -123,7 +116,7 @@ public class MagellanRouteFormatTest {
         NmeaPosition position = route.getPositions().get(0);
         assertDoubleEquals(11.561737, position.getLongitude());
         assertDoubleEquals(48.2744105, position.getLatitude());
-        assertEquals("1-startpunkt", position.getComment());
+        assertEquals("1-startpunkt", position.getDescription());
 
         route.setName("ush-rte");
 

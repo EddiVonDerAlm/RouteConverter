@@ -20,12 +20,22 @@
 
 package slash.common.type;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.logging.Logger;
+
+import static java.text.DateFormat.MEDIUM;
+import static java.text.DateFormat.SHORT;
+import static java.util.Calendar.DAY_OF_YEAR;
+import static java.util.Calendar.YEAR;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.unmodifiableMap;
 
 /**
  * A compact representation of a calendar, that saves some memory.
@@ -35,6 +45,7 @@ import java.util.TimeZone;
  */
 
 public class CompactCalendar {
+    private static final Logger log = Logger.getLogger(CompactCalendar.class.getName());
     public static final TimeZone UTC = TimeZone.getTimeZone("UTC");
 
     private final long timeInMillis;
@@ -43,6 +54,25 @@ public class CompactCalendar {
     private CompactCalendar(long timeInMillis, String timeZoneId) {
         this.timeInMillis = timeInMillis;
         this.timeZoneId = timeZoneId.equals("UTC") ? "UTC" : timeZoneId.intern();
+    }
+
+    public static DateFormat createDateFormat(String pattern) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+        simpleDateFormat.setTimeZone(UTC);
+        return simpleDateFormat;
+    }
+
+    public static CompactCalendar parseDate(String dateString, String dateFormatString) {
+        if (dateString == null)
+            return null;
+        try {
+            DateFormat dateFormat = createDateFormat(dateFormatString);
+            Date parsed = dateFormat.parse(dateString);
+            return fromDate(parsed);
+        } catch (ParseException e) {
+            log.severe("Could not parse '" + dateString + "' with format '" + dateFormatString + "'");
+        }
+        return null;
     }
 
     public static CompactCalendar fromMillisAndTimeZone(long timeInMillis, String timeZoneId) {
@@ -63,8 +93,16 @@ public class CompactCalendar {
         return fromCalendar(calendar);
     }
 
+    public static CompactCalendar now() {
+        return fromDate(new Date());
+    }
+
     public static CompactCalendar getInstance(String timeZoneId) {
         return fromCalendar(Calendar.getInstance(TimeZone.getTimeZone(timeZoneId)));
+    }
+
+    public CompactCalendar asUTCTimeInTimeZone(TimeZone timeZone) {
+        return new CompactCalendar(timeInMillis - timeZone.getOffset(timeInMillis), "UTC");
     }
 
     public long getTimeInMillis() {
@@ -81,11 +119,16 @@ public class CompactCalendar {
         return result;
     }
 
+    public boolean hasDateDefined() {
+        Calendar calendar = getCalendar();
+        return !(calendar.get(YEAR) == 1970 && calendar.get(DAY_OF_YEAR) == 1);
+    }
+
     public Date getTime() {
         return getCalendar().getTime();
     }
 
-    private static volatile Map<String, TimeZone> timeZones = Collections.emptyMap();
+    private static volatile Map<String, TimeZone> timeZones = emptyMap();
 
     private TimeZone getTimeZone() {
         if ("UTC".equals(getTimeZoneId()))
@@ -103,9 +146,9 @@ public class CompactCalendar {
             // add new timezone to new version of global map.
             // The following call is allegedly expensive (that's why we go through all this trouble)
             result = TimeZone.getTimeZone(getTimeZoneId());
-            Map<String, TimeZone> newTimeZones = new HashMap<String, TimeZone>(timeZones);
+            Map<String, TimeZone> newTimeZones = new HashMap<>(timeZones);
             newTimeZones.put(getTimeZoneId(), result);
-            newTimeZones = Collections.unmodifiableMap(newTimeZones); // paranoia
+            newTimeZones = unmodifiableMap(newTimeZones); // paranoia
             timeZones = newTimeZones;
         }
         return result;
@@ -129,13 +172,18 @@ public class CompactCalendar {
 
         CompactCalendar that = (CompactCalendar) o;
 
-        return timeInMillis == that.timeInMillis && !(timeZoneId != null ?
-                !timeZoneId.equals(that.timeZoneId) : that.timeZoneId != null);        
+        return timeInMillis == that.timeInMillis && timeZoneId.equals(that.timeZoneId);
     }
 
     public int hashCode() {
         int result = (int) (timeInMillis ^ (timeInMillis >>> 32));
-        result = 31 * result + (timeZoneId != null ? timeZoneId.hashCode() : 0);
+        result = 31 * result + timeZoneId.hashCode();
         return result;
+    }
+
+    public String toString() {
+        DateFormat format = DateFormat.getDateTimeInstance(SHORT, MEDIUM);
+        format.setTimeZone(getTimeZone());
+        return format.format(getTime()) + " " + format.getTimeZone().getID();
     }
 }

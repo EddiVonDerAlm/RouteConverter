@@ -8,7 +8,11 @@
 
 package slash.navigation.kml.binding22;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
@@ -112,7 +116,7 @@ public class ListStyleType
      *     
      */
     public void setBgColor(byte[] value) {
-        this.bgColor = ((byte[]) value);
+        this.bgColor = value;
     }
 
     /**
@@ -139,7 +143,7 @@ public class ListStyleType
      */
     public List<ItemIconType> getItemIcon() {
         if (itemIcon == null) {
-            itemIcon = new ArrayList<ItemIconType>();
+            itemIcon = new ArrayList<>();
         }
         return this.itemIcon;
     }
@@ -192,7 +196,7 @@ public class ListStyleType
      */
     public List<Object> getListStyleSimpleExtensionGroup() {
         if (listStyleSimpleExtensionGroup == null) {
-            listStyleSimpleExtensionGroup = new ArrayList<Object>();
+            listStyleSimpleExtensionGroup = new ArrayList<>();
         }
         return this.listStyleSimpleExtensionGroup;
     }
@@ -221,7 +225,7 @@ public class ListStyleType
      */
     public List<AbstractObjectType> getListStyleObjectExtensionGroup() {
         if (listStyleObjectExtensionGroup == null) {
-            listStyleObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            listStyleObjectExtensionGroup = new ArrayList<>();
         }
         return this.listStyleObjectExtensionGroup;
     }

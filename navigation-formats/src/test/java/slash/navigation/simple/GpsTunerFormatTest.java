@@ -26,10 +26,7 @@ import slash.navigation.base.Wgs84Position;
 
 import java.text.DateFormat;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static slash.common.TestCase.assertDoubleEquals;
 import static slash.common.TestCase.utcCalendar;
 
@@ -65,7 +62,7 @@ public class GpsTunerFormatTest {
         assertEquals(expectedCal, position.getTime());
         assertDoubleEquals(77.56176, position.getSpeed());
         assertDoubleEquals(279.0, position.getHeading());
-        assertNull(position.getComment());
+        assertNull(position.getDescription());
     }
 
     @Test

@@ -8,7 +8,11 @@
 
 package slash.navigation.kml.binding22;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -98,7 +102,7 @@ public class SimpleFieldType {
      */
     public List<Object> getSimpleFieldExtension() {
         if (simpleFieldExtension == null) {
-            simpleFieldExtension = new ArrayList<Object>();
+            simpleFieldExtension = new ArrayList<>();
         }
         return this.simpleFieldExtension;
     }

@@ -9,7 +9,12 @@
 package slash.navigation.kml.binding22;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -140,7 +145,7 @@ public class PolygonType
      *     
      */
     public void setAltitudeModeGroup(JAXBElement<?> value) {
-        this.altitudeModeGroup = ((JAXBElement<?> ) value);
+        this.altitudeModeGroup = value;
     }
 
     /**
@@ -191,7 +196,7 @@ public class PolygonType
      */
     public List<BoundaryType> getInnerBoundaryIs() {
         if (innerBoundaryIs == null) {
-            innerBoundaryIs = new ArrayList<BoundaryType>();
+            innerBoundaryIs = new ArrayList<>();
         }
         return this.innerBoundaryIs;
     }
@@ -220,7 +225,7 @@ public class PolygonType
      */
     public List<Object> getPolygonSimpleExtensionGroup() {
         if (polygonSimpleExtensionGroup == null) {
-            polygonSimpleExtensionGroup = new ArrayList<Object>();
+            polygonSimpleExtensionGroup = new ArrayList<>();
         }
         return this.polygonSimpleExtensionGroup;
     }
@@ -249,7 +254,7 @@ public class PolygonType
      */
     public List<AbstractObjectType> getPolygonObjectExtensionGroup() {
         if (polygonObjectExtensionGroup == null) {
-            polygonObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            polygonObjectExtensionGroup = new ArrayList<>();
         }
         return this.polygonObjectExtensionGroup;
     }

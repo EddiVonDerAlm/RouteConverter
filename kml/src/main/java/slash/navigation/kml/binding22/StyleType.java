@@ -8,7 +8,11 @@
 
 package slash.navigation.kml.binding22;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -240,7 +244,7 @@ public class StyleType
      */
     public List<Object> getStyleSimpleExtensionGroup() {
         if (styleSimpleExtensionGroup == null) {
-            styleSimpleExtensionGroup = new ArrayList<Object>();
+            styleSimpleExtensionGroup = new ArrayList<>();
         }
         return this.styleSimpleExtensionGroup;
     }
@@ -269,7 +273,7 @@ public class StyleType
      */
     public List<AbstractObjectType> getStyleObjectExtensionGroup() {
         if (styleObjectExtensionGroup == null) {
-            styleObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            styleObjectExtensionGroup = new ArrayList<>();
         }
         return this.styleObjectExtensionGroup;
     }

@@ -25,17 +25,11 @@ import slash.common.type.CompactCalendar;
 import slash.navigation.base.ParserContext;
 import slash.navigation.base.ParserContextImpl;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringReader;
-import java.io.StringWriter;
+import java.io.*;
 import java.text.DateFormat;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static slash.common.TestCase.assertDoubleEquals;
 import static slash.common.TestCase.calendar;
 import static slash.common.io.Transfer.ISO_LATIN1_ENCODING;
@@ -50,7 +44,7 @@ public class MagellanExploristFormatTest {
         assertTrue(format.isValidLine("$PMGNTRK,5159.928,N,00528.243,E,00008,M,093405.33,A,,250408*79"));
         assertTrue(format.isValidLine("$PMGNTRK,4348.1258,N,08735.0978,E,000000,M,,A,???,*E1"));
 
-        assertFalse(format.isValidLine("# Comment"));
+        assertFalse(format.isValidLine("# Description"));
     }
 
     @Test
@@ -92,15 +86,15 @@ public class MagellanExploristFormatTest {
         assertDoubleEquals(651.208, position.getLongitudeAsValueAndOrientation().getValue());
         assertEquals("N", position.getLatitudeAsValueAndOrientation().getOrientation().value());
         assertEquals("E", position.getLongitudeAsValueAndOrientation().getOrientation().value());
-        assertDoubleEquals(6.8534666, position.getLongitude());
-        assertDoubleEquals(49.2494499, position.getLatitude());
+        assertDoubleEquals(6.8534666667, position.getLongitude());
+        assertDoubleEquals(49.24945, position.getLatitude());
         assertDoubleEquals(199.0, position.getElevation());
         String actual = DateFormat.getDateTimeInstance().format(position.getTime().getTime());
         CompactCalendar expectedCal = calendar(2007, 3, 21, 15, 22, 24);
         String expected = DateFormat.getDateTimeInstance().format(expectedCal.getTime());
         assertEquals(expected, actual);
         assertEquals(expectedCal, position.getTime());
-        assertEquals("Kllertal-Radweg", position.getComment());
+        assertEquals("Kllertal-Radweg", position.getDescription());
     }
 
     @Test
@@ -108,8 +102,8 @@ public class MagellanExploristFormatTest {
         StringReader reader = new StringReader(
                 "$PMGNTRK,4914.9672,N,00651.2081,E,00199,M,152224,A,KLLERTAL-RADWEG,210307*7B"
         );
-        ParserContext<NmeaRoute> context = new ParserContextImpl<NmeaRoute>();
-        format.read(new BufferedReader(reader), null, ISO_LATIN1_ENCODING, context);
+        ParserContext<NmeaRoute> context = new ParserContextImpl<>();
+        format.read(new BufferedReader(reader), ISO_LATIN1_ENCODING, context);
         List<NmeaRoute> routes = context.getRoutes();
         assertEquals(1, routes.size());
         NmeaRoute route = routes.get(0);
@@ -119,15 +113,15 @@ public class MagellanExploristFormatTest {
         assertDoubleEquals(651.2081, position.getLongitudeAsValueAndOrientation().getValue());
         assertEquals("N", position.getLatitudeAsValueAndOrientation().getOrientation().value());
         assertEquals("E", position.getLongitudeAsValueAndOrientation().getOrientation().value());
-        assertDoubleEquals(6.8534683, position.getLongitude());
-        assertDoubleEquals(49.2494533, position.getLatitude());
+        assertDoubleEquals(6.8534683333, position.getLongitude());
+        assertDoubleEquals(49.2494533333, position.getLatitude());
         assertDoubleEquals(199.0, position.getElevation());
         String actual = DateFormat.getDateTimeInstance().format(position.getTime().getTime());
         CompactCalendar expectedCal = calendar(2007, 3, 21, 15, 22, 24);
         String expected = DateFormat.getDateTimeInstance().format(expectedCal.getTime());
         assertEquals(expected, actual);
         assertEquals(expectedCal, position.getTime());
-        assertEquals("Kllertal-Radweg", position.getComment());
+        assertEquals("Kllertal-Radweg", position.getDescription());
 
         StringWriter writer = new StringWriter();
         format.write(route, new PrintWriter(writer), 0, 1);

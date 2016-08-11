@@ -20,11 +20,11 @@
 
 package slash.navigation.converter.gui.models;
 
-import slash.navigation.catalog.domain.Route;
-import slash.navigation.catalog.model.RouteModel;
+import slash.navigation.routes.Route;
+import slash.navigation.routes.impl.RouteModel;
 
 /**
- * Allows to asynchonously retrieve a created {@link Route}.
+ * Allows to asynchronously retrieve a created {@link Route}.
  *
  * @author Christian Pesch
  */
@@ -47,8 +47,10 @@ public class AddRouteCallback {
         }
     }
 
-    public synchronized void setRoute(RouteModel route) {
-        this.route = route;
-        notifyAll();
+    public void setRoute(RouteModel route) {
+        synchronized (this) {
+            this.route = route;
+            notifyAll();
+        }
     }
 }

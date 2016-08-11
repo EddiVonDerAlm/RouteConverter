@@ -8,7 +8,12 @@
 
 package slash.navigation.kml.binding22;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlList;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,7 +84,7 @@ public class ItemIconType
      */
     public List<ItemIconStateEnumType> getState() {
         if (state == null) {
-            state = new ArrayList<ItemIconStateEnumType>();
+            state = new ArrayList<>();
         }
         return this.state;
     }
@@ -132,7 +137,7 @@ public class ItemIconType
      */
     public List<Object> getItemIconSimpleExtensionGroup() {
         if (itemIconSimpleExtensionGroup == null) {
-            itemIconSimpleExtensionGroup = new ArrayList<Object>();
+            itemIconSimpleExtensionGroup = new ArrayList<>();
         }
         return this.itemIconSimpleExtensionGroup;
     }
@@ -161,7 +166,7 @@ public class ItemIconType
      */
     public List<AbstractObjectType> getItemIconObjectExtensionGroup() {
         if (itemIconObjectExtensionGroup == null) {
-            itemIconObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            itemIconObjectExtensionGroup = new ArrayList<>();
         }
         return this.itemIconObjectExtensionGroup;
     }

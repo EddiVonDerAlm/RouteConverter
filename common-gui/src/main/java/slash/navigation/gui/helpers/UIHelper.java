@@ -20,15 +20,21 @@
 
 package slash.navigation.gui.helpers;
 
+import slash.navigation.gui.Application;
+import slash.navigation.gui.SingleFrameApplication;
+
 import javax.swing.*;
 import java.awt.*;
-import java.net.URL;
-import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
 import static java.awt.Cursor.DEFAULT_CURSOR;
 import static java.awt.Cursor.WAIT_CURSOR;
+import static java.awt.dnd.DragSource.DefaultMoveDrop;
+import static java.util.logging.Logger.getLogger;
+import static java.util.prefs.Preferences.userNodeForPackage;
 
 /**
  * Helpers used throughout the UI
@@ -37,23 +43,14 @@ import static java.awt.Cursor.WAIT_CURSOR;
  */
 
 public class UIHelper {
-    private static final Preferences preferences = Preferences.userNodeForPackage(UIHelper.class);
-    private static final Logger log = Logger.getLogger(UIHelper.class.getName());
+    private static final Preferences preferences = userNodeForPackage(UIHelper.class);
+    private static final Logger log = getLogger(UIHelper.class.getName());
     private static final String LOOK_AND_FEEL_CLASS_PREFERENCE = "lookAndFeelClass";
-
-    // for language support which is not defined by a constant in Locale
-    public static final Locale ARABIA = new Locale("ar", "SA");
-    public static final Locale CZECH = new Locale("cs", "CZ");
-    public static final Locale CROATIA = new Locale("hr", "HR");
-    public static final Locale NEDERLANDS = new Locale("nl", "NL");
-    public static final Locale SERBIA = new Locale("sr", "SR");
-    public static final Locale SLOVAKIA = new Locale("sk", "SK");
-    public static final Locale SPAIN = new Locale("es", "ES");
 
     public static void setLookAndFeel() {
         try {
             String lookAndFeelClass = preferences.get(LOOK_AND_FEEL_CLASS_PREFERENCE, "default");
-            if("default".equals(lookAndFeelClass))
+            if ("default".equals(lookAndFeelClass))
                 lookAndFeelClass = UIManager.getSystemLookAndFeelClassName();
             UIManager.setLookAndFeel(lookAndFeelClass);
         } catch (Exception e) {
@@ -61,6 +58,10 @@ public class UIHelper {
         }
         JFrame.setDefaultLookAndFeelDecorated(true);
         JDialog.setDefaultLookAndFeelDecorated(true);
+    }
+
+    public static void setUseSystemProxies() {
+        System.setProperty("java.net.useSystemProxies", "true");
     }
 
     public static void startWaitCursor(JComponent component) {
@@ -73,19 +74,18 @@ public class UIHelper {
         component.setCursor(Cursor.getPredefinedCursor(WAIT_CURSOR));
     }
 
+    public static void startDragCursor(Component component) {
+        component.setCursor(DefaultMoveDrop);
+    }
+
     public static void stopWaitCursor(JComponent component) {
         RootPaneContainer root = (RootPaneContainer) component.getTopLevelAncestor();
         stopWaitCursor(root.getGlassPane());
         root.getGlassPane().setVisible(false);
     }
 
-    private static void stopWaitCursor(Component component) {
+    public static void stopWaitCursor(Component component) {
         component.setCursor(Cursor.getPredefinedCursor(DEFAULT_CURSOR));
-    }
-
-    public static ImageIcon loadIcon(String name) {
-        URL iconURL = UIHelper.class.getClassLoader().getResource(name);
-        return new ImageIcon(iconURL);
     }
 
     public static JFileChooser createJFileChooser() {
@@ -93,17 +93,44 @@ public class UIHelper {
         try {
             try {
                 chooser = new JFileChooser();
-            }
-            catch (NullPointerException npe) {
+            } catch (NullPointerException npe) {
                 log.info("Working around http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6210674 by using Metal UI");
                 UIManager.getDefaults().put("FileChooserUI", "javax.swing.plaf.metal.MetalFileChooserUI");
                 chooser = new JFileChooser();
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.info("Working around http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6544857 by using restricted file system view");
             chooser = new JFileChooser(new RestrictedFileSystemView());
         }
         return chooser;
+    }
+
+    public static void patchUIManager(ResourceBundle bundle, String... keys) {
+        for (String key : keys) {
+            try {
+                if (bundle.containsKey(key))
+                    UIManager.getDefaults().put(key, bundle.getString(key));
+            } catch (MissingResourceException e) {
+                // intentionally left empty
+            }
+        }
+    }
+
+    private static FontMetrics fontMetrics = null;
+
+    public static int getMaxWidth(String string, int extraWidth) {
+        if (fontMetrics == null) {
+            JLabel label = new JLabel();
+            fontMetrics = label.getFontMetrics(label.getFont());
+        }
+        int width = fontMetrics.stringWidth(string);
+        return width + extraWidth;
+    }
+
+    public static JFrame getFrame() {
+        Application application = Application.getInstance();
+        if (!(application instanceof SingleFrameApplication))
+            return null;
+        return ((SingleFrameApplication) application).getFrame();
     }
 }

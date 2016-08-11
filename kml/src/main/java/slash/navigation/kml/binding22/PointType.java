@@ -9,7 +9,13 @@
 package slash.navigation.kml.binding22;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlList;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -110,7 +116,7 @@ public class PointType
      *     
      */
     public void setAltitudeModeGroup(JAXBElement<?> value) {
-        this.altitudeModeGroup = ((JAXBElement<?> ) value);
+        this.altitudeModeGroup = value;
     }
 
     /**
@@ -137,7 +143,7 @@ public class PointType
      */
     public List<String> getCoordinates() {
         if (coordinates == null) {
-            coordinates = new ArrayList<String>();
+            coordinates = new ArrayList<>();
         }
         return this.coordinates;
     }
@@ -166,7 +172,7 @@ public class PointType
      */
     public List<Object> getPointSimpleExtensionGroup() {
         if (pointSimpleExtensionGroup == null) {
-            pointSimpleExtensionGroup = new ArrayList<Object>();
+            pointSimpleExtensionGroup = new ArrayList<>();
         }
         return this.pointSimpleExtensionGroup;
     }
@@ -195,7 +201,7 @@ public class PointType
      */
     public List<AbstractObjectType> getPointObjectExtensionGroup() {
         if (pointObjectExtensionGroup == null) {
-            pointObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            pointObjectExtensionGroup = new ArrayList<>();
         }
         return this.pointObjectExtensionGroup;
     }

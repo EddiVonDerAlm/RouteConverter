@@ -20,8 +20,8 @@
 
 package slash.navigation.nmea;
 
-import slash.navigation.base.NavigationPosition;
 import slash.navigation.base.RouteCharacteristics;
+import slash.navigation.common.NavigationPosition;
 import slash.navigation.common.ValueAndOrientation;
 
 import java.io.PrintWriter;
@@ -29,17 +29,11 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
-import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static slash.common.io.Transfer.ceiling;
-import static slash.common.io.Transfer.escape;
-import static slash.common.io.Transfer.formatIntAsString;
-import static slash.common.io.Transfer.parseDouble;
-import static slash.common.io.Transfer.toMixedCase;
-import static slash.common.io.Transfer.trim;
+import static slash.common.io.Transfer.*;
 import static slash.navigation.base.RouteCharacteristics.Route;
 
 /**
@@ -53,23 +47,21 @@ import static slash.navigation.base.RouteCharacteristics.Route;
  */
 
 public class MagellanRouteFormat extends BaseNmeaFormat {
-    static {
-        log = Logger.getLogger(MagellanRouteFormat.class.getName());
-    }
     private static final Preferences preferences = Preferences.userNodeForPackage(MagellanRouteFormat.class);
 
     private static final NumberFormat LONGITUDE_NUMBER_FORMAT = DecimalFormat.getNumberInstance(Locale.US);
     private static final NumberFormat LATITUDE_NUMBER_FORMAT = DecimalFormat.getNumberInstance(Locale.US);
 
     static {
+        int maximumFractionDigits = preferences.getInt("magellanPositionMaximumFractionDigits", 5);
         LONGITUDE_NUMBER_FORMAT.setGroupingUsed(false);
         LONGITUDE_NUMBER_FORMAT.setMinimumFractionDigits(5);
-        LONGITUDE_NUMBER_FORMAT.setMaximumFractionDigits(5);
+        LONGITUDE_NUMBER_FORMAT.setMaximumFractionDigits(maximumFractionDigits);
         LONGITUDE_NUMBER_FORMAT.setMinimumIntegerDigits(5);
         LONGITUDE_NUMBER_FORMAT.setMaximumIntegerDigits(5);
         LATITUDE_NUMBER_FORMAT.setGroupingUsed(false);
         LATITUDE_NUMBER_FORMAT.setMinimumFractionDigits(5);
-        LATITUDE_NUMBER_FORMAT.setMaximumFractionDigits(5);
+        LATITUDE_NUMBER_FORMAT.setMaximumFractionDigits(maximumFractionDigits);
         LATITUDE_NUMBER_FORMAT.setMinimumIntegerDigits(4);
         LATITUDE_NUMBER_FORMAT.setMaximumIntegerDigits(4);
     }
@@ -82,8 +74,8 @@ public class MagellanRouteFormat extends BaseNmeaFormat {
                     "([\\d\\.]+)" + SEPARATOR + "([WE])" + SEPARATOR +
                     "(-?[\\d\\.]+)" + SEPARATOR +
                     "M" + SEPARATOR +
-                    "([^" + SEPARATOR + "]*)" + SEPARATOR +          // Comment
-                    "[^" + SEPARATOR + "]*" + SEPARATOR +            // copy of the comment above
+                    "([^" + SEPARATOR + "]*)" + SEPARATOR +          // description
+                    "[^" + SEPARATOR + "]*" + SEPARATOR +            // copy of the description above
                     "a" +
                     END_OF_LINE);
 
@@ -121,9 +113,9 @@ public class MagellanRouteFormat extends BaseNmeaFormat {
             String longitude = matcher.group(3);
             String westOrEast = matcher.group(4);
             String altitude = matcher.group(5);
-            String comment = toMixedCase(matcher.group(6));
+            String description = toMixedCase(matcher.group(6));
             return new NmeaPosition(parseDouble(longitude), westOrEast, parseDouble(latitude), northOrSouth,
-                    parseDouble(altitude), null, null, null, trim(comment));
+                    parseDouble(altitude), null, null, null, trim(description));
         }
         throw new IllegalArgumentException("'" + line + "' does not match");
     }
@@ -135,7 +127,7 @@ public class MagellanRouteFormat extends BaseNmeaFormat {
         return LONGITUDE_NUMBER_FORMAT.format(longitude);
     }
 
-    protected String formatLatititude(Double latitude) {
+    protected String formatLatitude(Double latitude) {
         if (latitude == null)
             return "";
         return LATITUDE_NUMBER_FORMAT.format(latitude);
@@ -164,7 +156,7 @@ public class MagellanRouteFormat extends BaseNmeaFormat {
         List<NmeaPosition> positions = route.getPositions();
         for (int i = startIndex; i < endIndex; i++) {
             NmeaPosition position = positions.get(i);
-            writePosition(position, writer, i);
+            writePosition(position, writer);
         }
 
         String routeName = formatRouteName(asRouteName(route.getName()));
@@ -182,29 +174,29 @@ public class MagellanRouteFormat extends BaseNmeaFormat {
         writer.println(HEADER_LINE);
     }
 
-    protected void writePosition(NmeaPosition position, PrintWriter writer, int index) {
+    protected void writePosition(NmeaPosition position, PrintWriter writer) {
         ValueAndOrientation longitudeAsValueAndOrientation = position.getLongitudeAsValueAndOrientation();
         String longitude = formatLongitude(longitudeAsValueAndOrientation.getValue());
         String westOrEast = longitudeAsValueAndOrientation.getOrientation().value();
         ValueAndOrientation latitudeAsValueAndOrientation = position.getLatitudeAsValueAndOrientation();
-        String latitude = formatLatititude(latitudeAsValueAndOrientation.getValue());
+        String latitude = formatLatitude(latitudeAsValueAndOrientation.getValue());
         String northOrSouth = latitudeAsValueAndOrientation.getOrientation().value();
-        String comment = escape(position.getComment(), SEPARATOR, ';');
+        String description = escape(position.getDescription(), SEPARATOR, ';');
         String altitude = formatIntAsString(position.getElevation() != null ? position.getElevation().intValue() : null);
 
         String wpl = "PMGNWPL" + SEPARATOR +
                 latitude + SEPARATOR + northOrSouth + SEPARATOR + longitude + SEPARATOR + westOrEast + SEPARATOR +
-                altitude + SEPARATOR + "M" + SEPARATOR + comment + SEPARATOR + SEPARATOR + "a";
+                altitude + SEPARATOR + "M" + SEPARATOR + description + SEPARATOR + SEPARATOR + "a";
         writeSentence(writer, wpl);
     }
 
     private void writeRte(NmeaPosition start, NmeaPosition end, PrintWriter writer, int count, int index, String routeName) {
-        String startName = escape(start.getComment(), SEPARATOR, ';');
+        String startName = escape(start.getDescription(), SEPARATOR, ';');
 
         String rte = "PMGNRTE" + SEPARATOR + count + SEPARATOR + (index + 1) + SEPARATOR +
                 "c" + SEPARATOR + "01" + SEPARATOR + routeName + SEPARATOR + startName + SEPARATOR + "a";
         if (end != null) {
-            String endName = escape(end.getComment(), SEPARATOR, ';');
+            String endName = escape(end.getDescription(), SEPARATOR, ';');
             rte += SEPARATOR + endName + SEPARATOR + "a";
         }
         writeSentence(writer, rte);

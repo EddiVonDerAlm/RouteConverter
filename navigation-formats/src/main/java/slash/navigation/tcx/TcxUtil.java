@@ -24,18 +24,15 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.namespace.QName;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import static slash.navigation.jaxb.JaxbUtils.newContext;
-import static slash.navigation.jaxb.JaxbUtils.newMarshaller;
-import static slash.navigation.jaxb.JaxbUtils.newUnmarshaller;
+import static slash.common.helpers.JAXBHelper.*;
 
 class TcxUtil {
-    private static final String TCX_1_NAMESPACE_URI = "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v1";
-    private static final String TCX_2_NAMESPACE_URI = "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2";
+    public static final String TCX_1_NAMESPACE_URI = "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v1";
+    public static final String TCX_2_NAMESPACE_URI = "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2";
 
     private static Unmarshaller newUnmarshaller1() {
         return newUnmarshaller(newContext(slash.navigation.tcx.binding1.ObjectFactory.class));
@@ -60,7 +57,7 @@ class TcxUtil {
             JAXBElement element = (JAXBElement) newUnmarshaller1().unmarshal(in);
             result = (slash.navigation.tcx.binding1.TrainingCenterDatabaseT) element.getValue();
         } catch (ClassCastException e) {
-            throw new JAXBException("Parse error with " + result + ": " + e.getMessage(), e);
+            throw new JAXBException("Parse error: " + e, e);
         }
         return result;
     }
@@ -68,14 +65,14 @@ class TcxUtil {
     public static void marshal1(slash.navigation.tcx.binding1.TrainingCenterDatabaseT trainingCenterDatabaseT, OutputStream out) throws JAXBException {
         try {
             try {
-                newMarshaller1().marshal(new JAXBElement<slash.navigation.tcx.binding1.TrainingCenterDatabaseT>(new QName(TCX_1_NAMESPACE_URI, "TrainingCenterDatabase"), slash.navigation.tcx.binding1.TrainingCenterDatabaseT.class, trainingCenterDatabaseT), out);
+                newMarshaller1().marshal(new slash.navigation.tcx.binding1.ObjectFactory().createTrainingCenterDatabase(trainingCenterDatabaseT), out);
             }
             finally {
                 out.flush();
                 out.close();
             }
         } catch (IOException e) {
-            throw new JAXBException("Error while marshalling: " + e.getMessage());
+            throw new JAXBException("Error while marshalling: " + e, e);
         }
     }
 
@@ -86,7 +83,7 @@ class TcxUtil {
             JAXBElement element = (JAXBElement) newUnmarshaller2().unmarshal(in);
             result = (slash.navigation.tcx.binding2.TrainingCenterDatabaseT) element.getValue();
         } catch (ClassCastException e) {
-            throw new JAXBException("Parse error with " + result + ": " + e.getMessage(), e);
+            throw new JAXBException("Parse error: " + e, e);
         }
         return result;
     }
@@ -94,14 +91,14 @@ class TcxUtil {
     public static void marshal2(slash.navigation.tcx.binding2.TrainingCenterDatabaseT trainingCenterDatabaseT, OutputStream out) throws JAXBException {
         try {
             try {
-                newMarshaller2().marshal(new JAXBElement<slash.navigation.tcx.binding2.TrainingCenterDatabaseT>(new QName(TCX_2_NAMESPACE_URI, "TrainingCenterDatabase"), slash.navigation.tcx.binding2.TrainingCenterDatabaseT.class, trainingCenterDatabaseT), out);
+                newMarshaller2().marshal(new slash.navigation.tcx.binding2.ObjectFactory().createTrainingCenterDatabase(trainingCenterDatabaseT), out);
             }
             finally {
                 out.flush();
                 out.close();
             }
         } catch (IOException e) {
-            throw new JAXBException("Error while marshalling: " + e.getMessage());
+            throw new JAXBException("Error while marshalling: " + e, e);
         }
     }
 }

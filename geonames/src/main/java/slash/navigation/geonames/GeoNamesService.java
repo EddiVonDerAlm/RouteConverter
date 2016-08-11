@@ -20,6 +20,11 @@
 
 package slash.navigation.geonames;
 
+import slash.navigation.common.BoundingBox;
+import slash.navigation.common.LongitudeAndLatitude;
+import slash.navigation.common.NavigationPosition;
+import slash.navigation.elevation.ElevationService;
+import slash.navigation.geocoding.GeocodingService;
 import slash.navigation.geonames.binding.Geonames;
 import slash.navigation.rest.Get;
 import slash.navigation.rest.exception.ServiceUnavailableException;
@@ -28,9 +33,10 @@ import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
-import static slash.common.io.Transfer.parseInt;
+import static slash.common.io.Transfer.parseInteger;
 
 /**
  * Encapsulates REST access to the geonames.org service.
@@ -38,12 +44,22 @@ import static slash.common.io.Transfer.parseInt;
  * @author Christian Pesch
  */
 
-public class GeoNamesService {
+public class GeoNamesService implements ElevationService, GeocodingService {
     private static final Preferences preferences = Preferences.userNodeForPackage(GeoNamesService.class);
+    private static final Logger log = Logger.getLogger(GeoNamesService.class.getName());
     private static final String GEONAMES_URL_PREFERENCE = "geonamesUrl";
     private static final String GEONAMES_USERNAME_PREFERENCE = "geonamesUserName";
+    private int overQueryLimitCount = 0;
 
-    private String getGeoNamesNamesUrl() {
+    public String getName() {
+        return "GeoNames";
+    }
+
+    public boolean isOverQueryLimit() {
+        return overQueryLimitCount > 0;
+    }
+
+    private String getGeoNamesApiUrl() {
         return preferences.get(GEONAMES_URL_PREFERENCE, "http://api.geonames.org/");
     }
 
@@ -52,9 +68,9 @@ public class GeoNamesService {
     }
 
     private String execute(String uri) throws IOException {
-        String url = getGeoNamesNamesUrl() + uri + "&username=" + getGeoNamesUserName();
+        String url = getGeoNamesApiUrl() + uri + "&username=" + getGeoNamesUserName();
         Get get = new Get(url);
-        String result = get.execute();
+        String result = get.executeAsString();
         if (get.isSuccessful()) {
             checkCurrentlyOverloaded(url, result);
             return result;
@@ -63,42 +79,56 @@ public class GeoNamesService {
     }
 
     private Integer getElevationFor(String uri, double longitude, double latitude, Integer nullValue) throws IOException {
-        String result = execute(uri + "?lat=" + latitude + "&lng=" + longitude);
+        String result = execute(uri + "?lat=" + latitude + "&lng=" + longitude); // could be up to 20 points
         if (result != null) {
             try {
-                Integer elevation = parseInt(result);
+                Integer elevation = parseInteger(result);
                 if (elevation != null && !elevation.equals(nullValue))
                     return elevation;
             } catch (NumberFormatException e) {
-                IOException io = new IOException("Cannot unmarshall " + result + ": " + e.getMessage());
-                io.setStackTrace(e.getStackTrace());
-                throw io;
+                throw new IOException("Cannot unmarshall " + result + ": " + e, e);
             }
         }
         return null;
     }
 
     private void checkCurrentlyOverloaded(String url, String result) throws ServiceUnavailableException {
-        if (result.contains("<html>") && (result.contains("overloaded") || result.contains("exceeded")))
-            throw new ServiceUnavailableException("geonames.org", url);
+        if (result.contains("limit") && (result.contains("overloaded") || result.contains("exceeded"))) {
+            overQueryLimitCount++;
+            log.warning("geonames API is over query limit, count: " + overQueryLimitCount + ", url: " + url);
+            throw new ServiceUnavailableException(getClass().getSimpleName(), url, result);
+        }
     }
 
-    Integer getSrtm3ElevationFor(double longitude, double latitude) throws IOException {
+    Integer getAsterGDEMElevationFor(double longitude, double latitude) throws IOException {
+        return getElevationFor("astergdem", longitude, latitude, -9999);
+    }
+
+    Integer getSRTM3ElevationFor(double longitude, double latitude) throws IOException {
         return getElevationFor("srtm3", longitude, latitude, -32768);
     }
 
-    Integer getGtopo30ElevationFor(double longitude, double latitude) throws IOException {
+    Integer getGTOPO30ElevationFor(double longitude, double latitude) throws IOException {
         return getElevationFor("gtopo30", longitude, latitude, -9999);
     }
 
     public Double getElevationFor(double longitude, double latitude) throws IOException {
-        if (latitude < 60.0 && latitude > -56.0) {
-            Integer elevation = getSrtm3ElevationFor(longitude, latitude);
-            return elevation != null ? elevation.doubleValue() : null;
-        } else {
-            Integer elevation = getGtopo30ElevationFor(longitude, latitude);
-            return elevation != null ? elevation.doubleValue() : null;
-        }
+        Integer elevation = null;
+
+        if (latitude < 83.0 && latitude > -65.0)
+            elevation = getAsterGDEMElevationFor(longitude, latitude);
+
+        if (elevation == null && latitude < 60.0 && latitude > -56.0)
+            elevation = getSRTM3ElevationFor(longitude, latitude);
+
+        if (elevation == null)
+            elevation = getGTOPO30ElevationFor(longitude, latitude);
+
+        return elevation != null ? elevation.doubleValue() : null;
+    }
+
+    public List<NavigationPosition> getPositionsFor(String address) throws IOException {
+        return null; // not supported
     }
 
     private Geonames getGeonamesFor(String uri) throws IOException {
@@ -107,9 +137,7 @@ public class GeoNamesService {
             try {
                 return GeoNamesUtil.unmarshal(result);
             } catch (JAXBException e) {
-                IOException io = new IOException("Cannot unmarshall " + result + ": " + e.getMessage());
-                io.setStackTrace(e.getStackTrace());
-                throw io;
+                throw new IOException("Cannot unmarshall " + result + ": " + e, e);
             }
         }
         return null;
@@ -125,7 +153,7 @@ public class GeoNamesService {
             return null;
         if (geonames.getStatus() != null)
             throw new IOException(geonames.getStatus().getMessage());
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         for (Geonames.Geoname geoname : geonames.getGeoname()) {
             result.add(geoname.getName());
         }
@@ -140,52 +168,38 @@ public class GeoNamesService {
         return getNearByFor("findNearbyPlaceName", longitude, latitude);
     }
 
-    public String getNearByFor(double longitude, double latitude) throws IOException {
-        String description = getNearByPlaceNameFor(longitude, latitude);
+    public String getAddressFor(NavigationPosition position) throws IOException {
+        String description = getNearByPlaceNameFor(position.getLongitude(), position.getLatitude());
         if (description == null)
-            description = getNearByToponymFor(longitude, latitude);
+            description = getNearByToponymFor(position.getLongitude(), position.getLatitude());
         return description;
     }
 
-    public PostalCode getNearByPostalCodeFor(double longitude, double latitude) throws IOException {
-        Geonames geonames = getGeonamesFor("findNearbyPostalCodes", longitude, latitude);
-        if (geonames == null || geonames.getCode() == null)
-            return null;
-        List<PostalCode> result = new ArrayList<PostalCode>();
-        for (Geonames.Code code : geonames.getCode()) {
-            result.add(new PostalCode(code.getCountryCode(), code.getPostalcode(), code.getName()));
-        }
-        return result.size() > 0 ? result.get(0) : null;
+    public boolean isDownload() {
+        return false;
     }
 
-    public String getPlaceNameFor(String countryCode, String postalCode) throws IOException {
-        Geonames geonames = getGeonamesFor("postalCodeSearch?postalcode=" + postalCode + "&country=" + countryCode);
-        if (geonames == null || geonames.getCode() == null)
-            return null;
-        List<PostalCode> result = new ArrayList<PostalCode>();
-        for (Geonames.Code code : geonames.getCode()) {
-            result.add(new PostalCode(code.getCountryCode(), code.getPostalcode(), code.getName()));
-        }
-        return result.size() > 0 ? result.get(0).placeName : null;
+    public boolean isSupportsPath() {
+        return false;
     }
 
-    /**
-     * Return longitude and latitude for the given country and postal code.
-     *
-     * @param countryCode the country code to search a position for
-     * @param postalCode  the postal code to search a position for
-     * @return the longitude and latitude for the given country and postal code
-     * @throws IOException if an error occurs while accessing geonames.org
-     */
-    public double[] getPositionFor(String countryCode, String postalCode) throws IOException {
-        Geonames geonames = getGeonamesFor("postalCodeSearch?postalcode=" + postalCode + "&country=" + countryCode);
-        if (geonames == null || geonames.getCode() == null)
-            return null;
-        List<Double> result = new ArrayList<Double>();
-        for (Geonames.Code code : geonames.getCode()) {
-            result.add(code.getLng().doubleValue());
-            result.add(code.getLat().doubleValue());
-        }
-        return result.size() > 1 ? new double[]{result.get(0), result.get(1)} : null;
+    public String getPath() {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setPath(String path) {
+        throw new UnsupportedOperationException();
+    }
+
+    public void downloadElevationDataFor(List<LongitudeAndLatitude> longitudeAndLatitudes, boolean waitForDownload) {
+        throw new UnsupportedOperationException();
+    }
+
+    public long calculateRemainingDownloadSize(List<BoundingBox> boundingBoxes) {
+        throw new UnsupportedOperationException();
+    }
+
+    public void downloadElevationData(List<BoundingBox> boundingBoxes) {
+        throw new UnsupportedOperationException();
     }
 }

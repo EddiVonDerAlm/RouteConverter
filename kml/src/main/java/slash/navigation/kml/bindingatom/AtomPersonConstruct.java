@@ -9,7 +9,11 @@
 package slash.navigation.kml.bindingatom;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlElementRefs;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,7 +78,7 @@ public class AtomPersonConstruct {
      */
     public List<JAXBElement<String>> getNameOrUriOrEmail() {
         if (nameOrUriOrEmail == null) {
-            nameOrUriOrEmail = new ArrayList<JAXBElement<String>>();
+            nameOrUriOrEmail = new ArrayList<>();
         }
         return this.nameOrUriOrEmail;
     }

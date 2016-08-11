@@ -14,7 +14,13 @@ import slash.navigation.kml.bindingatom.Link;
 import slash.navigation.kml.bindingxal.AddressDetails;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlSeeAlso;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -421,7 +427,7 @@ public abstract class AbstractFeatureType
      *     
      */
     public void setAbstractViewGroup(JAXBElement<? extends AbstractViewType> value) {
-        this.abstractViewGroup = ((JAXBElement<? extends AbstractViewType> ) value);
+        this.abstractViewGroup = value;
     }
 
     /**
@@ -449,7 +455,7 @@ public abstract class AbstractFeatureType
      *     
      */
     public void setAbstractTimePrimitiveGroup(JAXBElement<? extends AbstractTimePrimitiveType> value) {
-        this.abstractTimePrimitiveGroup = ((JAXBElement<? extends AbstractTimePrimitiveType> ) value);
+        this.abstractTimePrimitiveGroup = value;
     }
 
     /**
@@ -502,7 +508,7 @@ public abstract class AbstractFeatureType
      */
     public List<JAXBElement<? extends AbstractStyleSelectorType>> getAbstractStyleSelectorGroup() {
         if (abstractStyleSelectorGroup == null) {
-            abstractStyleSelectorGroup = new ArrayList<JAXBElement<? extends AbstractStyleSelectorType>>();
+            abstractStyleSelectorGroup = new ArrayList<>();
         }
         return this.abstractStyleSelectorGroup;
     }
@@ -605,7 +611,7 @@ public abstract class AbstractFeatureType
      */
     public List<JAXBElement<?>> getAbstractFeatureSimpleExtensionGroup() {
         if (abstractFeatureSimpleExtensionGroup == null) {
-            abstractFeatureSimpleExtensionGroup = new ArrayList<JAXBElement<?>>();
+            abstractFeatureSimpleExtensionGroup = new ArrayList<>();
         }
         return this.abstractFeatureSimpleExtensionGroup;
     }
@@ -634,7 +640,7 @@ public abstract class AbstractFeatureType
      */
     public List<AbstractObjectType> getAbstractFeatureObjectExtensionGroup() {
         if (abstractFeatureObjectExtensionGroup == null) {
-            abstractFeatureObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            abstractFeatureObjectExtensionGroup = new ArrayList<>();
         }
         return this.abstractFeatureObjectExtensionGroup;
     }

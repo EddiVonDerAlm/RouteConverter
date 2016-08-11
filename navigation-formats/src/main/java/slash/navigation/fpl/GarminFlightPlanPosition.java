@@ -20,6 +20,7 @@
 
 package slash.navigation.fpl;
 
+import slash.navigation.base.WaypointType;
 import slash.navigation.base.Wgs84Position;
 
 import java.math.BigDecimal;
@@ -35,36 +36,27 @@ import static slash.common.io.Transfer.trim;
  */
 
 public class GarminFlightPlanPosition extends Wgs84Position {
-    private WaypointType waypointType;
     private String identifier;
     private CountryCode countryCode;
 
-    public GarminFlightPlanPosition(Double longitude, Double latitude, Double elevation, String comment) {
-        super(longitude, latitude, elevation, null, null, comment);
-        if(comment != null)
-            this.identifier = comment.substring(0, min(comment.length(), 6)).toUpperCase();
+    public GarminFlightPlanPosition(Double longitude, Double latitude, Double elevation, String description) {
+        super(longitude, latitude, elevation, null, null, description);
+        if(description != null)
+            this.identifier = description.substring(0, min(description.length(), 6)).toUpperCase();
     }
 
-    public GarminFlightPlanPosition(BigDecimal longitude, BigDecimal latitude, BigDecimal elevation, String comment,
+    public GarminFlightPlanPosition(BigDecimal longitude, BigDecimal latitude, BigDecimal elevation, String description,
                                     WaypointType waypointType, String identifier, CountryCode countryCode) {
-        this(formatDouble(longitude), formatDouble(latitude), formatDouble(elevation), comment);
+        this(formatDouble(longitude), formatDouble(latitude), formatDouble(elevation), description);
         this.waypointType = waypointType;
         this.identifier = identifier;
         this.countryCode = countryCode;
     }
 
-    public String getComment() {
-        String comment = trim(super.getComment());
-        return comment != null ? comment :
+    public String getDescription() {
+        String description = trim(super.getDescription());
+        return description != null ? description :
                 getIdentifier() + ", " + getWaypointType() + (getCountryCode() != null ? ", " + getCountryCode() : "");
-    }
-
-    public WaypointType getWaypointType() {
-        return waypointType;
-    }
-
-    public void setWaypointType(WaypointType waypointType) {
-        this.waypointType = waypointType;
     }
 
     public String getIdentifier() {

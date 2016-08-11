@@ -8,7 +8,11 @@
 
 package slash.navigation.kml.binding22;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -208,7 +212,7 @@ public class ScreenOverlayType
      */
     public List<Object> getScreenOverlaySimpleExtensionGroup() {
         if (screenOverlaySimpleExtensionGroup == null) {
-            screenOverlaySimpleExtensionGroup = new ArrayList<Object>();
+            screenOverlaySimpleExtensionGroup = new ArrayList<>();
         }
         return this.screenOverlaySimpleExtensionGroup;
     }
@@ -237,7 +241,7 @@ public class ScreenOverlayType
      */
     public List<AbstractObjectType> getScreenOverlayObjectExtensionGroup() {
         if (screenOverlayObjectExtensionGroup == null) {
-            screenOverlayObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            screenOverlayObjectExtensionGroup = new ArrayList<>();
         }
         return this.screenOverlayObjectExtensionGroup;
     }

@@ -28,7 +28,7 @@ import slash.navigation.gui.actions.FrameAction;
 import javax.swing.*;
 
 import static javax.swing.SwingUtilities.invokeLater;
-import static slash.navigation.converter.gui.helper.JTableHelper.selectAndScrollToPosition;
+import static slash.navigation.gui.helpers.JTableHelper.selectAndScrollToPosition;
 
 /**
  * {@link Action} that cuts the selected rows of a {@link JTable}.
@@ -54,11 +54,11 @@ public class CutAction extends FrameAction {
                     positionsModel.getRoute().getFormat()));
 
             positionsModel.remove(selectedRows);
-            final int removeRow = selectedRows[0] > 0 ? selectedRows[0] - 1 : 0;
+            final int cutRow = selectedRows[0] > 0 ? selectedRows[0] - 1 : 0;
             if (table.getRowCount() > 0) {
                 invokeLater(new Runnable() {
                     public void run() {
-                        selectAndScrollToPosition(table, removeRow, removeRow);
+                        selectAndScrollToPosition(table, cutRow, cutRow);
                     }
                 });
             }

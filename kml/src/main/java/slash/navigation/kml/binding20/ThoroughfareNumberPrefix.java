@@ -8,7 +8,13 @@
 
 package slash.navigation.kml.binding20;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAnyAttribute;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlValue;
 import javax.xml.namespace.QName;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,7 +57,7 @@ public class ThoroughfareNumberPrefix {
     @XmlAttribute(name = "Code")
     protected String code;
     @XmlAnyAttribute
-    private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+    private Map<QName, String> otherAttributes = new HashMap<>();
 
     /**
      * A-12 where 12 is number and A is prefix and "-" is the separator

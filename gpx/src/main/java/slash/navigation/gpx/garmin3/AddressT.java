@@ -8,7 +8,11 @@
 
 package slash.navigation.gpx.garmin3;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
@@ -97,7 +101,7 @@ public class AddressT {
      */
     public List<String> getStreetAddress() {
         if (streetAddress == null) {
-            streetAddress = new ArrayList<String>();
+            streetAddress = new ArrayList<>();
         }
         return this.streetAddress;
     }

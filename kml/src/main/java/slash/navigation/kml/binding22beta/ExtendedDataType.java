@@ -10,7 +10,11 @@ package slash.navigation.kml.binding22beta;
 
 import org.w3c.dom.Element;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAnyElement;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,7 +79,7 @@ public class ExtendedDataType {
      */
     public List<DataType> getData() {
         if (data == null) {
-            data = new ArrayList<DataType>();
+            data = new ArrayList<>();
         }
         return this.data;
     }
@@ -104,7 +108,7 @@ public class ExtendedDataType {
      */
     public List<SchemaDataType> getSchemaData() {
         if (schemaData == null) {
-            schemaData = new ArrayList<SchemaDataType>();
+            schemaData = new ArrayList<>();
         }
         return this.schemaData;
     }
@@ -134,7 +138,7 @@ public class ExtendedDataType {
      */
     public List<Object> getAny() {
         if (any == null) {
-            any = new ArrayList<Object>();
+            any = new ArrayList<>();
         }
         return this.any;
     }

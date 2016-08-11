@@ -23,25 +23,20 @@ package slash.navigation.converter.gui.dialogs;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import slash.navigation.base.WaypointType;
 import slash.navigation.converter.gui.RouteConverter;
-import slash.navigation.converter.gui.actions.DialogAction;
 import slash.navigation.converter.gui.renderer.CountryCodeListCellRenderer;
 import slash.navigation.converter.gui.renderer.WaypointTypeListCellRenderer;
 import slash.navigation.fpl.CountryCode;
 import slash.navigation.fpl.GarminFlightPlanPosition;
 import slash.navigation.fpl.GarminFlightPlanRoute;
-import slash.navigation.fpl.WaypointType;
 import slash.navigation.gui.SimpleDialog;
+import slash.navigation.gui.actions.DialogAction;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.util.ResourceBundle;
 
 import static java.awt.Color.RED;
@@ -52,8 +47,8 @@ import static javax.swing.BorderFactory.createLineBorder;
 import static javax.swing.JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT;
 import static javax.swing.KeyStroke.getKeyStroke;
 import static slash.common.io.Transfer.trim;
+import static slash.navigation.base.WaypointType.*;
 import static slash.navigation.fpl.CountryCode.None;
-import static slash.navigation.fpl.WaypointType.UserWaypoint;
 
 /**
  * Dialog for completing information for a Garmin Flight Plan.
@@ -66,10 +61,10 @@ public class CompleteFlightPlanDialog extends SimpleDialog {
     private static final Border VALID_BORDER = new JComboBox().getBorder();
     private JPanel contentPane;
     private JLabel labelPosition;
-    private JTextField textFieldComment;
-    private JComboBox comboBoxCountryCode;
+    private JTextField textFieldDescription;
+    private JComboBox<CountryCode> comboBoxCountryCode;
     private JTextField textFieldIdentifier;
-    private JComboBox comboBoxWaypointType;
+    private JComboBox<WaypointType> comboBoxWaypointType;
     private JButton buttonPrevious;
     private JButton buttonNextOrFinish;
 
@@ -77,7 +72,7 @@ public class CompleteFlightPlanDialog extends SimpleDialog {
     private int index = 0;
 
     public CompleteFlightPlanDialog(GarminFlightPlanRoute routeToComplete) {
-        super(RouteConverter.getInstance().getFrame(), "completeflightplan");
+        super(RouteConverter.getInstance().getFrame(), "complete-flightplan");
         this.route = routeToComplete;
         setTitle(RouteConverter.getBundle().getString("complete-flight-plan-title"));
         setContentPane(contentPane);
@@ -103,9 +98,9 @@ public class CompleteFlightPlanDialog extends SimpleDialog {
             }
         });
 
-        textFieldComment.addKeyListener(new KeyAdapter() {
+        textFieldDescription.addKeyListener(new KeyAdapter() {
             protected void update() {
-                getPosition().setComment(textFieldComment.getText());
+                getPosition().setDescription(textFieldDescription.getText());
                 validateModel();
             }
         });
@@ -117,7 +112,7 @@ public class CompleteFlightPlanDialog extends SimpleDialog {
         });
 
         comboBoxCountryCode.setRenderer(new CountryCodeListCellRenderer());
-        comboBoxCountryCode.setModel(new DefaultComboBoxModel(CountryCode.values()));
+        comboBoxCountryCode.setModel(new DefaultComboBoxModel<>(CountryCode.values()));
         comboBoxCountryCode.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 if (e.getStateChange() != SELECTED)
@@ -128,7 +123,9 @@ public class CompleteFlightPlanDialog extends SimpleDialog {
             }
         });
         comboBoxWaypointType.setRenderer(new WaypointTypeListCellRenderer());
-        comboBoxWaypointType.setModel(new DefaultComboBoxModel(WaypointType.values()));
+        comboBoxWaypointType.setModel(new DefaultComboBoxModel<>(new WaypointType[]{
+                Airport, Intersection, NonDirectionalBeacon, UserWaypoint, VHFOmnidirectionalRadioRange
+        }));
         comboBoxWaypointType.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
                 if (e.getStateChange() != SELECTED)
@@ -162,7 +159,7 @@ public class CompleteFlightPlanDialog extends SimpleDialog {
     private void updateView() {
         labelPosition.setText(format(RouteConverter.getBundle().getString("position-index"), index + 1, route.getPositionCount()));
         GarminFlightPlanPosition position = getPosition();
-        textFieldComment.setText(position.getComment());
+        textFieldDescription.setText(position.getDescription());
         CountryCode countryCode = position.getCountryCode();
         comboBoxCountryCode.setSelectedItem(countryCode == null ? None : countryCode);
         textFieldIdentifier.setText(position.getIdentifier());
@@ -253,8 +250,8 @@ public class CompleteFlightPlanDialog extends SimpleDialog {
         final JLabel label5 = new JLabel();
         this.$$$loadLabelText$$$(label5, ResourceBundle.getBundle("slash/navigation/converter/gui/RouteConverter").getString("comment-colon"));
         panel3.add(label5, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
-        textFieldComment = new JTextField();
-        panel3.add(textFieldComment, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        textFieldDescription = new JTextField();
+        panel3.add(textFieldDescription, new GridConstraints(4, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         final JLabel label6 = new JLabel();
         this.$$$loadLabelText$$$(label6, ResourceBundle.getBundle("slash/navigation/converter/gui/RouteConverter").getString("complete-flight-plan-description"));
         contentPane.add(label6, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));

@@ -22,6 +22,7 @@ package slash.navigation.bcr;
 
 import org.junit.Test;
 import slash.common.type.CompactCalendar;
+import slash.navigation.gpx.GpxPosition;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -33,6 +34,7 @@ import static slash.common.TestCase.assertDoubleEquals;
 import static slash.common.TestCase.assertIntArrayEquals;
 import static slash.common.TestCase.assertNotNull;
 import static slash.common.TestCase.assertNull;
+import static slash.common.TestCase.calendar;
 import static slash.common.io.Transfer.formatIntAsString;
 import static slash.common.type.CompactCalendar.fromMillis;
 import static slash.navigation.base.RouteComments.commentPositions;
@@ -50,6 +52,7 @@ public class BcrRouteTest {
     BcrPosition c = new BcrPosition(3, 2, 0, "c");
     BcrPosition d = new BcrPosition(1, 3, 0, "d");
     BcrPosition e = new BcrPosition(1, 1, 0, "e");
+    GpxPosition zero = new GpxPosition(null, null, null, null, null, null);
 
     private void initialize() {
         List<BcrPosition> positions = route.getPositions();
@@ -57,14 +60,18 @@ public class BcrRouteTest {
         positions.add(a);
         positions.add(b);
         positions.add(c);
+        a.setTime(calendar(2015, 10, 5, 1, 2, 0, 0));
+        b.setTime(calendar(2015, 10, 5, 1, 2, 15, 0));
+        c.setTime(calendar(2015, 10, 5, 1, 2, 15, 0));
+        d.setTime(calendar(2015, 10, 5, 1, 2, 30, 0));
     }
 
     private void assertPositions(BcrPosition... expected) {
         List<BcrPosition> actual = route.getPositions();
         assertEquals(expected.length, actual.size());
         for (int i = 0; i < expected.length; i++)
-            assertEquals("at index:" + i + " expected:" + expected[i].getComment() +
-                    " but was:" + actual.get(i).getComment(), expected[i], actual.get(i));
+            assertEquals("at index:" + i + " expected:" + expected[i].getDescription() +
+                    " but was:" + actual.get(i).getDescription(), expected[i], actual.get(i));
     }
 
     @Test
@@ -225,6 +232,11 @@ public class BcrRouteTest {
         assertDoubleEquals(2.4858, c.calculateDistance(d));
         assertDoubleEquals(2.2114, d.calculateDistance(e));
         assertDoubleEquals(0.0, e.calculateDistance(a));
+    }
+
+    @Test
+    public void testCalculateNullDistance() {
+        assertNull(a.calculateDistance(zero));
     }
 
     @Test
@@ -442,13 +454,13 @@ public class BcrRouteTest {
         }
 
         for (int i = 0; i < 10; i++) {
-            assertNull(positions.get(i).getComment());
+            assertNull(positions.get(i).getDescription());
         }
 
         commentPositions(positions);
 
         for (int i = 0; i < 10; i++) {
-            assertEquals("Position " + (i + 1), positions.get(i).getComment());
+            assertEquals("Position " + (i + 1), positions.get(i).getDescription());
         }
     }
 
@@ -461,9 +473,9 @@ public class BcrRouteTest {
 
         commentPositions(positions);
 
-        positions.get(9).setComment("Position 7: Hamburg");
-        positions.get(7).setComment("Hamburg (Position 7)");
-        positions.get(3).setComment("Hamburg");
+        positions.get(9).setDescription("Position 7: Hamburg");
+        positions.get(7).setDescription("Hamburg (Position 7)");
+        positions.get(3).setDescription("Hamburg");
         positions.remove(8);
         positions.remove(6);
         positions.remove(4);
@@ -472,11 +484,11 @@ public class BcrRouteTest {
 
         commentPositions(positions);
 
-        assertEquals("Position 1", positions.get(0).getComment());
-        assertEquals("Hamburg", positions.get(1).getComment());
-        assertEquals("Position 3", positions.get(2).getComment());
-        assertEquals("Hamburg (Position 4)", positions.get(3).getComment());
-        assertEquals("Position 5: Hamburg", positions.get(4).getComment());
+        assertEquals("Position 1", positions.get(0).getDescription());
+        assertEquals("Hamburg", positions.get(1).getDescription());
+        assertEquals("Position 3", positions.get(2).getDescription());
+        assertEquals("Hamburg (Position 4)", positions.get(3).getDescription());
+        assertEquals("Position 5: Hamburg", positions.get(4).getDescription());
     }
 
     @Test
@@ -514,16 +526,16 @@ public class BcrRouteTest {
     public void testNumberPositionsWithGetNumberPositions() {
         List<BcrPosition> positions = route.getPositions();
         for (int i = 0; i < 10; i++) {
-            positions.add(new BcrPosition(i, i, i, "Comment"));
+            positions.add(new BcrPosition(i, i, i, "description"));
         }
 
         for (int i = 0; i < positions.size(); i++) {
             BcrPosition position = positions.get(i);
-            position.setComment(getNumberedPosition(position, i, 0, Number_Directly_Followed_By_Description));
+            position.setDescription(getNumberedPosition(position, i, 0, Number_Directly_Followed_By_Description));
         }
 
         for (int i = 0; i < positions.size(); i++) {
-            assertEquals((i + 1) + "Comment", positions.get(i).getComment());
+            assertEquals((i + 1) + "description", positions.get(i).getDescription());
         }
 
         positions.remove(8);
@@ -532,11 +544,11 @@ public class BcrRouteTest {
         // check renumbering, add space
         for (int i = 0; i < positions.size(); i++) {
             BcrPosition position = positions.get(i);
-            position.setComment(getNumberedPosition(position, i, 0, Number_Space_Then_Description));
+            position.setDescription(getNumberedPosition(position, i, 0, Number_Space_Then_Description));
         }
 
         for (int i = 0; i < positions.size(); i++) {
-            assertEquals((i + 1) + " Comment", positions.get(i).getComment());
+            assertEquals((i + 1) + " description", positions.get(i).getDescription());
         }
 
         positions.remove(5);
@@ -545,11 +557,11 @@ public class BcrRouteTest {
         // check renumbering, check remove space again but have 2 digits and leading zeros
         for (int i = 0; i < positions.size(); i++) {
             BcrPosition position = positions.get(i);
-            position.setComment(getNumberedPosition(position, i, 2, Number_Directly_Followed_By_Description));
+            position.setDescription(getNumberedPosition(position, i, 2, Number_Directly_Followed_By_Description));
         }
 
         for (int i = 0; i < positions.size(); i++) {
-            assertEquals(formatIntAsString(i + 1, 2) + "Comment", positions.get(i).getComment());
+            assertEquals(formatIntAsString(i + 1, 2) + "description", positions.get(i).getDescription());
         }
     }
 
@@ -566,5 +578,25 @@ public class BcrRouteTest {
     public void testGetPosition() {
         initialize();
         assertEquals(b, route.getPosition(1));
+    }
+
+    @Test
+    public void testGetClosestPositionByTimeExact() {
+        initialize();
+        assertEquals(1, route.getClosestPosition(b.getTime(), 0));
+    }
+
+    @Test
+    public void testGetClosestPositionByTimeFirstWins() {
+        initialize();
+        List<BcrPosition> positions = route.getPositions();
+        positions.add(d);
+        assertEquals(1, route.getClosestPosition(calendar(2015, 10, 5, 1, 2, 15), 30*1000));
+    }
+
+    @Test
+    public void testGetClosestPositionByTimeTimeZones() {
+        initialize();
+        assertEquals(1, route.getClosestPosition(calendar(2015, 10, 5, 2, 2, 15, 0, "GMT+1:00"), 1000));
     }
 }

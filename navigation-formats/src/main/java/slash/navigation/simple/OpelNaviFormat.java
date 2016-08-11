@@ -20,14 +20,9 @@
 
 package slash.navigation.simple;
 
-import slash.common.type.CompactCalendar;
-import slash.navigation.base.NavigationPosition;
-import slash.navigation.base.ParserContext;
-import slash.navigation.base.RouteCharacteristics;
-import slash.navigation.base.SimpleLineBasedFormat;
-import slash.navigation.base.SimpleRoute;
-import slash.navigation.base.Wgs84Position;
-import slash.navigation.base.Wgs84Route;
+import slash.common.io.Transfer;
+import slash.navigation.base.*;
+import slash.navigation.common.NavigationPosition;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,11 +33,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static slash.common.io.Transfer.UTF8_ENCODING;
-import static slash.common.io.Transfer.escape;
-import static slash.common.io.Transfer.formatDoubleAsString;
-import static slash.common.io.Transfer.parseDouble;
-import static slash.common.io.Transfer.trim;
+import static slash.common.io.Transfer.*;
+import static slash.navigation.base.RouteCalculations.asWgs84Position;
 
 /**
  * Reads and writes Opel Navi 600/900 (.poi) files.
@@ -75,8 +67,8 @@ public class OpelNaviFormat extends SimpleLineBasedFormat<SimpleRoute> {
         return "Opel Navi 600/900 (*" + getExtension() + ")";
     }
 
-    public void read(InputStream source, CompactCalendar startDate, ParserContext<SimpleRoute> context) throws Exception {
-        read(source, startDate, UTF8_ENCODING, context);
+    public void read(InputStream source, ParserContext<SimpleRoute> context) throws Exception {
+        read(source, UTF8_ENCODING, context);
     }
 
     public void write(SimpleRoute route, OutputStream target, int startIndex, int endIndex) throws IOException {
@@ -93,7 +85,7 @@ public class OpelNaviFormat extends SimpleLineBasedFormat<SimpleRoute> {
         return matcher.matches();
     }
 
-    protected Wgs84Position parsePosition(String line, CompactCalendar startDate) {
+    protected Wgs84Position parsePosition(String line, ParserContext context) {
         Matcher lineMatcher = LINE_PATTERN.matcher(line);
         if (!lineMatcher.matches())
             throw new IllegalArgumentException("'" + line + "' does not match");
@@ -103,19 +95,19 @@ public class OpelNaviFormat extends SimpleLineBasedFormat<SimpleRoute> {
         String extra = trim(lineMatcher.group(4));
         String phone = trim(lineMatcher.group(5));
 
-        String comment = name;
+        String description = name;
         if (extra != null)
-            comment += ";" + extra;
+            description += ";" + extra;
         if (phone != null)
-            comment += ";" + phone;
+            description += ";" + phone;
 
-        Wgs84Position position = new Wgs84Position(longitude, latitude, null, null, null, comment);
-        position.setStartDate(startDate);
+        Wgs84Position position = asWgs84Position(longitude, latitude, description);
+        position.setStartDate(context.getStartDate());
         return position;
     }
 
-    private String formatComment(String string, int maximumLength) {
-        string = escape(string, '"', '\'');
+    private String escape(String string, int maximumLength) {
+        string = Transfer.escape(string, '"', '\'');
         return string != null ? string.substring(0, Math.min(string.length(), maximumLength)) : null;
     }
 
@@ -123,13 +115,13 @@ public class OpelNaviFormat extends SimpleLineBasedFormat<SimpleRoute> {
         String longitude = formatDoubleAsString(position.getLongitude(), 6);
         String latitude = formatDoubleAsString(position.getLatitude(), 6);
 
-        String[] strings = position.getComment().split(";");
-        String comment = strings.length > 0 ? formatComment(strings[0], 60) : "";
-        String extra = strings.length > 1 ? formatComment(strings[1], 60) : "";
-        String phone = strings.length > 2 ? formatComment(strings[2], 30) : "";
+        String[] strings = position.getDescription().split(";");
+        String description = strings.length > 0 ? escape(strings[0], 60) : "";
+        String extra = strings.length > 1 ? escape(strings[1], 60) : "";
+        String phone = strings.length > 2 ? escape(strings[2], 30) : "";
 
         writer.println(longitude + SEPARATOR + " " + latitude + SEPARATOR + " " +
-                QUOTE + comment + QUOTE + SEPARATOR + " " +
+                QUOTE + description + QUOTE + SEPARATOR + " " +
                 QUOTE + extra + QUOTE + SEPARATOR + " " +
                 QUOTE + phone + QUOTE);
     }

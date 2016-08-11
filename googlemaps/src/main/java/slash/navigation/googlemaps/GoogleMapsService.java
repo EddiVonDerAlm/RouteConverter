@@ -20,7 +20,12 @@
 
 package slash.navigation.googlemaps;
 
-import slash.navigation.common.BasicPosition;
+import slash.navigation.common.BoundingBox;
+import slash.navigation.common.LongitudeAndLatitude;
+import slash.navigation.common.NavigationPosition;
+import slash.navigation.common.SimpleNavigationPosition;
+import slash.navigation.elevation.ElevationService;
+import slash.navigation.geocoding.GeocodingService;
 import slash.navigation.googlemaps.elevation.ElevationResponse;
 import slash.navigation.googlemaps.geocode.GeocodeResponse;
 import slash.navigation.rest.Get;
@@ -29,66 +34,81 @@ import slash.navigation.rest.exception.ServiceUnavailableException;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.prefs.Preferences;
+import java.util.logging.Logger;
 
-import static slash.common.util.Bearing.calculateBearing;
-import static slash.navigation.googlemaps.GoogleMapsUtil.unmarshalGeocode;
+import static java.util.Arrays.sort;
 import static slash.common.io.Transfer.encodeUri;
+import static slash.navigation.common.Bearing.calculateBearing;
+import static slash.navigation.googlemaps.GoogleMapsAPIKey.getAPIKey;
+import static slash.navigation.googlemaps.GoogleMapsServer.getGoogleMapsServer;
+import static slash.navigation.googlemaps.GoogleMapsUtil.unmarshalElevation;
+import static slash.navigation.googlemaps.GoogleMapsUtil.unmarshalGeocode;
+import static slash.navigation.rest.HttpRequest.USER_AGENT;
 
 /**
- * Encapsulates REST access to the Google Maps API Geocoding Service.
+ * Encapsulates REST access to the Google Maps API Elevation and Geocoding Services.
  *
  * @author Christian Pesch
  */
 
-public class GoogleMapsService {
-    private static final Preferences preferences = Preferences.userNodeForPackage(GoogleMapsService.class);
-    private static final String GOOGLE_MAPS_API_URL_PREFERENCE = "googleMapsApiUrl";
-    private static final String OK = "OK";
-    private static final String OVER_QUERY_LIMIT = "OVER_QUERY_LIMIT";
+public class GoogleMapsService implements ElevationService, GeocodingService {
+    private static final Logger log = Logger.getLogger(GoogleMapsService.class.getName());
+    private int overQueryLimitCount = 0;
 
-    private static String getGoogleMapsApiUrl(String api, String payload) {
-        String language = Locale.getDefault().getLanguage();
-        return preferences.get(GOOGLE_MAPS_API_URL_PREFERENCE, "http://maps.googleapis.com/") +
-                "maps/api/" + api + "/xml?" + payload + "&sensor=false&language=" + language;
+    public String getName() {
+        return "Google Maps";
     }
 
-    private static String getElevationUrl(String payload) {
+    public boolean isOverQueryLimit() {
+        return overQueryLimitCount > 0;
+    }
+
+    private String getGoogleMapsApiUrl(String api, String payload) {
+        String language = Locale.getDefault().getLanguage();
+        return getGoogleMapsServer().getApiUrl() + "/maps/api/" + api + "/xml?" + payload +
+                "&sensor=false&language=" + language + "&key=" + getAPIKey(api);
+    }
+
+    private String getElevationUrl(String payload) {
         return getGoogleMapsApiUrl("elevation", payload);
     }
 
-    private static String getGeocodingUrl(String payload) {
+    private String getGeocodingUrl(String payload) {
         return getGoogleMapsApiUrl("geocode", payload);
     }
 
     private Get get(String url) {
         Get get = new Get(url);
-        get.setUserAgent("Mozilla/5.0 (Windows; U; MSIE 7.0; Windows NT 5.1)");
+        get.setUserAgent(USER_AGENT);
         return get;
     }
 
-    public String getLocationFor(double longitude, double latitude) throws IOException {
-        String url = getGeocodingUrl("latlng=" + latitude + "," + longitude);
+    private void checkForError(String url, String status) throws ServiceUnavailableException {
+        if (!status.equals("OK")) {
+            overQueryLimitCount++;
+            log.warning("Google API is over query limit, count: " + overQueryLimitCount + ", url: " + url);
+            throw new ServiceUnavailableException(getClass().getSimpleName(), url, status);
+        }
+    }
+
+    public String getAddressFor(NavigationPosition position) throws IOException {
+        String url = getGeocodingUrl("latlng=" + position.getLatitude() + "," + position.getLongitude());
         Get get = get(url);
-        String result = get.execute();
+        log.info("Getting location for " + position.getLongitude() + "," + position.getLatitude());
+        String result = get.executeAsString();
         if (get.isSuccessful())
             try {
                 GeocodeResponse geocodeResponse = unmarshalGeocode(result);
                 if (geocodeResponse != null) {
                     String status = geocodeResponse.getStatus();
-                    if (status.equals(OK))
-                        return extractClosestLocation(geocodeResponse.getResult(), longitude, latitude);
-                    if (status.equals(OVER_QUERY_LIMIT))
-                        throw new ServiceUnavailableException("maps.googleapis.com", url);
+                    checkForError(url, status);
+                    return extractClosestLocation(geocodeResponse.getResult(), position.getLongitude(), position.getLatitude());
                 }
             } catch (JAXBException e) {
-                IOException io = new IOException("Cannot unmarshall " + result + ": " + e.getMessage());
-                io.setStackTrace(e.getStackTrace());
-                throw io;
+                throw new IOException("Cannot unmarshall " + result + ": " + e, e);
             }
         return null;
     }
@@ -96,7 +116,7 @@ public class GoogleMapsService {
     private String extractClosestLocation(List<GeocodeResponse.Result> results,
                                           final double longitude, final double latitude) {
         GeocodeResponse.Result[] resultsArray = results.toArray(new GeocodeResponse.Result[results.size()]);
-        Arrays.sort(resultsArray, new Comparator<GeocodeResponse.Result>() {
+        sort(resultsArray, new Comparator<GeocodeResponse.Result>() {
             public int compare(GeocodeResponse.Result p1, GeocodeResponse.Result p2) {
                 GeocodeResponse.Result.Geometry.Location l1 = p1.getGeometry().getLocation();
                 GeocodeResponse.Result.Geometry.Location l2 = p2.getGeometry().getLocation();
@@ -108,72 +128,88 @@ public class GoogleMapsService {
         return resultsArray[0].getFormattedAddress();
     }
 
-    public BasicPosition getPositionFor(String address) throws IOException {
-        List<BasicPosition> positions = getPositionsFor(address);
-        return positions != null && positions.size() > 0 ? positions.get(0) : null;
-    }
-
-    public List<BasicPosition> getPositionsFor(String address) throws IOException {
+    public List<NavigationPosition> getPositionsFor(String address) throws IOException {
         String url = getGeocodingUrl("address=" + encodeUri(address));
         Get get = get(url);
-        String result = get.execute();
+        log.info("Getting positions for " + address);
+        String result = get.executeAsString();
         if (get.isSuccessful())
             try {
                 GeocodeResponse geocodeResponse = unmarshalGeocode(result);
                 if (geocodeResponse != null) {
                     String status = geocodeResponse.getStatus();
-                    if (status.equals(OK))
-                        return extractAdresses(geocodeResponse.getResult());
-                    if (status.equals(OVER_QUERY_LIMIT))
-                        throw new ServiceUnavailableException("maps.googleapis.com", url);
+                    checkForError(url, status);
+                    return extractAdresses(geocodeResponse.getResult());
                 }
             } catch (JAXBException e) {
-                IOException io = new IOException("Cannot unmarshall " + result + ": " + e.getMessage());
-                io.setStackTrace(e.getStackTrace());
-                throw io;
+                throw new IOException("Cannot unmarshall " + result + ": " + e, e);
             }
         return null;
     }
 
-    private List<BasicPosition> extractAdresses(List<GeocodeResponse.Result> responses) {
-        List<BasicPosition> result = new ArrayList<BasicPosition>(responses.size());
+    private List<NavigationPosition> extractAdresses(List<GeocodeResponse.Result> responses) {
+        List<NavigationPosition> result = new ArrayList<>(responses.size());
         for (GeocodeResponse.Result response : responses) {
             GeocodeResponse.Result.Geometry.Location location = response.getGeometry().getLocation();
-            result.add(new BasicPosition(location.getLng().doubleValue(), location.getLat().doubleValue(),
-                    0.0d, response.getFormattedAddress()));
+            result.add(new SimpleNavigationPosition(location.getLng().doubleValue(), location.getLat().doubleValue(),
+                    null, response.getFormattedAddress()));
         }
         return result;
     }
 
     public Double getElevationFor(double longitude, double latitude) throws IOException {
-        String url = getElevationUrl("locations=" + latitude + "," + longitude); // TODO could be up to 512 locations
+        String url = getElevationUrl("locations=" + latitude + "," + longitude); // could be up to 512 locations
         Get get = get(url);
-        String result = get.execute();
+        log.info("Getting elevation for " + longitude + "," + latitude);
+        String result = get.executeAsString();
         if (get.isSuccessful())
             try {
-                ElevationResponse elevationResponse = GoogleMapsUtil.unmarshalElevation(result);
+                ElevationResponse elevationResponse = unmarshalElevation(result);
                 if (elevationResponse != null) {
                     String status = elevationResponse.getStatus();
-                    if (status.equals(OK)) {
-                        List<Double> elevations = extractElevations(elevationResponse.getResult());
-                        return elevations != null && elevations.size() > 0 ? elevations.get(0) : null;
-                    }
-                    if (status.equals(OVER_QUERY_LIMIT))
-                        throw new ServiceUnavailableException("maps.googleapis.com", url);
+                    checkForError(url, status);
+                    List<Double> elevations = extractElevations(elevationResponse.getResult());
+                    return elevations != null && elevations.size() > 0 ? elevations.get(0) : null;
                 }
             } catch (JAXBException e) {
-                IOException io = new IOException("Cannot unmarshall " + result + ": " + e.getMessage());
-                io.setStackTrace(e.getStackTrace());
-                throw io;
+                throw new IOException("Cannot unmarshall " + result + ": " + e, e);
             }
         return null;
     }
 
     private List<Double> extractElevations(List<ElevationResponse.Result> responses) {
-        List<Double> results = new ArrayList<Double>(responses.size());
+        List<Double> results = new ArrayList<>(responses.size());
         for (ElevationResponse.Result response : responses) {
             results.add(response.getElevation().doubleValue());
         }
         return results;
+    }
+
+    public boolean isDownload() {
+        return false;
+    }
+
+    public boolean isSupportsPath() {
+        return false;
+    }
+
+    public String getPath() {
+        throw new UnsupportedOperationException();
+    }
+
+    public void setPath(String path) {
+        throw new UnsupportedOperationException();
+    }
+
+    public void downloadElevationDataFor(List<LongitudeAndLatitude> longitudeAndLatitudes, boolean waitForDownload) {
+        throw new UnsupportedOperationException();
+    }
+
+    public long calculateRemainingDownloadSize(List<BoundingBox> boundingBoxes) {
+        throw new UnsupportedOperationException();
+    }
+
+    public void downloadElevationData(List<BoundingBox> boundingBoxes) {
+        throw new UnsupportedOperationException();
     }
 }

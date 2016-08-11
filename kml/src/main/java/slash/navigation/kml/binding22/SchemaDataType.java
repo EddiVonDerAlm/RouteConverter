@@ -11,7 +11,13 @@ package slash.navigation.kml.binding22;
 import slash.navigation.kml.binding22gx.SimpleArrayDataType;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,7 +84,7 @@ public class SchemaDataType
      */
     public List<SimpleDataType> getSimpleData() {
         if (simpleData == null) {
-            simpleData = new ArrayList<SimpleDataType>();
+            simpleData = new ArrayList<>();
         }
         return this.simpleData;
     }
@@ -108,7 +114,7 @@ public class SchemaDataType
      */
     public List<JAXBElement<?>> getSchemaDataExtension() {
         if (schemaDataExtension == null) {
-            schemaDataExtension = new ArrayList<JAXBElement<?>>();
+            schemaDataExtension = new ArrayList<>();
         }
         return this.schemaDataExtension;
     }

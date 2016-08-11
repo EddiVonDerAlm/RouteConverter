@@ -8,7 +8,18 @@
 
 package slash.navigation.kml.binding20;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAnyAttribute;
+import javax.xml.bind.annotation.XmlAnyElement;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlElementRefs;
+import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlMixed;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import javax.xml.namespace.QName;
@@ -221,7 +232,7 @@ public class Thoroughfare {
     @XmlAttribute(name = "Type")
     protected String type;
     @XmlAnyAttribute
-    private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+    private Map<QName, String> otherAttributes = new HashMap<>();
 
     /**
      * Gets the value of the addressLine property.
@@ -247,7 +258,7 @@ public class Thoroughfare {
      */
     public List<AddressLine> getAddressLine() {
         if (addressLine == null) {
-            addressLine = new ArrayList<AddressLine>();
+            addressLine = new ArrayList<>();
         }
         return this.addressLine;
     }
@@ -277,7 +288,7 @@ public class Thoroughfare {
      */
     public List<Object> getThoroughfareNumberOrThoroughfareNumberRange() {
         if (thoroughfareNumberOrThoroughfareNumberRange == null) {
-            thoroughfareNumberOrThoroughfareNumberRange = new ArrayList<Object>();
+            thoroughfareNumberOrThoroughfareNumberRange = new ArrayList<>();
         }
         return this.thoroughfareNumberOrThoroughfareNumberRange;
     }
@@ -306,7 +317,7 @@ public class Thoroughfare {
      */
     public List<ThoroughfareNumberPrefix> getThoroughfareNumberPrefix() {
         if (thoroughfareNumberPrefix == null) {
-            thoroughfareNumberPrefix = new ArrayList<ThoroughfareNumberPrefix>();
+            thoroughfareNumberPrefix = new ArrayList<>();
         }
         return this.thoroughfareNumberPrefix;
     }
@@ -335,7 +346,7 @@ public class Thoroughfare {
      */
     public List<ThoroughfareNumberSuffix> getThoroughfareNumberSuffix() {
         if (thoroughfareNumberSuffix == null) {
-            thoroughfareNumberSuffix = new ArrayList<ThoroughfareNumberSuffix>();
+            thoroughfareNumberSuffix = new ArrayList<>();
         }
         return this.thoroughfareNumberSuffix;
     }
@@ -412,7 +423,7 @@ public class Thoroughfare {
      */
     public List<ThoroughfareNameType> getThoroughfareName() {
         if (thoroughfareName == null) {
-            thoroughfareName = new ArrayList<ThoroughfareNameType>();
+            thoroughfareName = new ArrayList<>();
         }
         return this.thoroughfareName;
     }
@@ -609,7 +620,7 @@ public class Thoroughfare {
      */
     public List<Object> getAny() {
         if (any == null) {
-            any = new ArrayList<Object>();
+            any = new ArrayList<>();
         }
         return this.any;
     }
@@ -808,7 +819,7 @@ public class Thoroughfare {
         @XmlAttribute(name = "Type")
         protected String type;
         @XmlAnyAttribute
-        private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+        private Map<QName, String> otherAttributes = new HashMap<>();
 
         /**
          * Gets the value of the addressLine property.
@@ -834,7 +845,7 @@ public class Thoroughfare {
          */
         public List<AddressLine> getAddressLine() {
             if (addressLine == null) {
-                addressLine = new ArrayList<AddressLine>();
+                addressLine = new ArrayList<>();
             }
             return this.addressLine;
         }
@@ -911,7 +922,7 @@ public class Thoroughfare {
          */
         public List<ThoroughfareNameType> getThoroughfareName() {
             if (thoroughfareName == null) {
-                thoroughfareName = new ArrayList<ThoroughfareNameType>();
+                thoroughfareName = new ArrayList<>();
             }
             return this.thoroughfareName;
         }
@@ -988,7 +999,7 @@ public class Thoroughfare {
          */
         public List<Object> getAny() {
             if (any == null) {
-                any = new ArrayList<Object>();
+                any = new ArrayList<>();
             }
             return this.any;
         }
@@ -1149,7 +1160,7 @@ public class Thoroughfare {
         @XmlAttribute(name = "Code")
         protected String code;
         @XmlAnyAttribute
-        private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+        private Map<QName, String> otherAttributes = new HashMap<>();
 
         /**
          * Gets the value of the addressLine property.
@@ -1175,7 +1186,7 @@ public class Thoroughfare {
          */
         public List<AddressLine> getAddressLine() {
             if (addressLine == null) {
-                addressLine = new ArrayList<AddressLine>();
+                addressLine = new ArrayList<>();
             }
             return this.addressLine;
         }
@@ -1455,7 +1466,7 @@ public class Thoroughfare {
             @XmlAttribute(name = "Code")
             protected String code;
             @XmlAnyAttribute
-            private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+            private Map<QName, String> otherAttributes = new HashMap<>();
 
             /**
              * Gets the value of the content property.
@@ -1485,7 +1496,7 @@ public class Thoroughfare {
              */
             public List<Object> getContent() {
                 if (content == null) {
-                    content = new ArrayList<Object>();
+                    content = new ArrayList<>();
                 }
                 return this.content;
             }
@@ -1575,7 +1586,7 @@ public class Thoroughfare {
             @XmlAttribute(name = "Code")
             protected String code;
             @XmlAnyAttribute
-            private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+            private Map<QName, String> otherAttributes = new HashMap<>();
 
             /**
              * Gets the value of the content property.
@@ -1605,7 +1616,7 @@ public class Thoroughfare {
              */
             public List<Object> getContent() {
                 if (content == null) {
-                    content = new ArrayList<Object>();
+                    content = new ArrayList<>();
                 }
                 return this.content;
             }

@@ -20,7 +20,6 @@
 
 package slash.navigation.nmn;
 
-import slash.common.type.CompactCalendar;
 import slash.navigation.base.ParserContext;
 import slash.navigation.base.Wgs84Position;
 import slash.navigation.nmn.binding7.ObjectFactory;
@@ -35,9 +34,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
 
-import static slash.navigation.common.NavigationConversion.formatBigDecimal;
 import static slash.common.io.Transfer.formatDouble;
 import static slash.navigation.base.RouteCharacteristics.Route;
+import static slash.navigation.common.NavigationConversion.formatBigDecimal;
 import static slash.navigation.nmn.Nmn7Util.unmarshal;
 
 /**
@@ -65,19 +64,19 @@ public class Nmn7Format extends NmnFormat {
         throw new UnsupportedOperationException();
     }
 
-    protected Wgs84Position parsePosition(String line, CompactCalendar startDate) {
+    protected Wgs84Position parsePosition(String line, ParserContext context) {
         throw new UnsupportedOperationException();
     }
 
     private NmnRoute process(Route route) {
-        List<NmnPosition> positions = new ArrayList<NmnPosition>();
+        List<NmnPosition> positions = new ArrayList<>();
         for (Route.Point point : route.getPoint()) {
             positions.add(new NmnPosition(formatDouble(point.getX()), formatDouble(point.getY()), (Double) null, null, null, point.getName()));
         }
         return new NmnRoute(this, Route, route.getName(), positions);
     }
 
-    public void read(InputStream source, CompactCalendar startDate, ParserContext<NmnRoute> context) throws Exception {
+    public void read(InputStream source, ParserContext<NmnRoute> context) throws Exception {
         Route route = unmarshal(source);
         context.appendRoute(process(route));
     }
@@ -96,7 +95,7 @@ public class Nmn7Format extends NmnFormat {
             Route.Point point = objectFactory.createRoutePoint();
             point.setX(formatBigDecimal(position.getLongitude(), 7));
             point.setY(formatBigDecimal(position.getLatitude(), 7));
-            point.setName(position.getComment());
+            point.setName(position.getDescription());
             result.getPoint().add(point);
         }
         return result;

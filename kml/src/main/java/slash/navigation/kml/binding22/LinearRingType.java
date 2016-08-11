@@ -9,7 +9,13 @@
 package slash.navigation.kml.binding22;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlList;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -138,7 +144,7 @@ public class LinearRingType
      *     
      */
     public void setAltitudeModeGroup(JAXBElement<?> value) {
-        this.altitudeModeGroup = ((JAXBElement<?> ) value);
+        this.altitudeModeGroup = value;
     }
 
     /**
@@ -165,7 +171,7 @@ public class LinearRingType
      */
     public List<String> getCoordinates() {
         if (coordinates == null) {
-            coordinates = new ArrayList<String>();
+            coordinates = new ArrayList<>();
         }
         return this.coordinates;
     }
@@ -194,7 +200,7 @@ public class LinearRingType
      */
     public List<Object> getLinearRingSimpleExtensionGroup() {
         if (linearRingSimpleExtensionGroup == null) {
-            linearRingSimpleExtensionGroup = new ArrayList<Object>();
+            linearRingSimpleExtensionGroup = new ArrayList<>();
         }
         return this.linearRingSimpleExtensionGroup;
     }
@@ -223,7 +229,7 @@ public class LinearRingType
      */
     public List<AbstractObjectType> getLinearRingObjectExtensionGroup() {
         if (linearRingObjectExtensionGroup == null) {
-            linearRingObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            linearRingObjectExtensionGroup = new ArrayList<>();
         }
         return this.linearRingObjectExtensionGroup;
     }

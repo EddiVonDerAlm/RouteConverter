@@ -8,7 +8,11 @@
 
 package slash.navigation.kml.binding22;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
@@ -95,7 +99,7 @@ public class BalloonStyleType
      *     
      */
     public void setColor(byte[] value) {
-        this.color = ((byte[]) value);
+        this.color = value;
     }
 
     /**
@@ -119,7 +123,7 @@ public class BalloonStyleType
      *     
      */
     public void setBgColor(byte[] value) {
-        this.bgColor = ((byte[]) value);
+        this.bgColor = value;
     }
 
     /**
@@ -143,7 +147,7 @@ public class BalloonStyleType
      *     
      */
     public void setTextColor(byte[] value) {
-        this.textColor = ((byte[]) value);
+        this.textColor = value;
     }
 
     /**
@@ -218,7 +222,7 @@ public class BalloonStyleType
      */
     public List<Object> getBalloonStyleSimpleExtensionGroup() {
         if (balloonStyleSimpleExtensionGroup == null) {
-            balloonStyleSimpleExtensionGroup = new ArrayList<Object>();
+            balloonStyleSimpleExtensionGroup = new ArrayList<>();
         }
         return this.balloonStyleSimpleExtensionGroup;
     }
@@ -247,7 +251,7 @@ public class BalloonStyleType
      */
     public List<AbstractObjectType> getBalloonStyleObjectExtensionGroup() {
         if (balloonStyleObjectExtensionGroup == null) {
-            balloonStyleObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            balloonStyleObjectExtensionGroup = new ArrayList<>();
         }
         return this.balloonStyleObjectExtensionGroup;
     }

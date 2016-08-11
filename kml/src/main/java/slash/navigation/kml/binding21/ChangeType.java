@@ -9,7 +9,11 @@
 package slash.navigation.kml.binding21;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlElementRefs;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -111,7 +115,7 @@ public class ChangeType {
      */
     public List<JAXBElement<? extends ObjectType>> getObjectOrFeatureOrGeometry() {
         if (objectOrFeatureOrGeometry == null) {
-            objectOrFeatureOrGeometry = new ArrayList<JAXBElement<? extends ObjectType>>();
+            objectOrFeatureOrGeometry = new ArrayList<>();
         }
         return this.objectOrFeatureOrGeometry;
     }

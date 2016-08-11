@@ -1,27 +1,12 @@
 package slash.navigation.hgt;
 
 import org.junit.Test;
+import slash.navigation.download.DownloadManager;
 
 import static org.junit.Assert.assertEquals;
 
 public class HgtFilesTest {
-    private HgtFiles files = new HgtFiles();
-
-    @Test
-    public void createTileKey() {
-        assertEquals(new Integer(0), files.createTileKey(-180.0, -90.0));
-        assertEquals(new Integer(180), files.createTileKey(0.0, -90.0));
-        assertEquals(new Integer(360), files.createTileKey(180.0, -90.0));
-        assertEquals(new Integer(9000000), files.createTileKey(-180.0, 0.0));
-        assertEquals(new Integer(9000180), files.createTileKey(0.0, 0.0));
-        assertEquals(new Integer(9000360), files.createTileKey(180.0, 0.0));
-        assertEquals(new Integer(18000000), files.createTileKey(-180.0, 90.0));
-        assertEquals(new Integer(18000180), files.createTileKey(0.0, 90.0));
-        assertEquals(new Integer(18000360), files.createTileKey(180.0, 90.0));
-
-        assertEquals(new Integer(13200180), files.createTileKey(0.15052, 42.42091));
-        assertEquals(new Integer(13200179), files.createTileKey(-0.55289, 42.55803));
-    }
+    private HgtFiles files = new HgtFiles(null, new DownloadManager(null));
 
     @Test
     public void createFileKey() {

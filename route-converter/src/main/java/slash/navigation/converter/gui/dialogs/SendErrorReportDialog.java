@@ -27,23 +27,23 @@ import slash.common.io.Files;
 import slash.common.log.LoggingHelper;
 import slash.navigation.converter.gui.RouteConverter;
 import slash.navigation.gui.SimpleDialog;
-import slash.navigation.gui.actions.FrameAction;
-import slash.navigation.gui.helpers.UIHelper;
+import slash.navigation.gui.actions.DialogAction;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.ResourceBundle;
 
 import static java.awt.event.KeyEvent.VK_ESCAPE;
+import static javax.swing.JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT;
 import static javax.swing.JFileChooser.APPROVE_OPTION;
 import static javax.swing.JFileChooser.FILES_ONLY;
 import static javax.swing.KeyStroke.getKeyStroke;
+import static slash.navigation.gui.helpers.UIHelper.createJFileChooser;
 
 /**
  * Dialog for sending error reports
@@ -61,7 +61,7 @@ public class SendErrorReportDialog extends SimpleDialog {
     private JButton buttonCancel;
 
     public SendErrorReportDialog() {
-        super(RouteConverter.getInstance().getFrame(), "senderrorreport");
+        super(RouteConverter.getInstance().getFrame(), "send-error-report");
         setTitle(RouteConverter.getBundle().getString("send-error-report-title"));
         setContentPane(contentPane);
         setModal(true);
@@ -69,20 +69,20 @@ public class SendErrorReportDialog extends SimpleDialog {
 
         textAreaLog.setText(LoggingHelper.getInstance().getLogFileAsString());
 
-        buttonChooseFilePath.addActionListener(new FrameAction() {
+        buttonChooseFilePath.addActionListener(new DialogAction(this) {
             public void run() {
                 chooseFilePath();
             }
         });
 
-        buttonSend.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+        buttonSend.addActionListener(new DialogAction(this) {
+            public void run() {
                 send();
             }
         });
 
-        buttonCancel.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+        buttonCancel.addActionListener(new DialogAction(this) {
+            public void run() {
                 cancel();
             }
         });
@@ -98,11 +98,11 @@ public class SendErrorReportDialog extends SimpleDialog {
             public void actionPerformed(ActionEvent e) {
                 cancel();
             }
-        }, getKeyStroke(VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        }, getKeyStroke(VK_ESCAPE, 0), WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
     }
 
     private void chooseFilePath() {
-        JFileChooser chooser = UIHelper.createJFileChooser();
+        JFileChooser chooser = createJFileChooser();
         chooser.setDialogTitle(RouteConverter.getBundle().getString("choose-file-path"));
         chooser.setFileSelectionMode(FILES_ONLY);
         chooser.setMultiSelectionEnabled(false);
@@ -173,7 +173,7 @@ public class SendErrorReportDialog extends SimpleDialog {
         this.$$$loadLabelText$$$(label3, ResourceBundle.getBundle("slash/navigation/converter/gui/RouteConverter").getString("send-error-report-file"));
         panel3.add(label3, new GridConstraints(6, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         buttonChooseFilePath = new JButton();
-        buttonChooseFilePath.setIcon(new ImageIcon(getClass().getResource("/slash/navigation/converter/gui/select.png")));
+        buttonChooseFilePath.setIcon(new ImageIcon(getClass().getResource("/slash/navigation/converter/gui/16/open-action.png")));
         buttonChooseFilePath.setText("");
         panel3.add(buttonChooseFilePath, new GridConstraints(7, 1, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         textFieldFilePath = new JTextField();

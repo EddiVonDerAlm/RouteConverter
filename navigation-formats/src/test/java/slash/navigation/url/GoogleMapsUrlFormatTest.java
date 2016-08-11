@@ -29,12 +29,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static slash.common.TestCase.assertDoubleEquals;
-import static slash.navigation.url.GoogleMapsUrlFormat.isGoogleMapsUrl;
+import static slash.navigation.url.GoogleMapsUrlFormat.isGoogleMapsLinkUrl;
+import static slash.navigation.url.GoogleMapsUrlFormat.isGoogleMapsProfileUrl;
 
 public class GoogleMapsUrlFormatTest {
     private static final String INPUT1_EMAIL = "Betreff: Route nach/zu Riehler Strasse 190 50735 Koeln (Google Maps)\n" +
@@ -62,13 +60,17 @@ public class GoogleMapsUrlFormatTest {
 
     private static final String INPUT8_WWW_NO_COORDINATES ="http://www.google.de/maps?f=d&source=s_d&saddr=hannover&daddr=hamburg&hl=de&geocode=&mra=ls&sll=51.151786,10.415039&sspn=20.697059,39.331055&ie=UTF8&z=9";
 
+    private static final String INPUT9_NEW_GOOGLE_MAPS_2014 = "https://www.google.de/maps/dir/Aachen-Rothe+Erde/Mainz-Kastel,+Wiesbaden/Hanns-Martin-Schleyer-Stra%C3%9Fe,+Sindelfingen/@49.8065843,6.491479,8z/data=!3m1!4b1!4m20!4m19!1m5!1m1!1s0x47c09955de781093:0x8b975ed430fb3e53!2m2!1d6.116475!2d50.770202!1m5!1m1!1s0x47bd97a86ffd2e91:0xa4efa4fe12ce70c8!2m2!1d8.282168!2d50.0101878!1m5!1m1!1s0x4799dfcc3a4161f3:0xcd2a1bc2ee961675!2m2!1d9.0001511!2d48.7039074!3e0";
+
+    private static final String INPUT10_NEW_GOOGLE_MAPS_2015 = "https://www.google.at/maps/dir/Sterzing,+Bozen,+Italien/Jaufenpass,+Sankt+Leonhard+in+Passeier,+Bozen,+Italien/Ofenpass,+7532+Cierfs,+Schweiz/Albulapassstrasse,+7482+Berg%C3%BCn%2FBravuogn,+Schweiz/Spl%C3%BCgenpass,+Spl%C3%BCgen,+Schweiz/Via+Roma,+53,+22023+Castiglione+CO,+Italien/@46.4115893,9.1625277,8z/data=!3m1!4b1!4m42!4m41!1m5!1m1!1s0x479d5340912b4fed:0xeccf91de29d6fcf9!2m2!1d11.4336186!2d46.8926725!1m5!1m1!1s0x4782b27a89809711:0xbfb1348a6269dc1!2m2!1d11.3214111!2d46.8395577!1m5!1m1!1s0x47831519f57d6e8b:0xa4a9db7fa9393319!2m2!1d10.2870515!2d46.6418315!1m5!1m1!1s0x47849d1f1792adb3:0x1b8f8898b9521cba!2m2!1d9.8000555!2d46.5815557!1m5!1m1!1s0x4784f6a1054aa397:0x1ffb7aed566559ff!2m2!1d9.33028!2d46.5056!1m5!1m1!1s0x478425a384f4a881:0xcec114200a27651!2m2!1d9.089271!2d45.95557!2m3!1b1!2b1!3b1!3e0";
+
     private GoogleMapsUrlFormat format = new GoogleMapsUrlFormat();
 
     @Test
     public void testFindURL() {
         String url = format.findURL(INPUT1_EMAIL);
         assertNotNull(url);
-        assertTrue(url.startsWith("f=d"));
+        assertTrue(url.startsWith("?f=d"));
         assertNull(format.findURL("don't care"));
     }
 
@@ -91,7 +93,7 @@ public class GoogleMapsUrlFormatTest {
         Wgs84Position position = format.parseCommentPosition("L339/Wuppertaler Strasse @50.918890,7.560880 ");
         assertDoubleEquals(7.560880, position.getLongitude());
         assertDoubleEquals(50.918890, position.getLatitude());
-        assertEquals("L339/Wuppertaler Strasse", position.getComment());
+        assertEquals("L339/Wuppertaler Strasse", position.getDescription());
     }
 
     @Test
@@ -101,21 +103,26 @@ public class GoogleMapsUrlFormatTest {
         Wgs84Position position1 = positions.get(0);
         assertDoubleEquals(7.560880, position1.getLongitude());
         assertDoubleEquals(50.918890, position1.getLatitude());
-        assertEquals("L339/Wuppertaler Strasse", position1.getComment());
+        assertEquals("L339/Wuppertaler Strasse", position1.getDescription());
         Wgs84Position position2 = positions.get(1);
         assertDoubleEquals(-2.2, position2.getLongitude());
         assertDoubleEquals(-1.1, position2.getLatitude());
-        assertEquals("B", position2.getComment());
+        assertEquals("B", position2.getDescription());
         Wgs84Position position3 = positions.get(2);
         assertDoubleEquals(4.4, position3.getLongitude());
         assertDoubleEquals(3.3, position3.getLatitude());
-        assertEquals("C", position3.getComment());
+        assertEquals("C", position3.getDescription());
     }
 
     private List<Wgs84Position> parsePositions(String text) {
         String url = format.findURL(text);
-        Map<String, List<String>> parameters = format.parseURLParameters(url, "UTF-8");
-        return format.parsePositions(parameters);
+        if (url.startsWith("/dir/")) {
+            return format.parsePositions(url.substring(5));
+        } else {
+            Map<String, List<String>> parameters = format.parseURLParameters(url, "UTF-8");
+            return format.parsePositions(parameters);
+
+        }
     }
 
     @Test
@@ -126,15 +133,15 @@ public class GoogleMapsUrlFormatTest {
         Wgs84Position position1 = positions.get(0);
         assertNull(position1.getLongitude());
         assertNull(position1.getLatitude());
-        assertEquals("H\u00f6lderlinstra\u00dfe, 51545 Br\u00f6l, Oberbergischer Kreis, Nordrhein-Westfalen, Deutschland", position1.getComment());
+        assertEquals("H\u00f6lderlinstra\u00dfe, 51545 Br\u00f6l, Oberbergischer Kreis, Nordrhein-Westfalen, Deutschland", position1.getDescription());
         Wgs84Position position3 = positions.get(2);
         assertDoubleEquals(7.46395, position3.getLongitude());
         assertDoubleEquals(50.88518, position3.getLatitude());
-        assertEquals("L350", position3.getComment());
+        assertEquals("L350", position3.getDescription());
         Wgs84Position position6 = positions.get(5);
         assertNull(position6.getLongitude());
         assertNull(position6.getLatitude());
-        assertEquals("K\u00f6ln, Riehler Str. 190", position6.getComment());
+        assertEquals("K\u00f6ln, Riehler Str. 190", position6.getDescription());
     }
 
     @Test
@@ -145,15 +152,15 @@ public class GoogleMapsUrlFormatTest {
         Wgs84Position position1 = positions.get(0);
         assertNull(position1.getLongitude());
         assertNull(position1.getLatitude());
-        assertEquals("51545 Waldbroel, Hoelderlinstr.", position1.getComment());
+        assertEquals("51545 Waldbroel, Hoelderlinstr.", position1.getDescription());
         Wgs84Position position2 = positions.get(1);
         assertNull(position2.getLongitude());
         assertNull(position2.getLatitude());
-        assertEquals("50389 Wesseling, Urfelder Strasse 221", position2.getComment());
+        assertEquals("50389 Wesseling, Urfelder Strasse 221", position2.getDescription());
         Wgs84Position position3 = positions.get(2);
         assertDoubleEquals(6.962585, position3.getLongitude());
         assertDoubleEquals(50.876178, position3.getLatitude());
-        assertNull(position3.getComment());
+        assertNull(position3.getDescription());
     }
 
     @Test
@@ -164,11 +171,11 @@ public class GoogleMapsUrlFormatTest {
         Wgs84Position position1 = positions.get(0);
         assertNull(position1.getLongitude());
         assertNull(position1.getLatitude());
-        assertEquals("L\u00fcbeck, Germany", position1.getComment());
+        assertEquals("L\u00fcbeck, Germany", position1.getDescription());
         Wgs84Position position2 = positions.get(1);
         assertNull(position2.getLongitude());
         assertNull(position2.getLatitude());
-        assertEquals("Hamburg, Germany", position2.getComment());
+        assertEquals("Hamburg, Germany", position2.getDescription());
     }
 
     @Test
@@ -179,15 +186,15 @@ public class GoogleMapsUrlFormatTest {
         Wgs84Position position1 = positions.get(0);
         assertDoubleEquals(10.480100, position1.getLongitude());
         assertDoubleEquals(51.125340, position1.getLatitude());
-        assertEquals("L1042/Langensaltzaer Strasse", position1.getComment());
+        assertEquals("L1042/Langensaltzaer Strasse", position1.getDescription());
         Wgs84Position position2 = positions.get(1);
         assertDoubleEquals(10.723944, position2.getLongitude());
         assertDoubleEquals(51.116994, position2.getLatitude());
-        assertNull(position2.getComment());
+        assertNull(position2.getDescription());
         Wgs84Position position3 = positions.get(2);
         assertDoubleEquals(10.72092, position3.getLongitude());
         assertDoubleEquals(51.12645, position3.getLatitude());
-        assertEquals("Friedhofsweg", position3.getComment());
+        assertEquals("Friedhofsweg", position3.getDescription());
     }
 
     @Test
@@ -198,15 +205,15 @@ public class GoogleMapsUrlFormatTest {
         Wgs84Position position1 = positions.get(0);
         assertDoubleEquals(10.480100, position1.getLongitude());
         assertDoubleEquals(51.125340, position1.getLatitude());
-        assertEquals("L1042/Langensaltzaer Strasse", position1.getComment());
+        assertEquals("L1042/Langensaltzaer Strasse", position1.getDescription());
         Wgs84Position position2 = positions.get(1);
         assertDoubleEquals(10.723944, position2.getLongitude());
         assertDoubleEquals(51.116994, position2.getLatitude());
-        assertNull(position2.getComment());
+        assertNull(position2.getDescription());
         Wgs84Position position3 = positions.get(2);
         assertDoubleEquals(10.74325, position3.getLongitude());
         assertDoubleEquals(50.9445, position3.getLatitude());
-        assertEquals("Friedhofsweg", position3.getComment());
+        assertEquals("Friedhofsweg", position3.getDescription());
     }
 
     @Test
@@ -217,11 +224,11 @@ public class GoogleMapsUrlFormatTest {
         Wgs84Position position1 = positions.get(0);
         assertDoubleEquals(-78.922058, position1.getLongitude());
         assertDoubleEquals(40.323122, position1.getLatitude());
-        assertEquals("326 Napoleon St, Johnstown, PA 15901 (War Memorial)", position1.getComment());
+        assertEquals("326 Napoleon St, Johnstown, PA 15901 (War Memorial)", position1.getDescription());
         Wgs84Position position2 = positions.get(1);
         assertDoubleEquals(-79.950354, position2.getLongitude());
         assertDoubleEquals(40.443995, position2.getLatitude());
-        assertEquals("4400 Forbes Ave, Pittsburgh, PA 15213 (Carnegie Museums )", position2.getComment());
+        assertEquals("4400 Forbes Ave, Pittsburgh, PA 15213 (Carnegie Museums )", position2.getDescription());
     }
 
     @Test
@@ -232,19 +239,19 @@ public class GoogleMapsUrlFormatTest {
         Wgs84Position position1 = positions.get(0);
         assertDoubleEquals(-78.922058, position1.getLongitude());
         assertDoubleEquals(40.323122, position1.getLatitude());
-        assertEquals("326 Napoleon St, Johnstown, PA 15901 (War Memorial)", position1.getComment());
+        assertEquals("326 Napoleon St, Johnstown, PA 15901 (War Memorial)", position1.getDescription());
         Wgs84Position position2 = positions.get(2);
         assertDoubleEquals(-79.14302, position2.getLongitude());
         assertDoubleEquals(40.06483, position2.getLatitude());
-        assertEquals("I-70 W/I-76 W/Pennsylvania Turnpike", position2.getComment());
+        assertEquals("I-70 W/I-76 W/Pennsylvania Turnpike", position2.getDescription());
         Wgs84Position position3 = positions.get(3);
         assertDoubleEquals(-79.434904, position3.getLongitude());
         assertDoubleEquals(40.127779, position3.getLatitude());
-        assertEquals("PA-31", position3.getComment());
+        assertEquals("PA-31", position3.getDescription());
         Wgs84Position position4 = positions.get(4);
         assertDoubleEquals(-79.950354, position4.getLongitude());
         assertDoubleEquals(40.443995, position4.getLatitude());
-        assertEquals("4400 Forbes Ave, Pittsburgh, PA 15213 (Carnegie Museums )", position4.getComment());
+        assertEquals("4400 Forbes Ave, Pittsburgh, PA 15213 (Carnegie Museums )", position4.getDescription());
     }
 
     @Test
@@ -255,15 +262,15 @@ public class GoogleMapsUrlFormatTest {
         Wgs84Position position1 = positions.get(0);
         assertNull(position1.getLongitude());
         assertNull(position1.getLatitude());
-        assertEquals("Hamburg/Uhlenhorst", position1.getComment());
+        assertEquals("Hamburg/Uhlenhorst", position1.getDescription());
         Wgs84Position position2 = positions.get(2);
         assertDoubleEquals(10.419159, position2.getLongitude());
         assertDoubleEquals(53.588429, position2.getLatitude());
-        assertEquals(null, position2.getComment());
+        assertEquals(null, position2.getDescription());
         Wgs84Position position3 = positions.get(3);
         assertEquals(null, position3.getLongitude());
         assertEquals(null, position3.getLatitude());
-        assertEquals("Breitenfelde/Neuenlande", position3.getComment());
+        assertEquals("Breitenfelde/Neuenlande", position3.getDescription());
     }
 
     @Test
@@ -274,27 +281,72 @@ public class GoogleMapsUrlFormatTest {
         Wgs84Position position1 = positions.get(0);
         assertNull(position1.getLongitude());
         assertNull(position1.getLatitude());
-        assertEquals("hannover", position1.getComment());
+        assertEquals("hannover", position1.getDescription());
         Wgs84Position position2 = positions.get(1);
         assertNull(position2.getLongitude());
         assertNull(position2.getLatitude());
-        assertEquals("hamburg", position2.getComment());
+        assertEquals("hamburg", position2.getDescription());
+    }
+
+    @Test
+    public void testParseNewGoogleMaps2014FromInput9() {
+        List<Wgs84Position> positions = parsePositions(INPUT9_NEW_GOOGLE_MAPS_2014);
+        assertNotNull(positions);
+        assertEquals(3, positions.size());
+        Wgs84Position position1 = positions.get(0);
+        assertNull(position1.getLongitude());
+        assertNull(position1.getLatitude());
+        assertEquals("Aachen-Rothe Erde", position1.getDescription());
+        Wgs84Position position2 = positions.get(1);
+        assertNull(position2.getLongitude());
+        assertNull(position2.getLatitude());
+        assertEquals("Mainz-Kastel, Wiesbaden", position2.getDescription());
+        Wgs84Position position3 = positions.get(2);
+        assertNull(position3.getLongitude());
+        assertNull(position3.getLatitude());
+        assertEquals("Hanns-Martin-Schleyer-Stra\u00dfe, Sindelfingen", position3.getDescription());
+    }
+
+    @Test
+    public void testParseNewGoogleMaps2015FromInput10() {
+        List<Wgs84Position> positions = parsePositions(INPUT10_NEW_GOOGLE_MAPS_2015);
+        assertNotNull(positions);
+        assertEquals(6, positions.size());
+        Wgs84Position position1 = positions.get(0);
+        assertNull(position1.getLongitude());
+        assertNull(position1.getLatitude());
+        assertEquals("Sterzing, Bozen, Italien", position1.getDescription());
+        Wgs84Position position2 = positions.get(1);
+        assertNull(position2.getLongitude());
+        assertNull(position2.getLatitude());
+        assertEquals("Jaufenpass, Sankt Leonhard in Passeier, Bozen, Italien", position2.getDescription());
+        Wgs84Position position3 = positions.get(2);
+        assertNull(position3.getLongitude());
+        assertNull(position3.getLatitude());
+        assertEquals("Ofenpass, 7532 Cierfs, Schweiz", position3.getDescription());
     }
 
     @Test
     public void testCreateURL() {
-        List<Wgs84Position> positions = new ArrayList<Wgs84Position>();
+        List<Wgs84Position> positions = new ArrayList<>();
         positions.add(new Wgs84Position(10.02571156, 53.57497745, null, 5.5, null, "Hamburg, Germany"));
-        positions.add(new Wgs84Position(10.20026067, 53.57662034, null,4.5, null, "Stemwarde, Germany"));
-        positions.add(new Wgs84Position(10.35735078, 53.59171021, null,3.5, null, "Gro\u00dfensee, Germany"));
-        positions.add(new Wgs84Position(10.45696089, 53.64781001, null,2.5, null, "Linau, Germany"));
+        positions.add(new Wgs84Position(10.20026067, 53.57662034, null, 4.5, null, "Stemwarde, Germany"));
+        positions.add(new Wgs84Position(10.35735078, 53.59171021, null, 3.5, null, "Gro\u00dfensee, Germany"));
+        positions.add(new Wgs84Position(10.45696089, 53.64781001, null, 2.5, null, "Linau, Germany"));
         String expected = "http://maps.google.com/maps?ie=UTF8&saddr=Hamburg,+Germany%4053.574977,10.025711&daddr=Stemwarde,+Germany%4053.576620,10.200260+to:Gro%C3%9Fensee,+Germany%4053.591710,10.357350+to:Linau,+Germany%4053.647810,10.456960";
         String actual = format.createURL(positions, 0, positions.size());
         assertEquals(expected, actual);
     }
 
     @Test
-    public void testIsGoogleMapsUrl() throws MalformedURLException {
-        assertTrue(isGoogleMapsUrl(new URL("http://maps.google.com/maps/ms?ie=UTF8&hl=de&oe=UTF8&num=200&start=37&msa=0&msid=215491296402946676738.000484ccfd83696d5b12e&z=11")));
+    public void testIsGoogleMapsLinkUrl() throws MalformedURLException {
+        assertTrue(isGoogleMapsLinkUrl(new URL("https://maps.google.com/maps?saddr=Hamburg&daddr=Hannover+to:M%C3%BCnchen&hl=en&ie=UTF8&sll=50.844236,10.557014&sspn=6.272277,10.777588&geocode=Fe0fMQMd0n2YACm5Exh-g2GxRzGgOtZ78j0mBA%3BFVQxHwMdqn-UACmFT0lNUQuwRzEgR6yUbawlBA%3BFRCC3gIdsqWwACnZX4yj-XWeRzF9mLF9SrgMAQ&mra=ls&t=m&z=7")));
+        assertTrue(isGoogleMapsLinkUrl(new URL("https://www.google.de/maps/dir/Hamburg/Hannover/M%C3%BCnchen/@50.8213415,8.3587982,7z/data=!3m1!4b1!4m20!4m19!1m5!1m1!1s0x47b161837e1813b9:0x4263df27bd63aa0!2m2!1d9.9936818!2d53.5510846!1m5!1m1!1s0x47b00b514d494f85:0x425ac6d94ac4720!2m2!1d9.7320104!2d52.3758916!1m5!1m1!1s0x479e75f9a38c5fd9:0x10cb84a7db1987d!2m2!1d11.5819806!2d48.1351253!3e0")));
+    }
+
+    @Test
+    public void testIsGoogleMapsProfile() throws MalformedURLException {
+        assertTrue(isGoogleMapsProfileUrl(new URL("http://maps.google.com/maps/ms?ie=UTF8&hl=de&oe=UTF8&num=200&start=37&msa=0&msid=215491296402946676738.000484ccfd83696d5b12e&z=11")));
+        assertTrue(isGoogleMapsProfileUrl(new URL("https://maps.google.com/maps/ms?msa=0&msid=218347962219071576267.0004e1131e8ad4ef4fd9b")));
     }
 }

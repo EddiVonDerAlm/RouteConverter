@@ -10,7 +10,11 @@ package slash.navigation.kml.binding22gx;
 
 import slash.navigation.kml.binding22.AbstractObjectType;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,7 +79,7 @@ public class SimpleArrayDataType
      */
     public List<String> getValue() {
         if (value == null) {
-            value = new ArrayList<String>();
+            value = new ArrayList<>();
         }
         return this.value;
     }
@@ -104,7 +108,7 @@ public class SimpleArrayDataType
      */
     public List<Object> getSimpleArrayDataExtension() {
         if (simpleArrayDataExtension == null) {
-            simpleArrayDataExtension = new ArrayList<Object>();
+            simpleArrayDataExtension = new ArrayList<>();
         }
         return this.simpleArrayDataExtension;
     }

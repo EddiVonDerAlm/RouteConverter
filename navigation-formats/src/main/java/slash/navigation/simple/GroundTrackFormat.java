@@ -21,17 +21,12 @@
 package slash.navigation.simple;
 
 import slash.common.type.CompactCalendar;
-import slash.navigation.base.NavigationPosition;
-import slash.navigation.base.RouteCharacteristics;
-import slash.navigation.base.SimpleLineBasedFormat;
-import slash.navigation.base.SimpleRoute;
-import slash.navigation.base.Wgs84Position;
-import slash.navigation.base.Wgs84Route;
+import slash.navigation.base.*;
+import slash.navigation.common.NavigationPosition;
 
 import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
@@ -39,11 +34,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.Integer.parseInt;
-import static slash.common.io.Transfer.formatDoubleAsString;
-import static slash.navigation.common.NavigationConversion.formatElevationAsString;
-import static slash.common.io.Transfer.parseDouble;
-import static slash.common.io.Transfer.trim;
+import static slash.common.io.Transfer.*;
+import static slash.common.type.CompactCalendar.createDateFormat;
+import static slash.common.type.CompactCalendar.fromDate;
 import static slash.navigation.base.RouteCharacteristics.Track;
+import static slash.navigation.common.NavigationConversion.formatElevationAsString;
 
 /**
  * Reads and writes groundtrack vom SondenMonitor (.txt) files.
@@ -69,11 +64,7 @@ public class GroundTrackFormat extends SimpleLineBasedFormat<SimpleRoute> {
                     ".*" +
                     END_OF_LINE);
 
-    private static final DateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS");
-    static {
-        TIME_FORMAT.setTimeZone(CompactCalendar.UTC);
-        TIME_FORMAT.setLenient(false);
-    }
+    private static final String TIME_FORMAT = "HH:mm:ss.SSS";
 
     public String getExtension() {
         return ".txt";
@@ -97,38 +88,44 @@ public class GroundTrackFormat extends SimpleLineBasedFormat<SimpleRoute> {
         return matcher.matches();
     }
 
+    private DateFormat createTimeFormat() {
+        DateFormat dateFormat = createDateFormat(TIME_FORMAT);
+        dateFormat.setLenient(false);
+        return dateFormat;
+    }
+
     private CompactCalendar parseTime(String time, String milliseconds) {
         if (time == null)
             return null;
         String dateString = time + "." + (milliseconds != null ? milliseconds : "000");
         try {
-            Date parsed = TIME_FORMAT.parse(dateString);
-            return CompactCalendar.fromDate(parsed);
+            Date parsed = createTimeFormat().parse(dateString);
+            return fromDate(parsed);
         } catch (ParseException e) {
             log.severe("Could not parse time '" + dateString + "'");
         }
         return null;
     }
 
-    protected Wgs84Position parsePosition(String line, CompactCalendar startDate) {
+    protected Wgs84Position parsePosition(String line, ParserContext context) {
         Matcher lineMatcher = LINE_PATTERN.matcher(line);
         if (!lineMatcher.matches())
             throw new IllegalArgumentException("'" + line + "' does not match");
-        String comment = trim(lineMatcher.group(1));
+        String description = trim(lineMatcher.group(1));
         Double latitude = parseDouble(lineMatcher.group(2));
         Double longitude = parseDouble(lineMatcher.group(3));
         Double elevation = parseDouble(lineMatcher.group(4));
         CompactCalendar time = parseTime(trim(lineMatcher.group(5)), trim(lineMatcher.group(6)));
 
-        Wgs84Position position = new Wgs84Position(longitude, latitude, elevation, null, time, comment);
-        position.setStartDate(startDate);
+        Wgs84Position position = new Wgs84Position(longitude, latitude, elevation, null, time, description);
+        position.setStartDate(context.getStartDate());
         return position;
     }
 
     private String formatTime(CompactCalendar time) {
         if (time == null)
             return "";
-        return TIME_FORMAT.format(time.getTime());
+        return createTimeFormat().format(time.getTime());
     }
 
     private String fillWithSpaces(String string, int length) {
@@ -145,10 +142,10 @@ public class GroundTrackFormat extends SimpleLineBasedFormat<SimpleRoute> {
         String elevation = position.getElevation() != null ? formatElevationAsString(position.getElevation()) : "0.0";
         String time = formatTime(position.getTime());
 
-        // try to parse number from comment to make read/write round trip easier
+        // try to parse number from description to make read/write round trip easier
         int number;
         try {
-            number = parseInt(position.getComment());
+            number = parseInt(position.getDescription());
         }
         catch (NumberFormatException e) {
             number = index + 1;

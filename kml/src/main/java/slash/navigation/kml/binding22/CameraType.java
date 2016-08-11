@@ -9,7 +9,12 @@
 package slash.navigation.kml.binding22;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -246,7 +251,7 @@ public class CameraType
      *     
      */
     public void setAltitudeModeGroup(JAXBElement<?> value) {
-        this.altitudeModeGroup = ((JAXBElement<?> ) value);
+        this.altitudeModeGroup = value;
     }
 
     /**
@@ -273,7 +278,7 @@ public class CameraType
      */
     public List<Object> getCameraSimpleExtensionGroup() {
         if (cameraSimpleExtensionGroup == null) {
-            cameraSimpleExtensionGroup = new ArrayList<Object>();
+            cameraSimpleExtensionGroup = new ArrayList<>();
         }
         return this.cameraSimpleExtensionGroup;
     }
@@ -302,7 +307,7 @@ public class CameraType
      */
     public List<AbstractObjectType> getCameraObjectExtensionGroup() {
         if (cameraObjectExtensionGroup == null) {
-            cameraObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            cameraObjectExtensionGroup = new ArrayList<>();
         }
         return this.cameraObjectExtensionGroup;
     }

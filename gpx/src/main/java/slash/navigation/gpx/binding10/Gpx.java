@@ -8,7 +8,13 @@
 
 package slash.navigation.gpx.binding10;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAnyElement;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -474,7 +480,7 @@ public class Gpx {
      */
     public List<Gpx.Wpt> getWpt() {
         if (wpt == null) {
-            wpt = new ArrayList<Gpx.Wpt>();
+            wpt = new ArrayList<>();
         }
         return this.wpt;
     }
@@ -503,7 +509,7 @@ public class Gpx {
      */
     public List<Gpx.Rte> getRte() {
         if (rte == null) {
-            rte = new ArrayList<Gpx.Rte>();
+            rte = new ArrayList<>();
         }
         return this.rte;
     }
@@ -532,7 +538,7 @@ public class Gpx {
      */
     public List<Gpx.Trk> getTrk() {
         if (trk == null) {
-            trk = new ArrayList<Gpx.Trk>();
+            trk = new ArrayList<>();
         }
         return this.trk;
     }
@@ -561,7 +567,7 @@ public class Gpx {
      */
     public List<Object> getAny() {
         if (any == null) {
-            any = new ArrayList<Object>();
+            any = new ArrayList<>();
         }
         return this.any;
     }
@@ -898,7 +904,7 @@ public class Gpx {
          */
         public List<Object> getAny() {
             if (any == null) {
-                any = new ArrayList<Object>();
+                any = new ArrayList<>();
             }
             return this.any;
         }
@@ -927,7 +933,7 @@ public class Gpx {
          */
         public List<Gpx.Rte.Rtept> getRtept() {
             if (rtept == null) {
-                rtept = new ArrayList<Gpx.Rte.Rtept>();
+                rtept = new ArrayList<>();
             }
             return this.rtept;
         }
@@ -1561,7 +1567,7 @@ public class Gpx {
              */
             public List<Object> getAny() {
                 if (any == null) {
-                    any = new ArrayList<Object>();
+                    any = new ArrayList<>();
                 }
                 return this.any;
             }
@@ -1908,7 +1914,7 @@ public class Gpx {
          */
         public List<Object> getAny() {
             if (any == null) {
-                any = new ArrayList<Object>();
+                any = new ArrayList<>();
             }
             return this.any;
         }
@@ -1937,7 +1943,7 @@ public class Gpx {
          */
         public List<Gpx.Trk.Trkseg> getTrkseg() {
             if (trkseg == null) {
-                trkseg = new ArrayList<Gpx.Trk.Trkseg>();
+                trkseg = new ArrayList<>();
             }
             return this.trkseg;
         }
@@ -2027,7 +2033,7 @@ public class Gpx {
              */
             public List<Gpx.Trk.Trkseg.Trkpt> getTrkpt() {
                 if (trkpt == null) {
-                    trkpt = new ArrayList<Gpx.Trk.Trkseg.Trkpt>();
+                    trkpt = new ArrayList<>();
                 }
                 return this.trkpt;
             }
@@ -2661,7 +2667,7 @@ public class Gpx {
                  */
                 public List<Object> getAny() {
                     if (any == null) {
-                        any = new ArrayList<Object>();
+                        any = new ArrayList<>();
                     }
                     return this.any;
                 }
@@ -3349,7 +3355,7 @@ public class Gpx {
          */
         public List<Object> getAny() {
             if (any == null) {
-                any = new ArrayList<Object>();
+                any = new ArrayList<>();
             }
             return this.any;
         }

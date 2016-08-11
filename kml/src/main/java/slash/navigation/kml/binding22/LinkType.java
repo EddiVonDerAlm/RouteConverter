@@ -8,7 +8,11 @@
 
 package slash.navigation.kml.binding22;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -266,7 +270,7 @@ public class LinkType
      */
     public List<Object> getLinkSimpleExtensionGroup() {
         if (linkSimpleExtensionGroup == null) {
-            linkSimpleExtensionGroup = new ArrayList<Object>();
+            linkSimpleExtensionGroup = new ArrayList<>();
         }
         return this.linkSimpleExtensionGroup;
     }
@@ -295,7 +299,7 @@ public class LinkType
      */
     public List<AbstractObjectType> getLinkObjectExtensionGroup() {
         if (linkObjectExtensionGroup == null) {
-            linkObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            linkObjectExtensionGroup = new ArrayList<>();
         }
         return this.linkObjectExtensionGroup;
     }

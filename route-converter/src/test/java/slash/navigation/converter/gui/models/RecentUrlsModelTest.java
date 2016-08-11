@@ -20,44 +20,52 @@
 
 package slash.navigation.converter.gui.models;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.prefs.Preferences;
 
 import static java.io.File.createTempFile;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static java.util.Collections.singletonList;
+import static org.junit.Assert.*;
 import static slash.common.io.Files.toFile;
 
 public class RecentUrlsModelTest {
     private static final int LIMIT = 10;
-    private RecentUrlsModel recentUrlsModel = new RecentUrlsModel();
+    private RecentUrlsModel model = new RecentUrlsModel(Preferences.userRoot());
 
     @Before
     public void setUp() {
-        recentUrlsModel.removeAllUrls();
+        model.removeAllUrls();
+    }
+
+    @After
+    public void tearDown() {
+        model.removeAllUrls();
     }
 
     @Test
     public void testAddUrl() throws IOException {
         URL url = createTempFile("recent", ".url").toURI().toURL();
-        recentUrlsModel.addUrl(url);
-        assertEquals(asList(url), recentUrlsModel.getUrls());
+        model.addUrl(url);
+        assertEquals(singletonList(url), model.getUrls());
     }
 
     @Test
     public void testAddExistingUrl() throws IOException {
         URL url = createTempFile("recent", ".url").toURI().toURL();
-        recentUrlsModel.addUrl(url);
-        recentUrlsModel.addUrl(url);
-        recentUrlsModel.addUrl(url);
-        assertEquals(asList(url), recentUrlsModel.getUrls());
+        model.addUrl(url);
+        model.addUrl(url);
+        model.addUrl(url);
+        assertEquals(singletonList(url), model.getUrls());
     }
 
     @Test
@@ -65,33 +73,33 @@ public class RecentUrlsModelTest {
         URL first = createTempFile("first", ".url").toURI().toURL();
         URL second = createTempFile("second", ".url").toURI().toURL();
         URL third = createTempFile("third", ".url").toURI().toURL();
-        recentUrlsModel.addUrl(first);
-        recentUrlsModel.addUrl(second);
-        recentUrlsModel.addUrl(first);
-        recentUrlsModel.addUrl(third);
-        assertEquals(asList(third, first, second), recentUrlsModel.getUrls());
+        model.addUrl(first);
+        model.addUrl(second);
+        model.addUrl(first);
+        model.addUrl(third);
+        assertEquals(asList(third, first, second), model.getUrls());
     }
 
     @Test
     public void testLatestFirst() throws IOException {
-        List<URL> expected = new ArrayList<URL>();
+        List<URL> expected = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             URL url = createTempFile("recent-" + i + "-", ".url").toURI().toURL();
-            recentUrlsModel.addUrl(url);
+            model.addUrl(url);
             expected.add(0, url);
-            assertEquals(expected, recentUrlsModel.getUrls());
+            assertEquals(expected, model.getUrls());
         }
     }
 
     @Test
     public void testLimit() throws IOException {
-        List<URL> collected = new ArrayList<URL>();
+        List<URL> collected = new ArrayList<>();
         for (int i = 0; i < 2 * LIMIT; i++) {
             URL url = createTempFile("recent-" + i + "-", ".url").toURI().toURL();
-            recentUrlsModel.addUrl(url);
+            model.addUrl(url);
             collected.add(0, url);
             List<URL> expected = collected.subList(0, min(i + 1, LIMIT));
-            List<URL> actual = recentUrlsModel.getUrls();
+            List<URL> actual = model.getUrls();
             assertEquals(expected.size(), actual.size());
             assertEquals(expected, actual);
         }
@@ -99,17 +107,19 @@ public class RecentUrlsModelTest {
 
     @Test
     public void testSkipNotExistentFiles() throws IOException {
-        List<URL> collected = new ArrayList<URL>();
+        List<URL> collected = new ArrayList<>();
         for (int i = 0; i < LIMIT; i++) {
             URL url = createTempFile("recent-" + i + "-", ".url").toURI().toURL();
-            recentUrlsModel.addUrl(url);
+            model.addUrl(url);
             collected.add(0, url);
         }
 
         for (int i = 0; i < LIMIT; i++) {
-            assertTrue(toFile(collected.get(i)).delete());
+            File file = toFile(collected.get(i));
+            assertNotNull(file);
+            assertTrue(file.delete());
             List<URL> expected = collected.subList(i + 1, min(collected.size(), LIMIT));
-            List<URL> actual = recentUrlsModel.getUrls();
+            List<URL> actual = model.getUrls();
             assertEquals(expected.size(), actual.size());
             assertEquals(expected, actual);
         }

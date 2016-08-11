@@ -21,34 +21,22 @@
 package slash.navigation.simple;
 
 import slash.common.type.CompactCalendar;
-import slash.navigation.base.NavigationPosition;
-import slash.navigation.base.RouteCharacteristics;
-import slash.navigation.base.SimpleLineBasedFormat;
-import slash.navigation.base.SimpleRoute;
-import slash.navigation.base.Wgs84Position;
-import slash.navigation.base.Wgs84Route;
+import slash.navigation.base.*;
+import slash.navigation.common.NavigationPosition;
 
 import java.io.PrintWriter;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.Math.abs;
-import static slash.navigation.common.NavigationConversion.formatAccuracyAsString;
 import static slash.common.io.Transfer.formatDoubleAsString;
-import static slash.navigation.common.NavigationConversion.formatElevationAsString;
-import static slash.common.io.Transfer.formatIntAsString;
-import static slash.navigation.common.NavigationConversion.formatSpeedAsString;
-import static slash.common.io.Transfer.parseDouble;
-import static slash.common.io.Transfer.parseInt;
-import static slash.common.io.Transfer.trim;
-import static slash.common.type.CompactCalendar.fromDate;
+import static slash.common.io.Transfer.*;
+import static slash.common.type.CompactCalendar.createDateFormat;
+import static slash.common.type.CompactCalendar.parseDate;
 import static slash.navigation.base.RouteCharacteristics.Track;
+import static slash.navigation.common.NavigationConversion.*;
 
 /**
  * Reads and writes Qstarz BT-Q1000 (.csv) files.
@@ -86,14 +74,9 @@ public class QstarzQ1000Format extends SimpleLineBasedFormat<SimpleRoute> {
                     SPACE + "([\\d\\.]+)" + "[^" + SEPARATOR + "]*" + SEPARATOR +
                     END_OF_LINE);
 
-    private static final DateFormat DATE_AND_TIME_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd");
-    private static final DateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm:ss");
-    static {
-        DATE_AND_TIME_FORMAT.setTimeZone(CompactCalendar.UTC);
-        DATE_FORMAT.setTimeZone(CompactCalendar.UTC);
-        TIME_FORMAT.setTimeZone(CompactCalendar.UTC);
-    }
+    private static final String DATE_AND_TIME_FORMAT = "yyyy/MM/dd HH:mm:ss";
+    private static final String DATE_FORMAT = "yyyy/MM/dd";
+    private static final String TIME_FORMAT = "HH:mm:ss";
 
     public String getExtension() {
         return ".csv";
@@ -131,16 +114,10 @@ public class QstarzQ1000Format extends SimpleLineBasedFormat<SimpleRoute> {
         if(date == null || time == null)
             return null;
         String dateAndTime = date + " " + time;
-        try {
-            Date parsed = DATE_AND_TIME_FORMAT.parse(dateAndTime);
-            return fromDate(parsed);
-        } catch (ParseException e) {
-            log.severe("Could not parse date and time '" + dateAndTime + "'");
-        }
-        return null;
+        return parseDate(dateAndTime, DATE_AND_TIME_FORMAT);
     }
 
-    protected Wgs84Position parsePosition(String line, CompactCalendar startDate) {
+    protected Wgs84Position parsePosition(String line, ParserContext context) {
         Matcher lineMatcher = LINE_PATTERN.matcher(line);
         if (!lineMatcher.matches())
             throw new IllegalArgumentException("'" + line + "' does not match");
@@ -162,7 +139,7 @@ public class QstarzQ1000Format extends SimpleLineBasedFormat<SimpleRoute> {
         Wgs84Position position = new Wgs84Position(longitude, latitude, parseDouble(height), parseDouble(speed),
                 parseDateAndTime(date, time), null);
         position.setHdop(parseDouble(hdop));
-        position.setSatellites(parseInt(satellites));
+        position.setSatellites(parseInteger(satellites));
         return position;
     }
 
@@ -173,13 +150,13 @@ public class QstarzQ1000Format extends SimpleLineBasedFormat<SimpleRoute> {
     private String formatTime(CompactCalendar time) {
         if (time == null)
             return "";
-        return TIME_FORMAT.format(time.getTime());
+        return createDateFormat(TIME_FORMAT).format(time.getTime());
     }
 
     private String formatDate(CompactCalendar date) {
         if (date == null)
             return "";
-        return DATE_FORMAT.format(date.getTime());
+        return createDateFormat(DATE_FORMAT).format(date.getTime());
     }
 
     private Wgs84Position previousPosition = null;

@@ -8,7 +8,12 @@
 
 package slash.navigation.kml.binding20;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,7 +79,7 @@ public class Response {
      */
     public List<Object> getNameOrStatusOrPlacemark() {
         if (nameOrStatusOrPlacemark == null) {
-            nameOrStatusOrPlacemark = new ArrayList<Object>();
+            nameOrStatusOrPlacemark = new ArrayList<>();
         }
         return this.nameOrStatusOrPlacemark;
     }

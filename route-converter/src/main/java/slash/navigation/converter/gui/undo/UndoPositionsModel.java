@@ -24,7 +24,9 @@ import slash.common.type.CompactCalendar;
 import slash.navigation.base.BaseNavigationFormat;
 import slash.navigation.base.BaseNavigationPosition;
 import slash.navigation.base.BaseRoute;
-import slash.navigation.base.NavigationPosition;
+import slash.navigation.common.BoundingBox;
+import slash.navigation.common.NavigationPosition;
+import slash.navigation.converter.gui.models.PositionColumnValues;
 import slash.navigation.converter.gui.models.PositionsModel;
 import slash.navigation.converter.gui.models.PositionsModelImpl;
 import slash.navigation.gui.events.ContinousRange;
@@ -35,10 +37,11 @@ import slash.navigation.gui.undo.UndoManager;
 import javax.swing.event.TableModelListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
-import static java.util.Arrays.asList;
-import static javax.swing.event.TableModelEvent.ALL_COLUMNS;
+import static java.lang.Integer.MAX_VALUE;
+import static java.util.Collections.singletonList;
 import static slash.common.io.Transfer.trim;
 
 /**
@@ -50,7 +53,6 @@ import static slash.common.io.Transfer.trim;
 public class UndoPositionsModel implements PositionsModel {
     private final PositionsModelImpl delegate = new PositionsModelImpl();
     private final UndoManager undoManager;
-    private boolean valueIsAdjusting = false;
 
     public UndoPositionsModel(UndoManager undoManager) {
         this.undoManager = undoManager;
@@ -83,22 +85,27 @@ public class UndoPositionsModel implements PositionsModel {
     }
 
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-        edit(rowIndex, columnIndex, aValue, -1, null, true, true);
+        edit(rowIndex, new PositionColumnValues(columnIndex, aValue), true, true);
     }
 
-    public String getStringAt(int rowIndex, int columnIndex) {
+    private String getStringAt(int rowIndex, int columnIndex) {
         return delegate.getStringAt(rowIndex, columnIndex);
     }
 
-    public void edit(int rowIndex, int firstColumnIndex, Object firstValue, int secondColumnIndex, Object secondValue, boolean fireEvent, boolean trackUndo) {
+    public void edit(int rowIndex, PositionColumnValues columnToValues, boolean fireEvent, boolean trackUndo) {
         if (rowIndex == getRowCount())
             return;
 
-        Object previousFirstValue = trackUndo ? trim(getStringAt(rowIndex, firstColumnIndex)) : null;
-        Object previousSecondValue = trackUndo && secondColumnIndex != -1 ? trim(getStringAt(rowIndex, secondColumnIndex)) : null;
-        delegate.edit(rowIndex, firstColumnIndex, firstValue, secondColumnIndex, secondValue, fireEvent, trackUndo);
+        if(trackUndo) {
+            List<Object> previousValues = new ArrayList<>(columnToValues.getColumnIndices().size());
+            for (int columnIndex : columnToValues.getColumnIndices()) {
+                previousValues.add(trim(getStringAt(rowIndex, columnIndex)));
+            }
+            columnToValues.setPreviousValues(previousValues);
+        }
+        delegate.edit(rowIndex, columnToValues, fireEvent, trackUndo);
         if (trackUndo)
-            undoManager.addEdit(new EditPosition(this, rowIndex, firstColumnIndex, previousFirstValue, firstValue, secondColumnIndex, previousSecondValue, secondValue));
+            undoManager.addEdit(new EditPosition(this, rowIndex, columnToValues));
     }
 
     public void addTableModelListener(TableModelListener l) {
@@ -107,6 +114,12 @@ public class UndoPositionsModel implements PositionsModel {
 
     public void removeTableModelListener(TableModelListener l) {
         delegate.removeTableModelListener(l);
+    }
+
+    private static final int CONTINOUS_RANGE_FINAL_EVENT = -2;
+
+    public boolean isContinousRange() {
+        return delegate.isContinousRange();
     }
 
     public void fireTableRowsUpdated(int firstIndex, int lastIndex, int columnIndex) {
@@ -139,8 +152,8 @@ public class UndoPositionsModel implements PositionsModel {
         return delegate.getPositions(firstIndex, lastIndex);
     }
 
-    public int[] getContainedPositions(NavigationPosition northEastCorner, NavigationPosition southWestCorner) {
-        return delegate.getContainedPositions(northEastCorner, southWestCorner);
+    public int[] getContainedPositions(BoundingBox boundingBox) {
+        return delegate.getContainedPositions(boundingBox);
     }
 
     public int[] getPositionsWithinDistanceToPredecessor(double distance) {
@@ -155,11 +168,15 @@ public class UndoPositionsModel implements PositionsModel {
         return delegate.getClosestPosition(longitude, latitude, threshold);
     }
 
+    public int getClosestPosition(CompactCalendar time, long threshold) {
+        return delegate.getClosestPosition(time, threshold);
+    }
+
     // Undoable operations
 
-    public void add(int rowIndex, Double longitude, Double latitude, Double elevation, Double speed, CompactCalendar time, String comment) {
-        BaseNavigationPosition position = getRoute().createPosition(longitude, latitude, elevation, speed, time, comment);
-        add(rowIndex, asList(position));
+    public void add(int rowIndex, Double longitude, Double latitude, Double elevation, Double speed, CompactCalendar time, String description) {
+        BaseNavigationPosition position = getRoute().createPosition(longitude, latitude, elevation, speed, time, description);
+        add(rowIndex, singletonList(position));
 
     }
 
@@ -201,25 +218,46 @@ public class UndoPositionsModel implements PositionsModel {
         final RemovePositions edit = new RemovePositions(this);
 
         new ContinousRange(rows, new RangeOperation() {
-            private List<NavigationPosition> removed = new ArrayList<NavigationPosition>();
+            private List<NavigationPosition> removed = new ArrayList<>();
 
             public void performOnIndex(int index) {
                 removed.add(0, getRoute().remove(index));
             }
+
             public void performOnRange(int firstIndex, int lastIndex) {
-                if (fireEvent && !valueIsAdjusting)
-                    delegate.fireTableRowsDeleted(firstIndex, lastIndex);
+                if (fireEvent)
+                    delegate.fireTableRowsDeletedInContinousRange(firstIndex, lastIndex);
                 if (trackUndo)
                     edit.add(firstIndex, removed);
-                removed.clear();
+                removed = new ArrayList<>();
             }
+
             public boolean isInterrupted() {
                 return false;
             }
         }).performMonotonicallyDecreasing();
 
+        if (fireEvent)
+            fireTableRowsUpdated(0, MAX_VALUE, CONTINOUS_RANGE_FINAL_EVENT);
         if (trackUndo)
             undoManager.addEdit(edit);
+    }
+
+    public void sort(Comparator<NavigationPosition> comparator) {
+        sort(comparator, true);
+    }
+
+    void sort(Comparator<NavigationPosition> comparator, boolean trackUndo) {
+        @SuppressWarnings("unchecked")
+        List<NavigationPosition> original = getRoute().getPositions();
+        List<NavigationPosition> positions = new ArrayList<>(original);
+        delegate.sort(comparator);
+        if (trackUndo)
+            undoManager.addEdit(new SortPositions(this, comparator, positions));
+    }
+
+    public void order(List<NavigationPosition> positions) {
+        delegate.order(positions);
     }
 
     public void revert() {
@@ -238,7 +276,7 @@ public class UndoPositionsModel implements PositionsModel {
 
     void top(int[] rows, boolean trackUndo) {
         delegate.top(rows);
-        if(trackUndo)
+        if (trackUndo)
             undoManager.addEdit(new TopPositions(this, rows));
     }
 
@@ -252,7 +290,7 @@ public class UndoPositionsModel implements PositionsModel {
 
     void up(int[] rows, int delta, boolean trackUndo) {
         delegate.up(rows, delta);
-        if(trackUndo)
+        if (trackUndo)
             undoManager.addEdit(new UpPositions(this, rows, delta));
     }
 
@@ -278,12 +316,5 @@ public class UndoPositionsModel implements PositionsModel {
 
     void bottomUp(int[] rows) {
         delegate.bottomUp(rows);
-    }
-
-    public void setValueIsAdjusting(boolean valueIsAdjusting) {
-        this.valueIsAdjusting = valueIsAdjusting;
-        if (!valueIsAdjusting)
-            // since fireTableDataChanged() leads to recentering due to BaseMapView#update(allRowsChanged)
-            fireTableRowsUpdated(0, Integer.MAX_VALUE, ALL_COLUMNS);
     }
 }

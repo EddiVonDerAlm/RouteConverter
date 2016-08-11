@@ -20,10 +20,10 @@
 
 package slash.common.type;
 
-import org.apache.commons.codec.DecoderException;
-
 import static org.apache.commons.codec.binary.Hex.decodeHex;
 import static org.apache.commons.codec.binary.Hex.encodeHex;
+
+import org.apache.commons.codec.DecoderException;
 
 /**
  * Helps to encode bytes to hexadecimal encoded numbers and back.
@@ -33,7 +33,11 @@ import static org.apache.commons.codec.binary.Hex.encodeHex;
 
 public class HexadecimalNumber {
     public static String encodeByte(byte aByte) {
-        return new String(encodeHex(new byte[]{aByte})).toUpperCase();
+        return encodeBytes(new byte[]{aByte});
+    }
+
+    public static String encodeBytes(byte[] bytes) {
+        return new String(encodeHex(bytes)).toUpperCase();
     }
 
     public static byte[] decodeBytes(String string) {
@@ -42,5 +46,15 @@ public class HexadecimalNumber {
         } catch (DecoderException e) {
             throw new IllegalArgumentException("Not an even number of hex digits: " + string);
         }
+    }
+
+    public static String encodeInt(int integer) {
+        // with Java 8 use Integer#toUnsignedString
+        return Integer.toHexString(integer);
+    }
+
+    public static int decodeInt(String string) {
+        // with Java 8 use Integer#parseUnsignedInt
+        return (int) Long.parseLong(string, 16);
     }
 }

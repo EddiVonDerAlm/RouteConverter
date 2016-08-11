@@ -23,7 +23,7 @@ package slash.navigation.base;
 import org.junit.Test;
 import slash.navigation.bcr.MTP0607Format;
 import slash.navigation.itn.TomTom5RouteFormat;
-import slash.navigation.itn.TomTom8RouteFormat;
+import slash.navigation.itn.TomTom95RouteFormat;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,7 +45,7 @@ public class SplitIT {
     }
 
     private void splitReadWriteRoundtrip(String testFileName, boolean duplicateFirstPosition) throws IOException {
-        NavigationFormatParser parser = new NavigationFormatParser();
+        NavigationFormatParser parser = new NavigationFormatParser(new AllNavigationFormatRegistry());
 
         File source = new File(testFileName);
         ParserResult result = parser.read(source);
@@ -67,7 +67,7 @@ public class SplitIT {
 
             File[] targets = new File[fileCount];
             for (int i = 0; i < targets.length; i++)
-                targets[i] = File.createTempFile("target", ".test");
+                targets[i] = createTempFile("target", ".test");
             parser.write(sourceRoute, result.getFormat(), duplicateFirstPosition, false, null, targets);
 
             ParserResult sourceResult = parser.read(source);
@@ -177,7 +177,7 @@ public class SplitIT {
 
 
     void convertSplitRoundtrip(String testFileName, BaseNavigationFormat sourceFormat, BaseNavigationFormat targetFormat) throws IOException {
-        NavigationFormatParser parser = new NavigationFormatParser();
+        NavigationFormatParser parser = new NavigationFormatParser(new AllNavigationFormatRegistry());
 
         File source = new File(testFileName);
         ParserResult result = parser.read(source);
@@ -221,14 +221,15 @@ public class SplitIT {
         } finally {
             // avoid to clutter the temp directory
             for (File target : targets) {
-                assert target.delete();
+                if (target.exists())
+                    assertTrue(target.delete());
             }
         }
     }
 
     @Test
     public void testConvertLargeTomTomRouteToSeveralTomTomRoutes() throws IOException {
-        convertSplitRoundtrip(TEST_PATH + "large.itn", new TomTom5RouteFormat(), new TomTom8RouteFormat());
+        convertSplitRoundtrip(TEST_PATH + "large.itn", new TomTom5RouteFormat(), new TomTom95RouteFormat());
     }
 
     @Test
@@ -238,7 +239,7 @@ public class SplitIT {
 
     @Test
     public void testConvertLargeMTP0607ToSeveralTomTomRoutes() throws IOException {
-        convertSplitRoundtrip(TEST_PATH + "large.bcr", new MTP0607Format(), new TomTom8RouteFormat());
+        convertSplitRoundtrip(TEST_PATH + "large.bcr", new MTP0607Format(), new TomTom95RouteFormat());
     }
 
     @Test

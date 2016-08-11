@@ -8,7 +8,14 @@
 
 package slash.navigation.kml.binding20;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAnyAttribute;
+import javax.xml.bind.annotation.XmlAnyElement;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlValue;
 import javax.xml.namespace.QName;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -243,7 +250,7 @@ public class AddressDetails {
     @XmlAttribute(name = "Code")
     protected String code;
     @XmlAnyAttribute
-    private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+    private Map<QName, String> otherAttributes = new HashMap<>();
 
     /**
      * Gets the value of the postalServiceElements property.
@@ -437,7 +444,7 @@ public class AddressDetails {
      */
     public List<Object> getAny() {
         if (any == null) {
-            any = new ArrayList<Object>();
+            any = new ArrayList<>();
         }
         return this.any;
     }
@@ -660,7 +667,7 @@ public class AddressDetails {
         @XmlAttribute(name = "Code")
         protected String code;
         @XmlAnyAttribute
-        private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+        private Map<QName, String> otherAttributes = new HashMap<>();
 
         /**
          * Gets the value of the content property.
@@ -818,7 +825,7 @@ public class AddressDetails {
         @XmlAnyElement(lax = true)
         protected List<Object> any;
         @XmlAnyAttribute
-        private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+        private Map<QName, String> otherAttributes = new HashMap<>();
 
         /**
          * Gets the value of the addressLine property.
@@ -844,7 +851,7 @@ public class AddressDetails {
          */
         public List<AddressLine> getAddressLine() {
             if (addressLine == null) {
-                addressLine = new ArrayList<AddressLine>();
+                addressLine = new ArrayList<>();
             }
             return this.addressLine;
         }
@@ -873,7 +880,7 @@ public class AddressDetails {
          */
         public List<AddressDetails.Country.CountryNameCode> getCountryNameCode() {
             if (countryNameCode == null) {
-                countryNameCode = new ArrayList<AddressDetails.Country.CountryNameCode>();
+                countryNameCode = new ArrayList<>();
             }
             return this.countryNameCode;
         }
@@ -902,7 +909,7 @@ public class AddressDetails {
          */
         public List<CountryName> getCountryName() {
             if (countryName == null) {
-                countryName = new ArrayList<CountryName>();
+                countryName = new ArrayList<>();
             }
             return this.countryName;
         }
@@ -1003,7 +1010,7 @@ public class AddressDetails {
          */
         public List<Object> getAny() {
             if (any == null) {
-                any = new ArrayList<Object>();
+                any = new ArrayList<>();
             }
             return this.any;
         }
@@ -1058,7 +1065,7 @@ public class AddressDetails {
             @XmlAttribute(name = "Code")
             protected String code;
             @XmlAnyAttribute
-            private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+            private Map<QName, String> otherAttributes = new HashMap<>();
 
             /**
              * Gets the value of the content property.
@@ -1317,7 +1324,7 @@ public class AddressDetails {
         @XmlAttribute(name = "Type")
         protected String type;
         @XmlAnyAttribute
-        private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+        private Map<QName, String> otherAttributes = new HashMap<>();
 
         /**
          * Gets the value of the addressIdentifier property.
@@ -1343,7 +1350,7 @@ public class AddressDetails {
          */
         public List<AddressDetails.PostalServiceElements.AddressIdentifier> getAddressIdentifier() {
             if (addressIdentifier == null) {
-                addressIdentifier = new ArrayList<AddressDetails.PostalServiceElements.AddressIdentifier>();
+                addressIdentifier = new ArrayList<>();
             }
             return this.addressIdentifier;
         }
@@ -1564,7 +1571,7 @@ public class AddressDetails {
          */
         public List<AddressDetails.PostalServiceElements.SupplementaryPostalServiceData> getSupplementaryPostalServiceData() {
             if (supplementaryPostalServiceData == null) {
-                supplementaryPostalServiceData = new ArrayList<AddressDetails.PostalServiceElements.SupplementaryPostalServiceData>();
+                supplementaryPostalServiceData = new ArrayList<>();
             }
             return this.supplementaryPostalServiceData;
         }
@@ -1593,7 +1600,7 @@ public class AddressDetails {
          */
         public List<Object> getAny() {
             if (any == null) {
-                any = new ArrayList<Object>();
+                any = new ArrayList<>();
             }
             return this.any;
         }
@@ -1675,7 +1682,7 @@ public class AddressDetails {
             @XmlAttribute(name = "Code")
             protected String code;
             @XmlAnyAttribute
-            private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+            private Map<QName, String> otherAttributes = new HashMap<>();
 
             /**
              * Gets the value of the content property.
@@ -1825,7 +1832,7 @@ public class AddressDetails {
             @XmlAttribute(name = "Code")
             protected String code;
             @XmlAnyAttribute
-            private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+            private Map<QName, String> otherAttributes = new HashMap<>();
 
             /**
              * Gets the value of the content property.
@@ -1953,7 +1960,7 @@ public class AddressDetails {
             @XmlAttribute(name = "Code")
             protected String code;
             @XmlAnyAttribute
-            private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+            private Map<QName, String> otherAttributes = new HashMap<>();
 
             /**
              * Specific to postal service
@@ -2079,7 +2086,7 @@ public class AddressDetails {
             @XmlAttribute(name = "Code")
             protected String code;
             @XmlAnyAttribute
-            private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+            private Map<QName, String> otherAttributes = new HashMap<>();
 
             /**
              * Gets the value of the content property.
@@ -2205,7 +2212,7 @@ public class AddressDetails {
             @XmlAttribute(name = "Code")
             protected String code;
             @XmlAnyAttribute
-            private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+            private Map<QName, String> otherAttributes = new HashMap<>();
 
             /**
              * Gets the value of the content property.
@@ -2331,7 +2338,7 @@ public class AddressDetails {
             @XmlAttribute(name = "Code")
             protected String code;
             @XmlAnyAttribute
-            private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+            private Map<QName, String> otherAttributes = new HashMap<>();
 
             /**
              * Gets the value of the content property.
@@ -2457,7 +2464,7 @@ public class AddressDetails {
             @XmlAttribute(name = "Code")
             protected String code;
             @XmlAnyAttribute
-            private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+            private Map<QName, String> otherAttributes = new HashMap<>();
 
             /**
              * Gets the value of the content property.
@@ -2583,7 +2590,7 @@ public class AddressDetails {
             @XmlAttribute(name = "Code")
             protected String code;
             @XmlAnyAttribute
-            private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+            private Map<QName, String> otherAttributes = new HashMap<>();
 
             /**
              * Gets the value of the content property.
@@ -2787,7 +2794,7 @@ public class AddressDetails {
             @XmlAttribute(name = "Code")
             protected String code;
             @XmlAnyAttribute
-            private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+            private Map<QName, String> otherAttributes = new HashMap<>();
 
             /**
              * Gets the value of the content property.

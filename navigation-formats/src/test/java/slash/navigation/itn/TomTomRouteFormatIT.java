@@ -21,25 +21,21 @@
 package slash.navigation.itn;
 
 import org.junit.Test;
-import slash.navigation.base.BaseNavigationFormat;
-import slash.navigation.base.BaseNavigationPosition;
-import slash.navigation.base.BaseRoute;
-import slash.navigation.base.NavigationFormatParser;
-import slash.navigation.base.NavigationPosition;
-import slash.navigation.base.ParserResult;
+import slash.navigation.base.*;
+import slash.navigation.common.NavigationPosition;
 
 import java.io.File;
 import java.io.IOException;
 
-import static junit.framework.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static slash.navigation.base.NavigationTestCase.SAMPLE_PATH;
 import static slash.navigation.base.NavigationTestCase.TEST_PATH;
 import static slash.navigation.base.RouteCharacteristics.Route;
 import static slash.navigation.base.RouteCharacteristics.Track;
 
 public class TomTomRouteFormatIT {
-    private NavigationFormatParser parser = new NavigationFormatParser();
+    private NavigationFormatParser parser = new NavigationFormatParser(new AllNavigationFormatRegistry());
 
     @Test
     public void testIsPlainRouteRouteCharacteristics() throws IOException {
@@ -79,7 +75,7 @@ public class TomTomRouteFormatIT {
 
     static void checkUmlauts(BaseRoute<BaseNavigationPosition, BaseNavigationFormat> route) {
         NavigationPosition first = route.getPositions().get(0);
-        assertEquals("abc" + UMLAUTS_ae_oe_ue_sz + EURO, first.getComment());
+        assertEquals("abc" + UMLAUTS_ae_oe_ue_sz + EURO, first.getDescription());
     }
 
     @Test
@@ -106,11 +102,11 @@ public class TomTomRouteFormatIT {
 
     static void checkPlaceNamesWithUmlauts(BaseRoute<BaseNavigationPosition, BaseNavigationFormat> route) {
         NavigationPosition first = route.getPositions().get(0);
-        assertEquals(SCHEESSEL, first.getComment());
+        assertEquals(SCHEESSEL, first.getDescription());
         NavigationPosition second = route.getPositions().get(1);
-        assertEquals(MOELLN, second.getComment());
+        assertEquals(MOELLN, second.getDescription());
         NavigationPosition third = route.getPositions().get(2);
-        assertEquals(LUEBECK, third.getComment());
+        assertEquals(LUEBECK, third.getDescription());
     }
 
     @Test

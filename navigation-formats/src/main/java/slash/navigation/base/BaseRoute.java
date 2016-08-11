@@ -25,6 +25,12 @@ import slash.navigation.bcr.BcrFormat;
 import slash.navigation.bcr.BcrRoute;
 import slash.navigation.bcr.MTP0607Format;
 import slash.navigation.bcr.MTP0809Format;
+import slash.navigation.columbus.ColumbusGpsBinaryFormat;
+import slash.navigation.columbus.ColumbusGpsProfessionalFormat;
+import slash.navigation.columbus.ColumbusGpsStandardFormat;
+import slash.navigation.columbus.ColumbusGpsType2Format;
+import slash.navigation.common.BoundingBox;
+import slash.navigation.common.NavigationPosition;
 import slash.navigation.copilot.CoPilot6Format;
 import slash.navigation.copilot.CoPilot7Format;
 import slash.navigation.copilot.CoPilot8Format;
@@ -34,6 +40,7 @@ import slash.navigation.fpl.GarminFlightPlanPosition;
 import slash.navigation.fpl.GarminFlightPlanRoute;
 import slash.navigation.gopal.GoPal3RouteFormat;
 import slash.navigation.gopal.GoPal5RouteFormat;
+import slash.navigation.gopal.GoPal7RouteFormat;
 import slash.navigation.gopal.GoPalRoute;
 import slash.navigation.gopal.GoPalRouteFormat;
 import slash.navigation.gopal.GoPalTrackFormat;
@@ -41,6 +48,8 @@ import slash.navigation.gpx.Gpx10Format;
 import slash.navigation.gpx.Gpx11Format;
 import slash.navigation.gpx.GpxFormat;
 import slash.navigation.gpx.GpxRoute;
+import slash.navigation.itn.TomTom95RouteFormat;
+import slash.navigation.photo.PhotoFormat;
 import slash.navigation.itn.TomTom5RouteFormat;
 import slash.navigation.itn.TomTom8RouteFormat;
 import slash.navigation.itn.TomTomRoute;
@@ -82,8 +91,7 @@ import slash.navigation.nmn.NmnRouteFormat;
 import slash.navigation.nmn.NmnUrlFormat;
 import slash.navigation.ovl.OvlFormat;
 import slash.navigation.ovl.OvlRoute;
-import slash.navigation.simple.ColumbusV900ProfessionalFormat;
-import slash.navigation.simple.ColumbusV900StandardFormat;
+import slash.navigation.simple.ApeMapFormat;
 import slash.navigation.simple.GlopusFormat;
 import slash.navigation.simple.GoRiderGpsFormat;
 import slash.navigation.simple.GpsTunerFormat;
@@ -107,6 +115,7 @@ import slash.navigation.tour.TourFormat;
 import slash.navigation.tour.TourPosition;
 import slash.navigation.tour.TourRoute;
 import slash.navigation.url.GoogleMapsUrlFormat;
+import slash.navigation.url.MotoPlanerUrlFormat;
 import slash.navigation.viamichelin.ViaMichelinFormat;
 import slash.navigation.viamichelin.ViaMichelinRoute;
 import slash.navigation.wbt.WintecWbt201Tk1Format;
@@ -117,14 +126,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.List;
 
+import static java.lang.Double.MAX_VALUE;
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.util.Arrays.asList;
+import static java.util.Arrays.binarySearch;
+import static slash.common.io.Transfer.isEmpty;
 import static slash.common.io.Transfer.toArray;
+import static slash.common.io.Transfer.toDouble;
 import static slash.common.type.CompactCalendar.UTC;
 import static slash.common.type.CompactCalendar.fromCalendar;
-import static slash.navigation.base.Positions.contains;
-import static slash.navigation.base.Positions.getSignificantPositions;
+import static slash.common.type.CompactCalendar.fromMillisAndTimeZone;
+import static slash.navigation.base.RouteCalculations.getSignificantPositions;
 
 /**
  * The base of all routes formats.
@@ -155,6 +172,7 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
     }
 
     public abstract String getName();
+
     public abstract void setName(String name);
 
     public abstract List<String> getDescription();
@@ -212,7 +230,7 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         int index = 0;
         while (index < positions.size()) {
             P next = positions.get(index);
-            if (previous != null && (!next.hasCoordinates() || next.calculateDistance(previous) <= 0.0)) {
+            if (previous != null && (!next.hasCoordinates() || toDouble(next.calculateDistance(previous)) <= 0.0)) {
                 positions.remove(index);
             } else
                 index++;
@@ -230,7 +248,7 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
 
         List<P> positions = getPositions();
         P first = positions.get(0);
-        if (first.getTime() == null)
+        if (!first.hasTime())
             first.setTime(fromCalendar(Calendar.getInstance(UTC)));
 
         P previous = first;
@@ -239,36 +257,35 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
             CompactCalendar time = next.getTime();
             if (time == null || time.equals(previous.getTime())) {
                 Double distance = next.calculateDistance(previous);
-                Long millis = distance != null ? (long) (distance / averageSpeed * 1000) : null;
+                Long millis = !isEmpty(distance) ? (long) (distance / averageSpeed * 1000) : null;
                 if (millis == null || millis < 1000)
                     millis = 1000L;
-                next.setTime(CompactCalendar.fromMillisAndTimeZone(previous.getTime().getTimeInMillis() + millis, previous.getTime().getTimeZoneId()));
+                next.setTime(fromMillisAndTimeZone(previous.getTime().getTimeInMillis() + millis, previous.getTime().getTimeZoneId()));
             }
             previous = next;
         }
     }
 
-    public int[] getContainedPositions(NavigationPosition northEastCorner,
-                                       NavigationPosition southWestCorner) {
-        List<Integer> result = new ArrayList<Integer>();
+    public int[] getContainedPositions(BoundingBox boundingBox) {
+        List<Integer> result = new ArrayList<>();
         List<P> positions = getPositions();
         for (int i = 0; i < positions.size(); i++) {
             P position = positions.get(i);
-            if (position.hasCoordinates() && contains(northEastCorner, southWestCorner, position))
+            if (position.hasCoordinates() && boundingBox.contains(position))
                 result.add(i);
         }
         return toArray(result);
     }
 
     public int[] getPositionsWithinDistanceToPredecessor(double distance) {
-        List<Integer> result = new ArrayList<Integer>();
+        List<Integer> result = new ArrayList<>();
         List<P> positions = getPositions();
         if (positions.size() <= 2)
             return new int[0];
         P previous = positions.get(0);
         for (int i = 1; i < positions.size() - 1; i++) {
             P next = positions.get(i);
-            if (!next.hasCoordinates() || next.calculateDistance(previous) <= distance)
+            if (!next.hasCoordinates() || toDouble(next.calculateDistance(previous)) <= distance)
                 result.add(i);
             else
                 previous = next;
@@ -292,13 +309,32 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
 
     public int getClosestPosition(double longitude, double latitude, double threshold) {
         int closestIndex = -1;
-        double closestDistance = Double.MAX_VALUE;
+        double closestDistance = MAX_VALUE;
 
         List<P> positions = getPositions();
         for (int i = 0; i < positions.size(); ++i) {
-            P point = positions.get(i);
-            Double distance = point.calculateDistance(longitude, latitude);
-            if (distance != null && distance < closestDistance && distance < threshold) {
+            P position = positions.get(i);
+            Double distance = position.calculateDistance(longitude, latitude);
+            if (distance != null && distance < closestDistance && distance <= threshold) {
+                closestDistance = distance;
+                closestIndex = i;
+            }
+        }
+        return closestIndex;
+    }
+
+    public int getClosestPosition(CompactCalendar time, long threshold) {
+        int closestIndex = -1;
+        long closestDistance = Long.MAX_VALUE;
+
+        List<P> positions = getPositions();
+        for (int i = 0; i < positions.size(); ++i) {
+            P position = positions.get(i);
+            if (!position.hasTime())
+                continue;
+
+            long distance = abs(position.getTime().getTimeInMillis() - time.getTimeInMillis());
+            if (distance < closestDistance && distance <= threshold) {
                 closestDistance = distance;
                 closestIndex = i;
             }
@@ -359,7 +395,7 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
             NavigationPosition next = positions.get(i);
             if (previous != null) {
                 Double distance = previous.calculateDistance(next);
-                if (distance != null)
+                if (!isEmpty(distance))
                     result += distance;
             }
             previous = next;
@@ -377,7 +413,7 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
             NavigationPosition next = positions.get(index);
             if (previous != null) {
                 Double delta = previous.calculateDistance(next);
-                if (delta != null)
+                if (!isEmpty(delta))
                     distance += delta;
                 if (index >= startIndex)
                     result[index - startIndex] = distance;
@@ -392,7 +428,7 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         double[] result = new double[indices.length];
         if (indices.length > 0 && getPositionCount() > 0) {
             Arrays.sort(indices);
-            int endIndex = Math.min(indices[indices.length - 1], getPositionCount() - 1);
+            int endIndex = min(indices[indices.length - 1], getPositionCount() - 1);
 
             int index = 0;
             double distance = 0.0;
@@ -402,11 +438,59 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
                 NavigationPosition next = positions.get(index);
                 if (previous != null) {
                     Double delta = previous.calculateDistance(next);
-                    if (delta != null)
+                    if (!isEmpty(delta))
                         distance += delta;
-                    int indexInIndices = Arrays.binarySearch(indices, index);
+                    int indexInIndices = binarySearch(indices, index);
                     if (indexInIndices >= 0)
                         result[indexInIndices] = distance;
+                }
+                index++;
+                previous = next;
+            }
+        }
+        return result;
+    }
+
+    public long[] getTimesFromStart(int startIndex, int endIndex) {
+        long[] result = new long[endIndex - startIndex + 1];
+        List<P> positions = getPositions();
+        int index = 0;
+        long time = 0L;
+        NavigationPosition previous = positions.size() > 0 ? positions.get(0) : null;
+        while (index <= endIndex) {
+            NavigationPosition next = positions.get(index);
+            if (previous != null) {
+                Long delta = previous.calculateTime(next);
+                if (delta != null)
+                    time += delta;
+                if (index >= startIndex)
+                    result[index - startIndex] = time;
+            }
+            index++;
+            previous = next;
+        }
+        return result;
+    }
+
+    public long[] getTimesFromStart(int[] indices) {
+        long[] result = new long[indices.length];
+        if (indices.length > 0 && getPositionCount() > 0) {
+            Arrays.sort(indices);
+            int endIndex = min(indices[indices.length - 1], getPositionCount() - 1);
+
+            int index = 0;
+            long time = 0L;
+            List<P> positions = getPositions();
+            NavigationPosition previous = positions.get(0);
+            while (index <= endIndex) {
+                NavigationPosition next = positions.get(index);
+                if (previous != null) {
+                    Long delta = previous.calculateTime(next);
+                    if (delta != null)
+                        time += delta;
+                    int indexInIndices = binarySearch(indices, index);
+                    if (indexInIndices >= 0)
+                        result[indexInIndices] = time;
                 }
                 index++;
                 previous = next;
@@ -440,22 +524,48 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
             if (previous != null) {
                 Double elevation = previous.calculateElevation(next);
                 if (elevation != null && elevation < 0)
-                    result += Math.abs(elevation);
+                    result += abs(elevation);
             }
             previous = next;
         }
         return result;
     }
 
+    public double getElevationDelta(int index) {
+        List<P> positions = getPositions();
+        NavigationPosition previous = index > 0 ? positions.get(index - 1) : null;
+        NavigationPosition current = index < positions.size() ? positions.get(index) : null;
+        if (previous != null && current != null) {
+            Double elevation = previous.calculateElevation(current);
+            if (elevation != null)
+                return elevation;
+        }
+        return 0;
+    }
+
+    public void sort(Comparator<P> comparator) {
+        List<P> positions = getPositions();
+        @SuppressWarnings({"SuspiciousToArrayCall", "unchecked"})
+        P[] sorted = (P[]) positions.toArray(new BaseNavigationPosition[positions.size()]);
+        Arrays.sort(sorted, comparator);
+        //noinspection unchecked
+        order(asList(sorted));
+    }
+
+    public void order(List<P> positions) {
+        List<P> existing = getPositions();
+        for (int i = 0; i < positions.size(); i++) {
+            existing.set(i, positions.get(i));
+        }
+    }
+
     public void revert() {
         List<P> positions = getPositions();
-        List<P> reverted = new ArrayList<P>();
+        List<P> reverted = new ArrayList<>();
         for (P position : positions) {
             reverted.add(0, position);
         }
-        for (int i = 0; i < reverted.size(); i++) {
-            positions.set(i, reverted.get(i));
-        }
+        order(reverted);
 
         String routeName = getName();
         if (!routeName.endsWith(REVERSE_ROUTE_NAME_POSTFIX))
@@ -465,30 +575,61 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         setName(routeName);
     }
 
-    public abstract P createPosition(Double longitude, Double latitude, Double elevation, Double speed, CompactCalendar time, String comment);
+    public abstract P createPosition(Double longitude, Double latitude, Double elevation, Double speed, CompactCalendar time, String description);
 
     protected abstract BcrRoute asBcrFormat(BcrFormat format);
+
     protected abstract GoPalRoute asGoPalRouteFormat(GoPalRouteFormat format);
+
     protected abstract GpxRoute asGpxFormat(GpxFormat format);
+
+    protected abstract SimpleRoute asPhotoFormat(PhotoFormat format);
+
     protected abstract KmlRoute asKmlFormat(BaseKmlFormat format);
+
     protected abstract NmeaRoute asNmeaFormat(BaseNmeaFormat format);
+
     protected abstract NmnRoute asNmnFormat(NmnFormat format);
+
     protected abstract SimpleRoute asSimpleFormat(SimpleFormat format);
+
     protected abstract TcxRoute asTcxFormat(TcxFormat format);
+
     protected abstract TomTomRoute asTomTomRouteFormat(TomTomRouteFormat format);
 
     @SuppressWarnings("UnusedDeclaration")
-    public SimpleRoute asColumbusV900StandardFormat() {
-        if (getFormat() instanceof ColumbusV900StandardFormat)
+    public SimpleRoute asApeMapFormat() {
+        if (getFormat() instanceof ApeMapFormat)
             return (SimpleRoute) this;
-        return asSimpleFormat(new ColumbusV900StandardFormat());
+        return asSimpleFormat(new ApeMapFormat());
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    public SimpleRoute asColumbusV900ProfessionalFormat() {
-        if (getFormat() instanceof ColumbusV900ProfessionalFormat)
+    public SimpleRoute asColumbusGpsBinaryFormat() {
+        if (getFormat() instanceof ColumbusGpsBinaryFormat)
             return (SimpleRoute) this;
-        return asSimpleFormat(new ColumbusV900ProfessionalFormat());
+        return asSimpleFormat(new ColumbusGpsBinaryFormat());
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public SimpleRoute asColumbusGpsStandardFormat() {
+        if (getFormat() instanceof ColumbusGpsStandardFormat)
+            return (SimpleRoute) this;
+        return asSimpleFormat(new ColumbusGpsStandardFormat());
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public SimpleRoute asColumbusGpsProfessionalFormat() {
+        if (getFormat() instanceof ColumbusGpsProfessionalFormat)
+            return (SimpleRoute) this;
+        return asSimpleFormat(new ColumbusGpsProfessionalFormat());
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public SimpleRoute asColumbusGpsType2Format() {
+        if (getFormat() instanceof ColumbusGpsType2Format)
+            return (SimpleRoute) this;
+        return asSimpleFormat(new ColumbusGpsType2Format());
     }
 
     @SuppressWarnings("UnusedDeclaration")
@@ -524,7 +665,7 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         if (getFormat() instanceof GarminFlightPlanFormat)
             return (GarminFlightPlanRoute) this;
 
-        List<GarminFlightPlanPosition> flightPlanPositions = new ArrayList<GarminFlightPlanPosition>();
+        List<GarminFlightPlanPosition> flightPlanPositions = new ArrayList<>();
         for (P position : getPositions()) {
             flightPlanPositions.add(position.asGarminFlightPlanPosition());
         }
@@ -557,6 +698,13 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         if (getFormat() instanceof GoPal5RouteFormat)
             return (GoPalRoute) this;
         return asGoPalRouteFormat(new GoPal5RouteFormat());
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public GoPalRoute asGoPal7RouteFormat() {
+        if (getFormat() instanceof GoPal5RouteFormat)
+            return (GoPalRoute) this;
+        return asGoPalRouteFormat(new GoPal7RouteFormat());
     }
 
     @SuppressWarnings("UnusedDeclaration")
@@ -623,6 +771,13 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
     }
 
     @SuppressWarnings("UnusedDeclaration")
+    public SimpleRoute asPhotoFormat() {
+        if (getFormat() instanceof PhotoFormat)
+            return (SimpleRoute) this;
+        return asPhotoFormat(new PhotoFormat());
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
     public SimpleRoute asKienzleGpsFormat() {
         if (getFormat() instanceof KienzleGpsFormat)
             return (SimpleRoute) this;
@@ -634,7 +789,7 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         if (getFormat() instanceof KlickTelRouteFormat)
             return (KlickTelRoute) this;
 
-        List<Wgs84Position> wgs84Positions = new ArrayList<Wgs84Position>();
+        List<Wgs84Position> wgs84Positions = new ArrayList<>();
         for (P position : getPositions()) {
             wgs84Positions.add(position.asWgs84Position());
         }
@@ -730,7 +885,7 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         if (getFormat() instanceof MagicMapsIktFormat)
             return (MagicMapsIktRoute) this;
 
-        List<Wgs84Position> wgs84Positions = new ArrayList<Wgs84Position>();
+        List<Wgs84Position> wgs84Positions = new ArrayList<>();
         for (P position : getPositions()) {
             wgs84Positions.add(position.asWgs84Position());
         }
@@ -742,11 +897,18 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         if (getFormat() instanceof MagicMapsPthFormat)
             return (MagicMapsPthRoute) this;
 
-        List<GkPosition> gkPositions = new ArrayList<GkPosition>();
+        List<GkPosition> gkPositions = new ArrayList<>();
         for (P position : getPositions()) {
             gkPositions.add(position.asGkPosition());
         }
         return new MagicMapsPthRoute(getCharacteristics(), gkPositions);
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public SimpleRoute asMotoPlanerUrlFormat() {
+        if (getFormat() instanceof MotoPlanerUrlFormat)
+            return (SimpleRoute) this;
+        return asSimpleFormat(new MotoPlanerUrlFormat());
     }
 
     @SuppressWarnings("UnusedDeclaration")
@@ -828,7 +990,7 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         if (getFormat() instanceof NokiaLandmarkExchangeFormat)
             return (NokiaLandmarkExchangeRoute) this;
 
-        List<Wgs84Position> wgs84Positions = new ArrayList<Wgs84Position>();
+        List<Wgs84Position> wgs84Positions = new ArrayList<>();
         for (P position : getPositions()) {
             wgs84Positions.add(position.asWgs84Position());
         }
@@ -847,7 +1009,7 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         if (getFormat() instanceof OvlFormat)
             return (OvlRoute) this;
 
-        List<Wgs84Position> ovlPositions = new ArrayList<Wgs84Position>();
+        List<Wgs84Position> ovlPositions = new ArrayList<>();
         for (P position : getPositions()) {
             ovlPositions.add(position.asOvlPosition());
         }
@@ -911,11 +1073,18 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
     }
 
     @SuppressWarnings("UnusedDeclaration")
+    public TomTomRoute asTomTom95RouteFormat() {
+        if (getFormat() instanceof TomTom95RouteFormat)
+            return (TomTomRoute) this;
+        return asTomTomRouteFormat(new TomTom95RouteFormat());
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
     public TourRoute asTourFormat() {
         if (getFormat() instanceof TourFormat)
             return (TourRoute) this;
 
-        List<TourPosition> tourPositions = new ArrayList<TourPosition>();
+        List<TourPosition> tourPositions = new ArrayList<>();
         for (P position : getPositions()) {
             tourPositions.add(position.asTourPosition());
         }
@@ -927,7 +1096,7 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         if (getFormat() instanceof ViaMichelinFormat)
             return (ViaMichelinRoute) this;
 
-        List<Wgs84Position> wgs84Positions = new ArrayList<Wgs84Position>();
+        List<Wgs84Position> wgs84Positions = new ArrayList<>();
         for (P position : getPositions()) {
             wgs84Positions.add(position.asWgs84Position());
         }
@@ -960,5 +1129,9 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         if (getFormat() instanceof WintecWbt202TesFormat)
             return (SimpleRoute) this;
         return asSimpleFormat(new WintecWbt202TesFormat());
+    }
+
+    public String toString() {
+        return super.toString() + "[name=" + getName() + ", positionCount=" + getPositionCount() + "]";
     }
 }

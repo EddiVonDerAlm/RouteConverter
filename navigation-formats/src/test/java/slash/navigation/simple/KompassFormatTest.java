@@ -22,9 +22,7 @@ package slash.navigation.simple;
 import org.junit.Test;
 import slash.navigation.base.Wgs84Position;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static slash.common.TestCase.assertDoubleEquals;
 
 public class KompassFormatTest {
@@ -51,7 +49,7 @@ public class KompassFormatTest {
         assertDoubleEquals(7.0508300, position.getLongitude());
         assertDoubleEquals(51.0450383, position.getLatitude());
         assertDoubleEquals(124.5, position.getElevation());
-        assertNull(position.getComment());
+        assertNull(position.getDescription());
     }
 
     @Test
@@ -60,6 +58,6 @@ public class KompassFormatTest {
         assertDoubleEquals(7.0508300, position.getLongitude());
         assertDoubleEquals(51.0450383, position.getLatitude());
         assertNull(position.getElevation());
-        assertNull(position.getComment());
+        assertNull(position.getDescription());
     }
 }

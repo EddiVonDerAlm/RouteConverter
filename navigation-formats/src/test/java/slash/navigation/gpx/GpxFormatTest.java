@@ -23,41 +23,16 @@ package slash.navigation.gpx;
 import org.junit.Test;
 import slash.navigation.gpx.binding11.ExtensionsType;
 import slash.navigation.gpx.binding11.GpxType;
-import slash.navigation.gpx.routecatalog10.UserextensionType;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.io.StringWriter;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static slash.common.TestCase.assertDoubleEquals;
 import static slash.navigation.common.NavigationConversion.formatBigDecimal;
+import static slash.navigation.gpx.GpxUtil.toXml;
 
 public class GpxFormatTest {
-
-    @Test
-    public void testWritingRouteConverterExtensions() throws IOException, JAXBException {
-        slash.navigation.gpx.routecatalog10.ObjectFactory rcFactory = new slash.navigation.gpx.routecatalog10.ObjectFactory();
-        UserextensionType userExtensionType = rcFactory.createUserextensionType();
-        userExtensionType.setFirstname("FIRST");
-        slash.navigation.gpx.binding11.ObjectFactory gpxFactory = new slash.navigation.gpx.binding11.ObjectFactory();
-        ExtensionsType extensionsType = gpxFactory.createExtensionsType();
-        extensionsType.getAny().add(userExtensionType);
-        GpxType gpx = gpxFactory.createGpxType();
-        gpx.setCreator("CREATOR");
-        gpx.setExtensions(extensionsType);
-        assertNotNull(gpx);
-        StringWriter writer = new StringWriter();
-        GpxUtil.marshal11(gpx, writer);
-        String string = writer.toString();
-        assertTrue(string.contains("<gpx creator=\"CREATOR\""));
-        assertTrue(string.contains("FIRST"));
-        assertTrue(string.contains("firstname"));
-        assertTrue(string.contains("<rcxx:firstname>FIRST</rcxx:firstname>"));
-    }
 
     @Test
     public void testWritingTrekBuddyExtensions() throws IOException, JAXBException {
@@ -69,9 +44,7 @@ public class GpxFormatTest {
         assertNotNull(gpx);
         gpx.setExtensions(extensionsType);
         assertNotNull(gpx);
-        StringWriter writer = new StringWriter();
-        GpxUtil.marshal11(gpx, writer);
-        String string = writer.toString();
+        String string = toXml(gpx);
         assertTrue(string.contains("<nmea:speed>123.45</nmea:speed>"));
     }
 
@@ -101,15 +74,15 @@ public class GpxFormatTest {
     @Test
     public void testExtractReason() {
         GpxPosition position = new GpxPosition(null, null, null, null, null, null);
-        assertNull(position.getComment());
+        assertNull(position.getDescription());
         assertNull(position.getCity());
         assertNull(position.getReason());
-        position.setComment("Course 97 : Barmbek-Nord");
-        assertEquals("Barmbek-Nord", position.getComment());
+        position.setDescription("Course 97 : Barmbek-Nord");
+        assertEquals("Barmbek-Nord", position.getDescription());
         assertEquals("Barmbek-Nord", position.getCity());
         assertEquals("Course 97", position.getReason());
-        position.setComment("Course 97 : Barmbek-Nord; 14.2 Km");
-        assertEquals("Barmbek-Nord; 14.2 Km", position.getComment());
+        position.setDescription("Course 97 : Barmbek-Nord; 14.2 Km");
+        assertEquals("Barmbek-Nord; 14.2 Km", position.getDescription());
         assertEquals("Barmbek-Nord; 14.2 Km", position.getCity());
         assertEquals("Course 97", position.getReason());
     }
@@ -117,12 +90,12 @@ public class GpxFormatTest {
     @Test
     public void testExtractDescription() {
         GpxPosition position = new GpxPosition(null, null, null, null, null, null);
-        assertNull(position.getComment());
+        assertNull(position.getDescription());
         assertNull(position.getCity());
         assertNull(position.getReason());
-        position.setComment("Bad Oldesloe; 58.0 Km");
+        position.setDescription("Bad Oldesloe; 58.0 Km");
         // TODO think about how to solve this with that much errors
-        // assertEquals("Bad Oldesloe", position.getComment());
+        // assertEquals("Bad Oldesloe", position.getDescription());
         // assertEquals("Bad Oldesloe", position.getCity());
         // assertEquals("58.0 Km", position.getReason());
     }

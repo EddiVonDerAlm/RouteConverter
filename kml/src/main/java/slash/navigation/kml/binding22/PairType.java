@@ -9,7 +9,12 @@
 package slash.navigation.kml.binding22;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -134,7 +139,7 @@ public class PairType
      *     
      */
     public void setAbstractStyleSelectorGroup(JAXBElement<? extends AbstractStyleSelectorType> value) {
-        this.abstractStyleSelectorGroup = ((JAXBElement<? extends AbstractStyleSelectorType> ) value);
+        this.abstractStyleSelectorGroup = value;
     }
 
     /**
@@ -161,7 +166,7 @@ public class PairType
      */
     public List<Object> getPairSimpleExtensionGroup() {
         if (pairSimpleExtensionGroup == null) {
-            pairSimpleExtensionGroup = new ArrayList<Object>();
+            pairSimpleExtensionGroup = new ArrayList<>();
         }
         return this.pairSimpleExtensionGroup;
     }
@@ -190,7 +195,7 @@ public class PairType
      */
     public List<AbstractObjectType> getPairObjectExtensionGroup() {
         if (pairObjectExtensionGroup == null) {
-            pairObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            pairObjectExtensionGroup = new ArrayList<>();
         }
         return this.pairObjectExtensionGroup;
     }

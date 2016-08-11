@@ -27,14 +27,8 @@ import javax.swing.event.TableModelListener;
 
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.Math.min;
-import static javax.swing.event.TableModelEvent.ALL_COLUMNS;
-import static javax.swing.event.TableModelEvent.DELETE;
-import static javax.swing.event.TableModelEvent.INSERT;
-import static javax.swing.event.TableModelEvent.UPDATE;
-import static slash.navigation.converter.gui.models.PositionColumns.ELEVATION_COLUMN_INDEX;
-import static slash.navigation.converter.gui.models.PositionColumns.LATITUDE_COLUMN_INDEX;
-import static slash.navigation.converter.gui.models.PositionColumns.LONGITUDE_COLUMN_INDEX;
-import static slash.navigation.converter.gui.models.PositionColumns.SPEED_COLUMN_INDEX;
+import static javax.swing.event.TableModelEvent.*;
+import static slash.navigation.converter.gui.models.PositionColumns.*;
 
 /**
  * Synchronizes changes at a {@link PositionsModel} with a {@link XYSeries}.
@@ -73,8 +67,12 @@ public abstract class PositionsModelToXYSeriesSynchronizer {
                         handleUpdate(e.getFirstRow(), e.getLastRow(), e.getColumn());
                         break;
                     case DELETE:
-                        handleDelete(e.getFirstRow(), e.getLastRow());
+                        if (getPositions().isContinousRange())
+                            return;
+                        handleRemove(e.getFirstRow(), e.getLastRow());
                         break;
+                    default:
+                        throw new IllegalArgumentException("Event type " + e.getType() + " is not supported");
                 }
             }
         });
@@ -125,7 +123,7 @@ public abstract class PositionsModelToXYSeriesSynchronizer {
         }
     }
 
-    protected void handleDelete(int firstRow, int lastRow) {
+    protected void handleRemove(int firstRow, int lastRow) {
         series.delete(firstRow, lastRow);
     }
 }

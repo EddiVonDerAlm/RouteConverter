@@ -21,10 +21,9 @@
 package slash.navigation.nmn;
 
 import org.junit.Test;
+import slash.navigation.base.ParserContextImpl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static slash.common.TestCase.assertDoubleEquals;
 
 public class Nmn4FormatTest {
@@ -47,7 +46,7 @@ public class Nmn4FormatTest {
         NmnPosition position = format.parsePosition("-|-|-|45128|Südviertel|45128|Hohenzollernstrasse/L451|-|-|-|7.00905|51.44329|-|", null);
         assertDoubleEquals(7.00905, position.getLongitude());
         assertDoubleEquals(51.44329, position.getLatitude());
-        assertEquals("45128 Südviertel, Hohenzollernstrasse/L451", position.getComment());
+        assertEquals("45128 Südviertel, Hohenzollernstrasse/L451", position.getDescription());
         assertEquals("45128", position.getZip());
         assertEquals("Südviertel", position.getCity());
         assertEquals("Hohenzollernstrasse/L451", position.getStreet());
@@ -59,7 +58,7 @@ public class Nmn4FormatTest {
         NmnPosition position = format.parsePosition("-|-|-|45128|SODVIERTEL|45128|HOHENZOLLERNSTRASSE|-|-|-|7.00905|51.44329|-|", null);
         assertDoubleEquals(7.00905, position.getLongitude());
         assertDoubleEquals(51.44329, position.getLatitude());
-        assertEquals("45128 Sodviertel, Hohenzollernstrasse", position.getComment());
+        assertEquals("45128 Sodviertel, Hohenzollernstrasse", position.getDescription());
         assertEquals("45128", position.getZip());
         assertEquals("Sodviertel", position.getCity());
         assertEquals("Hohenzollernstrasse", position.getStreet());
@@ -78,7 +77,7 @@ public class Nmn4FormatTest {
         NmnPosition position = format.parsePosition("-|-|16|-|-|Linau|-|-|-|-|-|10.46348|53.64352|-|-|", null);
         assertDoubleEquals(10.46348, position.getLongitude());
         assertDoubleEquals(53.64352, position.getLatitude());
-        assertEquals("Linau", position.getComment());
+        assertEquals("Linau", position.getDescription());
         assertNull(position.getZip());
         assertEquals("Linau", position.getCity());
         assertNull(position.getStreet());
@@ -87,10 +86,10 @@ public class Nmn4FormatTest {
 
     @Test
     public void testParseMN42Position() {
-        NmnPosition position = format.parsePosition("-|-|17|-|-|Gelsenkirchen|45896|Polsumer Straße|-|-|-|7.05143|51.59682|-|-|", null);
+        NmnPosition position = format.parsePosition("-|-|17|-|-|Gelsenkirchen|45896|Polsumer Straße|-|-|-|7.05143|51.59682|-|-|", new ParserContextImpl());
         assertDoubleEquals(7.05143, position.getLongitude());
         assertDoubleEquals(51.59682, position.getLatitude());
-        assertEquals("45896 Gelsenkirchen, Polsumer Straße", position.getComment());
+        assertEquals("45896 Gelsenkirchen, Polsumer Straße", position.getDescription());
         assertEquals("45896", position.getZip());
         assertEquals("Gelsenkirchen", position.getCity());
         assertEquals("Polsumer Straße", position.getStreet());

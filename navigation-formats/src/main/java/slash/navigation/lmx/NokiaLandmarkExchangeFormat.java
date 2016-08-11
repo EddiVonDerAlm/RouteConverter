@@ -20,17 +20,12 @@
 
 package slash.navigation.lmx;
 
-import slash.common.type.CompactCalendar;
-import slash.navigation.base.NavigationPosition;
 import slash.navigation.base.ParserContext;
 import slash.navigation.base.RouteCharacteristics;
 import slash.navigation.base.Wgs84Position;
 import slash.navigation.base.XmlNavigationFormat;
-import slash.navigation.lmx.binding.CoordinatesType;
-import slash.navigation.lmx.binding.LandmarkCollectionType;
-import slash.navigation.lmx.binding.LandmarkType;
-import slash.navigation.lmx.binding.Lmx;
-import slash.navigation.lmx.binding.ObjectFactory;
+import slash.navigation.common.NavigationPosition;
+import slash.navigation.lmx.binding.*;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
@@ -39,7 +34,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import static slash.common.io.Transfer.formatFloat;
+import static slash.common.io.Transfer.*;
 import static slash.navigation.common.NavigationConversion.formatDouble;
 import static slash.navigation.lmx.NokiaLandmarkExchangeUtil.marshal;
 import static slash.navigation.lmx.NokiaLandmarkExchangeUtil.unmarshal;
@@ -81,13 +76,13 @@ public class NokiaLandmarkExchangeFormat extends XmlNavigationFormat<NokiaLandma
                 coordinates != null ? coordinates.getLatitude() : null,
                 altitude,
                 null,
-                coordinates != null ? parseTime(coordinates.getTimeStamp()) : null,
+                coordinates != null ? parseXMLTime(coordinates.getTimeStamp()) : null,
                 landmark.getName(),
                 landmark);
     }
 
     private NokiaLandmarkExchangeRoute process(Lmx lmx) {
-        List<Wgs84Position> positions = new ArrayList<Wgs84Position>();
+        List<Wgs84Position> positions = new ArrayList<>();
 
         String name = null, description = null;
         LandmarkType aLandmark = lmx.getLandmark();
@@ -131,7 +126,7 @@ public class NokiaLandmarkExchangeFormat extends XmlNavigationFormat<NokiaLandma
             LandmarkType landmarkType = position.getOrigin(LandmarkType.class);
             if (landmarkType == null)
                 landmarkType = objectFactory.createLandmarkType();
-            landmarkType.setName(position.getComment());
+            landmarkType.setName(position.getDescription());
 
             CoordinatesType coordinatesType = landmarkType.getCoordinates();
             if (coordinatesType == null)
@@ -139,7 +134,7 @@ public class NokiaLandmarkExchangeFormat extends XmlNavigationFormat<NokiaLandma
             coordinatesType.setAltitude(formatFloat(position.getElevation()));
             coordinatesType.setLatitude(formatDouble(position.getLatitude(), 7));
             coordinatesType.setLongitude(formatDouble(position.getLongitude(), 7));
-            coordinatesType.setTimeStamp(formatTime(position.getTime()));
+            coordinatesType.setTimeStamp(formatXMLTime(position.getTime()));
             landmarkType.setCoordinates(coordinatesType);
 
             landmarkTypeList.add(landmarkType);
@@ -149,7 +144,7 @@ public class NokiaLandmarkExchangeFormat extends XmlNavigationFormat<NokiaLandma
         return lmx;
     }
 
-    public void read(InputStream source, CompactCalendar startDate, ParserContext<NokiaLandmarkExchangeRoute> context) throws Exception {
+    public void read(InputStream source, ParserContext<NokiaLandmarkExchangeRoute> context) throws Exception {
         Lmx lmx = unmarshal(source);
         context.appendRoute(process(lmx));
     }

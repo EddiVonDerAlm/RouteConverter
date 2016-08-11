@@ -20,18 +20,12 @@
 
 package slash.navigation.converter.gui.models;
 
-import slash.navigation.catalog.domain.Catalog;
-import slash.navigation.catalog.domain.Category;
-import slash.navigation.catalog.domain.Route;
-import slash.navigation.catalog.model.CategoryTreeModel;
-import slash.navigation.catalog.model.CategoryTreeNode;
-import slash.navigation.catalog.model.CategoryTreeNodeImpl;
-import slash.navigation.catalog.model.RouteComparator;
-import slash.navigation.catalog.model.RouteModel;
-import slash.navigation.catalog.model.RoutesTableModel;
-import slash.navigation.converter.gui.helper.RouteServiceOperator;
+import slash.navigation.converter.gui.helpers.RouteServiceOperator;
+import slash.navigation.routes.Catalog;
+import slash.navigation.routes.Category;
+import slash.navigation.routes.Route;
+import slash.navigation.routes.impl.*;
 
-import javax.swing.*;
 import javax.swing.tree.TreeModel;
 import java.io.File;
 import java.io.IOException;
@@ -39,8 +33,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.sort;
-import static slash.navigation.converter.gui.helper.JTreeHelper.asNames;
-import static slash.navigation.converter.gui.helper.JTreeHelper.asParents;
+import static javax.swing.SwingUtilities.invokeLater;
+import static slash.navigation.converter.gui.helpers.RouteModelHelper.asNames;
+import static slash.navigation.converter.gui.helpers.RouteModelHelper.asParents;
 
 /**
  * Acts as a {@link TreeModel} for the categories and routes of a {@link Catalog}.
@@ -69,7 +64,7 @@ public class CatalogModelImpl implements CatalogModel {
 
     public void setCurrentCategory(CategoryTreeNode category) {
         List<Route> routes = category.getRoutes();
-        List<RouteModel> routeModels = new ArrayList<RouteModel>();
+        List<RouteModel> routeModels = new ArrayList<>();
         if (routes != null) {
             Route[] routesArray = routes.toArray(new Route[routes.size()]);
             sort(routesArray, routeComparator);
@@ -86,14 +81,14 @@ public class CatalogModelImpl implements CatalogModel {
             }
 
             public void run() throws IOException {
-                final List<CategoryTreeNode> categories = new ArrayList<CategoryTreeNode>();
+                final List<CategoryTreeNode> categories = new ArrayList<>();
                 for (int i = 0; i < parents.size(); i++) {
                     CategoryTreeNode parent = parents.get(i);
                     Category category = parent.getCategory().create(names.get(i));
                     categories.add(new CategoryTreeNodeImpl(category));
                 }
 
-                SwingUtilities.invokeLater(new Runnable() {
+                invokeLater(new Runnable() {
                     public void run() {
                         for (int i = 0; i < parents.size(); i++) {
                             CategoryTreeNode parent = parents.get(i);
@@ -120,7 +115,7 @@ public class CatalogModelImpl implements CatalogModel {
 
                 category.getCategory().update(null, name);
 
-                SwingUtilities.invokeLater(new Runnable() {
+                invokeLater(new Runnable() {
                     public void run() {
                         categoryTreeModel.nodeChanged(category);
                     }
@@ -152,7 +147,7 @@ public class CatalogModelImpl implements CatalogModel {
                     category.getCategory().update(parent.getCategory(), category.getCategory().getName());
                 }
 
-                SwingUtilities.invokeLater(new Runnable() {
+                invokeLater(new Runnable() {
                     public void run() {
                         for (int i = 0; i < categories.size(); i++) {
                             CategoryTreeNode category = categories.get(i);
@@ -168,14 +163,14 @@ public class CatalogModelImpl implements CatalogModel {
         });
     }
 
-    public void removeCategories(List<CategoryTreeNode> categories, Runnable invokeLaterRunnable) {
-        removeCategories(asParents(categories), asNames(categories), invokeLaterRunnable);
+    public void deleteCategories(List<CategoryTreeNode> categories, Runnable invokeLaterRunnable) {
+        deleteCategories(asParents(categories), asNames(categories), invokeLaterRunnable);
     }
 
-    public void removeCategories(final List<CategoryTreeNode> parents, final List<String> names, final Runnable invokeLaterRunnable) {
+    public void deleteCategories(final List<CategoryTreeNode> parents, final List<String> names, final Runnable invokeLaterRunnable) {
         operator.executeOperation(new RouteServiceOperator.Operation() {
             public String getName() {
-                return "RemoveCategories";
+                return "DeleteCategories";
             }
 
             public void run() throws IOException {
@@ -188,14 +183,15 @@ public class CatalogModelImpl implements CatalogModel {
                     category.getCategory().delete();
                 }
 
-                SwingUtilities.invokeLater(new Runnable() {
+                invokeLater(new Runnable() {
                     public void run() {
+                        if (invokeLaterRunnable != null)
+                            invokeLaterRunnable.run();
+
                         for (int i = 0; i < parents.size(); i++) {
                             CategoryTreeNode category = categoryTreeModel.getChild(parents.get(i), names.get(i));
                             categoryTreeModel.removeNodeFromParent(category);
                         }
-                        if (invokeLaterRunnable != null)
-                            invokeLaterRunnable.run();
                     }
                 });
             }
@@ -213,7 +209,7 @@ public class CatalogModelImpl implements CatalogModel {
                 final RouteModel routeModel = new RouteModel(category, route);
                 callback.setRoute(routeModel);
 
-                SwingUtilities.invokeLater(new Runnable() {
+                invokeLater(new Runnable() {
                     public void run() {
                         routesTableModel.addRoute(routeModel);
                     }
@@ -222,18 +218,21 @@ public class CatalogModelImpl implements CatalogModel {
         });
     }
 
-    public void renameRoute(final RouteModel route, final String name) {
+    public void renameRoute(final RouteModel route, final String name, final Runnable invokeLaterRunnable) {
         operator.executeOperation(new RouteServiceOperator.Operation() {
             public String getName() {
                 return "RenameRoute";
             }
 
             public void run() throws IOException {
-                route.getRoute().update(route.getCategory().getCategory().getUrl(), name);
+                route.getRoute().update(route.getCategory().getCategory(), name);
 
-                SwingUtilities.invokeLater(new Runnable() {
+                invokeLater(new Runnable() {
                     public void run() {
                         routesTableModel.updateRoute(route);
+
+                        if (invokeLaterRunnable != null)
+                            invokeLaterRunnable.run();
                     }
                 });
             }
@@ -261,10 +260,10 @@ public class CatalogModelImpl implements CatalogModel {
                     if (category.isRemote() && parent.isLocal())
                         throw new IOException("cannot move remote route " + route.getName() + " to local parent " + parent.getName());
 
-                    route.getRoute().update(parent.getCategory().getUrl(), route.getDescription() != null ? route.getDescription() : route.getName());
+                    route.getRoute().update(parent.getCategory(), route.getDescription() != null ? route.getDescription() : route.getName());
                 }
 
-                SwingUtilities.invokeLater(new Runnable() {
+                invokeLater(new Runnable() {
                     public void run() {
                         for (CategoryTreeNode parent : parents) {
                             setCurrentCategory(parent);
@@ -277,24 +276,23 @@ public class CatalogModelImpl implements CatalogModel {
         });
     }
 
-    public void removeRoutes(final List<RouteModel> routes) {
+    public void deleteRoutes(final List<RouteModel> routes) {
         operator.executeOperation(new RouteServiceOperator.Operation() {
             public String getName() {
-                return "RemoveRoutes";
+                return "DeleteRoutes";
             }
 
             public void run() throws IOException {
-                for (RouteModel route : routes) {
+                for (final RouteModel route : routes) {
                     route.getRoute().delete();
+
+                    invokeLater(new Runnable() {
+                        public void run() {
+                            routesTableModel.deleteRoute(route);
+                        }
+                    });
                 }
 
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        for (RouteModel route : routes) {
-                            routesTableModel.removeRoute(route);
-                        }
-                    }
-                });
             }
         });
     }

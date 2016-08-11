@@ -19,7 +19,8 @@
 */
 package slash.navigation.rest;
 
-import org.apache.commons.httpclient.methods.DeleteMethod;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpPost;
 
 /**
  * Wrapper to initiate an HTTP DELETE Request.
@@ -27,9 +28,18 @@ import org.apache.commons.httpclient.methods.DeleteMethod;
  * @author Christian Pesch
  */
 
-public class Delete extends HttpRequest {
-
+public class Delete extends MultipartRequest {
     public Delete(String url, Credentials credentials) {
-        super(new DeleteMethod(url), credentials);
+        super(new HttpDeleteWithEnclosingEntity(url), credentials);
+    }
+
+    private static class HttpDeleteWithEnclosingEntity extends HttpPost {
+        public HttpDeleteWithEnclosingEntity(String uri) {
+            super(uri);
+        }
+
+        public String getMethod() {
+            return HttpDelete.METHOD_NAME;
+        }
     }
 }

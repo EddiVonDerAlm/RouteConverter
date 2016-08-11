@@ -9,7 +9,12 @@
 package slash.navigation.kml.binding22;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -134,7 +139,7 @@ public class LatLonAltBoxType
      *     
      */
     public void setAltitudeModeGroup(JAXBElement<?> value) {
-        this.altitudeModeGroup = ((JAXBElement<?> ) value);
+        this.altitudeModeGroup = value;
     }
 
     /**
@@ -161,7 +166,7 @@ public class LatLonAltBoxType
      */
     public List<Object> getLatLonAltBoxSimpleExtensionGroup() {
         if (latLonAltBoxSimpleExtensionGroup == null) {
-            latLonAltBoxSimpleExtensionGroup = new ArrayList<Object>();
+            latLonAltBoxSimpleExtensionGroup = new ArrayList<>();
         }
         return this.latLonAltBoxSimpleExtensionGroup;
     }
@@ -190,7 +195,7 @@ public class LatLonAltBoxType
      */
     public List<AbstractObjectType> getLatLonAltBoxObjectExtensionGroup() {
         if (latLonAltBoxObjectExtensionGroup == null) {
-            latLonAltBoxObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            latLonAltBoxObjectExtensionGroup = new ArrayList<>();
         }
         return this.latLonAltBoxObjectExtensionGroup;
     }

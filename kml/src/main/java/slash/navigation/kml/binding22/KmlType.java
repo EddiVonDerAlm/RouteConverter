@@ -11,7 +11,13 @@ package slash.navigation.kml.binding22;
 import slash.navigation.kml.binding22gx.TourType;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -125,7 +131,7 @@ public class KmlType {
      *     
      */
     public void setAbstractFeatureGroup(JAXBElement<? extends AbstractFeatureType> value) {
-        this.abstractFeatureGroup = ((JAXBElement<? extends AbstractFeatureType> ) value);
+        this.abstractFeatureGroup = value;
     }
 
     /**
@@ -152,7 +158,7 @@ public class KmlType {
      */
     public List<Object> getKmlSimpleExtensionGroup() {
         if (kmlSimpleExtensionGroup == null) {
-            kmlSimpleExtensionGroup = new ArrayList<Object>();
+            kmlSimpleExtensionGroup = new ArrayList<>();
         }
         return this.kmlSimpleExtensionGroup;
     }
@@ -181,7 +187,7 @@ public class KmlType {
      */
     public List<AbstractObjectType> getKmlObjectExtensionGroup() {
         if (kmlObjectExtensionGroup == null) {
-            kmlObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            kmlObjectExtensionGroup = new ArrayList<>();
         }
         return this.kmlObjectExtensionGroup;
     }

@@ -21,24 +21,17 @@
 package slash.navigation.simple;
 
 import slash.common.type.CompactCalendar;
-import slash.navigation.base.NavigationPosition;
-import slash.navigation.base.RouteCharacteristics;
-import slash.navigation.base.SimpleLineBasedFormat;
-import slash.navigation.base.SimpleRoute;
-import slash.navigation.base.Wgs84Position;
-import slash.navigation.base.Wgs84Route;
+import slash.navigation.base.*;
+import slash.navigation.common.NavigationPosition;
 
 import java.io.PrintWriter;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static slash.common.io.Transfer.parseDouble;
 import static slash.common.io.Transfer.trim;
-import static slash.common.type.CompactCalendar.UTC;
+import static slash.common.type.CompactCalendar.parseDate;
 import static slash.navigation.base.RouteCharacteristics.Route;
 
 /**
@@ -53,12 +46,7 @@ import static slash.navigation.base.RouteCharacteristics.Route;
 public class KienzleGpsFormat extends SimpleLineBasedFormat<SimpleRoute> {
     private static final char SEPARATOR = ';';
     private static final String HEADER_LINE = "Position;X;Y";
-
-    private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mm");
-    static {
-        TIME_FORMAT.setTimeZone(UTC);
-    }
-
+    private static final String TIME_FORMAT = "HH:mm";
     private static final Pattern LINE_PATTERN = Pattern.
             compile(BEGIN_OF_LINE +
                     WHITE_SPACE + "\\d+" + WHITE_SPACE + SEPARATOR +
@@ -104,18 +92,13 @@ public class KienzleGpsFormat extends SimpleLineBasedFormat<SimpleRoute> {
         return matcher.matches();
     }
 
-    private CompactCalendar parseTime(String string) {
-        if (string == null)
+    private CompactCalendar parseTime(String time) {
+        if (time == null)
             return null;
-        try {
-            Date parsed = TIME_FORMAT.parse(string);
-            return CompactCalendar.fromDate(parsed);
-        } catch (ParseException e) {
-            return null;
-        }
+        return parseDate(time, TIME_FORMAT);
     }
 
-    protected Wgs84Position parsePosition(String line, CompactCalendar startDate) {
+    protected Wgs84Position parsePosition(String line, ParserContext context) {
         Matcher lineMatcher = LINE_PATTERN.matcher(line);
         if (!lineMatcher.matches())
             throw new IllegalArgumentException("'" + line + "' does not match");
@@ -127,7 +110,7 @@ public class KienzleGpsFormat extends SimpleLineBasedFormat<SimpleRoute> {
         String street = trim(lineMatcher.group(7));
         String houseNo = trim(lineMatcher.group(8));
         String time = lineMatcher.group(9);
-        String comment = (organization != null ? organization + ": " : "") +
+        String description = (organization != null ? organization + ": " : "") +
                 (postalCode != null ? postalCode + " " : "") +
                 (city != null ? city + ", " : "") +
                 (street != null ? street + " " : "") +
@@ -135,8 +118,8 @@ public class KienzleGpsFormat extends SimpleLineBasedFormat<SimpleRoute> {
 
         CompactCalendar calendar = parseTime(time);
         Wgs84Position position = new Wgs84Position(parseDouble(longitude), parseDouble(latitude),
-                null, null, calendar, comment);
-        position.setStartDate(startDate);
+                null, null, calendar, description);
+        position.setStartDate(context.getStartDate());
         return position;
     }
 

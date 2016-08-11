@@ -22,10 +22,7 @@ package slash.navigation.simple;
 import org.junit.Test;
 import slash.navigation.base.Wgs84Position;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static slash.common.TestCase.assertDoubleEquals;
 
 public class GlopusFormatTest {
@@ -55,6 +52,6 @@ public class GlopusFormatTest {
         assertDoubleEquals(7.0508300, position.getLongitude());
         assertDoubleEquals(51.0450383, position.getLatitude());
         assertNull(position.getElevation());
-        assertEquals("Hofgeismar", position.getComment());
+        assertEquals("Hofgeismar", position.getDescription());
     }
 }

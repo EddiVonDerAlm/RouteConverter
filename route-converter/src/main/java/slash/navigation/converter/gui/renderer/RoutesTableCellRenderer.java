@@ -20,47 +20,31 @@
 
 package slash.navigation.converter.gui.renderer;
 
-import slash.navigation.catalog.model.RouteModel;
-import slash.navigation.converter.gui.RouteConverter;
+import slash.navigation.routes.impl.RouteModel;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
+
+import static slash.navigation.converter.gui.helpers.RouteHelper.*;
 
 /**
- * Renders the table cells of the positions table.
+ * Renders the table cells of the routes table.
  *
  * @author Christian Pesch
  */
 
 public class RoutesTableCellRenderer extends AlternatingColorTableCellRenderer {
-
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int rowIndex, int columnIndex) {
         JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, rowIndex, columnIndex);
         RouteModel route = (RouteModel) value;
         switch (columnIndex) {
             case 0:
-                String name = route.getName();
-                if (name == null)
-                    name = RouteConverter.getBundle().getString("no-name");
-                try {
-                    String description = route.getRoute().getDescription();
-                    if(description != null)
-                        name = description + " (" + name + ")";
-                } catch (IOException e) {
-                    // intentionally left empty
-                }
-                label.setText(name);
+                label.setText(formatDescription(route));
+                label.setToolTipText(formatUrl(route));
                 break;
             case 1:
-                try {
-                    String creator = route.getRoute().getCreator();
-                    if (creator == null)
-                        creator = RouteConverter.getBundle().getString("no-creator");
-                    label.setText(creator);
-                } catch (IOException e) {
-                    label.setText(RouteConverter.getBundle().getString("loading"));
-                }
+                label.setText(formatCreator(route));
+                label.setToolTipText(formatUrl(route));
                 break;
             default:
                 throw new IllegalArgumentException("Row " + rowIndex + ", column " + columnIndex + " does not exist");

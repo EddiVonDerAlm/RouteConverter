@@ -22,17 +22,17 @@ package slash.navigation.gopal;
 
 import org.junit.Test;
 import slash.common.type.CompactCalendar;
+import slash.navigation.base.ParserContextImpl;
 import slash.navigation.base.Wgs84Position;
 
 import java.text.DateFormat;
 import java.util.Calendar;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static java.util.Calendar.*;
+import static org.junit.Assert.*;
 import static slash.common.TestCase.assertDoubleEquals;
 import static slash.common.TestCase.calendar;
+import static slash.common.type.CompactCalendar.UTC;
 
 public class GoPalTrackFormatTest {
     GoPalTrackFormat format = new GoPalTrackFormat();
@@ -61,7 +61,7 @@ public class GoPalTrackFormatTest {
 
     @Test
     public void testParsePosition() {
-        Wgs84Position position = format.parsePosition("6664226, 180820, 8.016903, 52.345550, 12.95, 30.0394, 2, 3.000001, 4", null);
+        Wgs84Position position = format.parsePosition("6664226, 180820, 8.016903, 52.345550, 12.95, 30.0394, 2, 3.000001, 4", new ParserContextImpl());
         assertDoubleEquals(8.016903, position.getLongitude());
         assertDoubleEquals(52.34555, position.getLatitude());
         assertNull(position.getElevation());
@@ -70,42 +70,42 @@ public class GoPalTrackFormatTest {
         assertDoubleEquals(3.000001, position.getHdop());
         assertEquals(new Integer(4), position.getSatellites());
         DateFormat format = DateFormat.getDateTimeInstance();
-        format.setTimeZone(CompactCalendar.UTC);
+        format.setTimeZone(UTC);
         String actual = format.format(position.getTime().getTime());
-        Calendar expectedCal = Calendar.getInstance(CompactCalendar.UTC);
+        Calendar expectedCal = Calendar.getInstance(UTC);
         expectedCal.setTimeInMillis(position.getTime().getTimeInMillis());
-        expectedCal.set(Calendar.HOUR_OF_DAY, 18);
-        expectedCal.set(Calendar.MINUTE, 8);
-        expectedCal.set(Calendar.SECOND, 20);
+        expectedCal.set(HOUR_OF_DAY, 18);
+        expectedCal.set(MINUTE, 8);
+        expectedCal.set(SECOND, 20);
         String expected = format.format(expectedCal.getTime());
         assertEquals(expected, actual);
         assertEquals(expectedCal, position.getTime().getCalendar());
-        assertNull(position.getComment());
+        assertNull(position.getDescription());
     }
 
     @Test
     public void testParseNegativePosition() {
-        Wgs84Position position = format.parsePosition("6664226, 180820, -8.016903, -52.345550, 12.95, 30.0394, 2, 3.000000, 3", null);
+        Wgs84Position position = format.parsePosition("6664226, 180820, -8.016903, -52.345550, 12.95, 30.0394, 2, 3.000000, 3", new ParserContextImpl());
         assertDoubleEquals(-8.016903, position.getLongitude());
         assertDoubleEquals(-52.34555, position.getLatitude());
         assertNull(position.getElevation());
         DateFormat format = DateFormat.getDateTimeInstance();
-        format.setTimeZone(CompactCalendar.UTC);
+        format.setTimeZone(UTC);
         String actual = format.format(position.getTime().getTime());
-        Calendar expectedCal = Calendar.getInstance(CompactCalendar.UTC);
+        Calendar expectedCal = Calendar.getInstance(UTC);
         expectedCal.setTimeInMillis(position.getTime().getTimeInMillis());
-        expectedCal.set(Calendar.HOUR_OF_DAY, 18);
-        expectedCal.set(Calendar.MINUTE, 8);
-        expectedCal.set(Calendar.SECOND, 20);
+        expectedCal.set(HOUR_OF_DAY, 18);
+        expectedCal.set(MINUTE, 8);
+        expectedCal.set(SECOND, 20);
         String expected = format.format(expectedCal.getTime());
         assertEquals(expected, actual);
         assertEquals(expectedCal, position.getTime().getCalendar());
-        assertNull(position.getComment());
+        assertNull(position.getDescription());
     }
 
     @Test
     public void testParsePositionWithDate() {
-        Wgs84Position position = format.parsePosition("31653, 092258, -22.760357, 65.125717, 334.4, 20.7424, 2, 1.000000, 8, 20100719, 0, 14", null);
+        Wgs84Position position = format.parsePosition("31653, 092258, -22.760357, 65.125717, 334.4, 20.7424, 2, 1.000000, 8, 20100719, 0, 14", new ParserContextImpl());
         assertDoubleEquals(-22.760357, position.getLongitude());
         assertDoubleEquals(65.125717, position.getLatitude());
         assertNull(position.getElevation());
@@ -117,6 +117,6 @@ public class GoPalTrackFormatTest {
         CompactCalendar expectedCal = calendar(2010, 7, 19, 9, 22, 58);
         String expected = DateFormat.getDateTimeInstance().format(expectedCal.getTime());
         assertEquals(expected, actual);
-        assertNull(position.getComment());
+        assertNull(position.getDescription());
     }
 }

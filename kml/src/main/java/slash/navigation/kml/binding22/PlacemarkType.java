@@ -12,7 +12,12 @@ import slash.navigation.kml.binding22gx.MultiTrackType;
 import slash.navigation.kml.binding22gx.TrackType;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,7 +98,7 @@ public class PlacemarkType
      *     
      */
     public void setAbstractGeometryGroup(JAXBElement<? extends AbstractGeometryType> value) {
-        this.abstractGeometryGroup = ((JAXBElement<? extends AbstractGeometryType> ) value);
+        this.abstractGeometryGroup = value;
     }
 
     /**
@@ -120,7 +125,7 @@ public class PlacemarkType
      */
     public List<Object> getPlacemarkSimpleExtensionGroup() {
         if (placemarkSimpleExtensionGroup == null) {
-            placemarkSimpleExtensionGroup = new ArrayList<Object>();
+            placemarkSimpleExtensionGroup = new ArrayList<>();
         }
         return this.placemarkSimpleExtensionGroup;
     }
@@ -149,7 +154,7 @@ public class PlacemarkType
      */
     public List<AbstractObjectType> getPlacemarkObjectExtensionGroup() {
         if (placemarkObjectExtensionGroup == null) {
-            placemarkObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            placemarkObjectExtensionGroup = new ArrayList<>();
         }
         return this.placemarkObjectExtensionGroup;
     }

@@ -1,6 +1,4 @@
 /**
- * Contains type helpers.
- * <p>
- * This package facilitates types such as hexadecimal numbers, compact calenders and ISO8601 times.
+ * Basic data types such as hexadecimal number, compact calender and ISO8601 time.
  */
 package slash.common.type;

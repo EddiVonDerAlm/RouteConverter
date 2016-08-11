@@ -21,12 +21,14 @@
 package slash.navigation.converter.gui.models;
 
 import slash.navigation.base.BaseRoute;
+import slash.navigation.common.NavigationPosition;
 
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Comparator;
 
 /**
  * Acts as a {@link TableColumn} for the positions of a {@link BaseRoute}.
@@ -35,14 +37,18 @@ import java.beans.PropertyChangeListener;
  */
 
 public class PositionTableColumn extends TableColumn {
+    public static final String VISIBLE_PROPERTY_NAME = "visible";
     private boolean visible;
     private final String name;
+    private final Comparator<NavigationPosition> comparator;
 
     public PositionTableColumn(int modelIndex, String name, boolean visible,
-                               TableCellRenderer cellRenderer, TableCellEditor cellEditor) {
+                               TableCellRenderer cellRenderer, TableCellEditor cellEditor,
+                               Comparator<NavigationPosition> comparator) {
         super(modelIndex, 75, cellRenderer, cellEditor);
-        this.visible = visible;
         this.name = name;
+        this.visible = visible;
+        this.comparator = comparator;
     }
 
     public String getName() {
@@ -57,7 +63,7 @@ public class PositionTableColumn extends TableColumn {
         boolean oldVisibile = this.visible;
         this.visible = newVisible;
 
-        PropertyChangeEvent changeEvent = new PropertyChangeEvent(this, "visible", oldVisibile, newVisible);
+        PropertyChangeEvent changeEvent = new PropertyChangeEvent(this, VISIBLE_PROPERTY_NAME, oldVisibile, newVisible);
         for(PropertyChangeListener changeListener : getPropertyChangeListeners()) {
             changeListener.propertyChange(changeEvent);
         }
@@ -65,5 +71,9 @@ public class PositionTableColumn extends TableColumn {
 
     public void toggleVisibility() {
         setVisible(!isVisible());
+    }
+
+    public Comparator<NavigationPosition> getComparator() {
+        return comparator;
     }
 }

@@ -20,21 +20,17 @@
 
 package slash.navigation.converter.gui.models;
 
-import slash.navigation.base.BaseNavigationFormat;
-import slash.navigation.base.BaseNavigationPosition;
-import slash.navigation.base.BaseRoute;
-import slash.navigation.base.FormatAndRoutes;
-import slash.navigation.base.NavigationFormat;
-import slash.navigation.converter.gui.helper.AbstractListDataListener;
-import slash.navigation.converter.gui.helper.JTableHelper;
+import slash.navigation.base.*;
+import slash.navigation.converter.gui.helpers.AbstractListDataListener;
 
 import javax.swing.*;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ListDataEvent;
-import javax.swing.event.ListDataListener;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
+import javax.swing.event.*;
 import java.util.List;
+
+import static javax.swing.event.ListDataEvent.CONTENTS_CHANGED;
+import static slash.navigation.converter.gui.models.CharacteristicsModel.IGNORE;
+import static slash.navigation.converter.gui.models.PositionColumns.DISTANCE_COLUMN_INDEX;
+import static slash.navigation.gui.helpers.JTableHelper.isFirstToLastRow;
 
 /**
  * Acts as a {@link ComboBoxModel} for the routes of a {@link FormatAndRoutes}.
@@ -43,31 +39,35 @@ import java.util.List;
  */
 
 public class FormatAndRoutesModelImpl extends AbstractListModel implements FormatAndRoutesModel {
+    private final PositionsModel positionsModel;
+    private final CharacteristicsModel characteristicsModel;
     private boolean modified = false;
     private FormatAndRoutes formatAndRoutes;
-    private PositionsModel positionsModel;
-    private CharacteristicsModel characteristicsModel = new CharacteristicsModel();
 
-    public FormatAndRoutesModelImpl(PositionsModel positionsModel) {
+    public FormatAndRoutesModelImpl(PositionsModel positionsModel, CharacteristicsModel characteristicsModel) {
         this.positionsModel = positionsModel;
-        getPositionsModel().addTableModelListener(new TableModelListener() {
-            public void tableChanged(TableModelEvent e) {
-                // ignore events following setSelectedItem()
-                if (JTableHelper.isFirstToLastRow(e))
-                    return;
+        this.characteristicsModel = characteristicsModel;
 
+        positionsModel.addTableModelListener(new TableModelListener() {
+            public void tableChanged(TableModelEvent e) {
+                // ignore events following setSelectedRoute()
+                if (isFirstToLastRow(e))
+                    return;
+                // ignore distance column updates from the overlay position model
+                if (e.getColumn() == DISTANCE_COLUMN_INDEX)
+                    return;
                 setModified(true);
             }
         });
         addListDataListener(new AbstractListDataListener() {
             public void process(ListDataEvent e) {
-                // ignore events following setSelectedItem()
-                if (e.getType() == ListDataEvent.CONTENTS_CHANGED && e.getIndex0() == -1 && e.getIndex1() == -1)
+                // ignore events following setSelectedRoute()
+                if (e.getType() == CONTENTS_CHANGED && e.getIndex0() == -1 && e.getIndex1() == -1)
                     return;
                 setModified(true);
             }
         });
-        getCharacteristicsModel().addListDataListener(new ListDataListener() {
+        characteristicsModel.addListDataListener(new ListDataListener() {
             public void intervalAdded(ListDataEvent e) {
             }
 
@@ -76,7 +76,7 @@ public class FormatAndRoutesModelImpl extends AbstractListModel implements Forma
 
             public void contentsChanged(ListDataEvent e) {
                 // ignore events following setRoute()
-                if (e.getType() == ListDataEvent.CONTENTS_CHANGED && e.getIndex0() == CharacteristicsModel.IGNORE && e.getIndex1() == CharacteristicsModel.IGNORE)
+                if (e.getType() == CONTENTS_CHANGED && e.getIndex0() == IGNORE && e.getIndex1() == IGNORE)
                     return;
                 if (formatAndRoutes.getFormat().isWritingRouteCharacteristics())
                     setModified(true);
@@ -159,14 +159,6 @@ public class FormatAndRoutesModelImpl extends AbstractListModel implements Forma
         return getRoutes().indexOf(route);
     }
 
-    public PositionsModel getPositionsModel() {
-        return positionsModel;
-    }
-
-    public CharacteristicsModel getCharacteristicsModel() {
-        return characteristicsModel;
-    }
-
     public boolean isModified() {
         return modified;
     }
@@ -196,7 +188,7 @@ public class FormatAndRoutesModelImpl extends AbstractListModel implements Forma
     }
 
     public BaseRoute getSelectedRoute() {
-        return getPositionsModel().getRoute();
+        return positionsModel.getRoute();
     }
 
     @SuppressWarnings("unchecked")
@@ -208,8 +200,8 @@ public class FormatAndRoutesModelImpl extends AbstractListModel implements Forma
     public void setSelectedRoute(BaseRoute route) {
         if ((getSelectedRoute() != null && !getSelectedRoute().equals(route)) ||
                 getSelectedRoute() == null && route != null) {
-            getPositionsModel().setRoute(route);
-            getCharacteristicsModel().setRoute(route);
+            positionsModel.setRoute(route);
+            characteristicsModel.setRoute(route);
             fireContentsChanged(this, -1, -1);
         }
     }

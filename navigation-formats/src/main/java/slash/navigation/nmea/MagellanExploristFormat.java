@@ -1,7 +1,7 @@
 package slash.navigation.nmea;
 
-import slash.navigation.base.NavigationPosition;
 import slash.navigation.base.RouteCharacteristics;
+import slash.navigation.common.NavigationPosition;
 import slash.navigation.common.ValueAndOrientation;
 
 import java.io.PrintWriter;
@@ -9,14 +9,10 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.List;
 import java.util.Locale;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static slash.common.io.Transfer.escape;
-import static slash.common.io.Transfer.parseDouble;
-import static slash.common.io.Transfer.toMixedCase;
-import static slash.common.io.Transfer.trim;
+import static slash.common.io.Transfer.*;
 
 /**
  * Reads and writes Magellan Explorist (.log) files.
@@ -28,10 +24,6 @@ import static slash.common.io.Transfer.trim;
  */
 
 public class MagellanExploristFormat extends BaseNmeaFormat {
-    static {
-        log = Logger.getLogger(MagellanExploristFormat.class.getName());
-    }
-
     private static final String HEADER_LINE = "$PMGNFMT,%TRK,LAT,HEMI,LON,HEMI,ALT,UNIT,TIME,VALID,NAME,%META,ASCII";
     
     private static final Pattern TRK_PATTERN = Pattern.
@@ -42,7 +34,7 @@ public class MagellanExploristFormat extends BaseNmeaFormat {
                     "M" + SEPARATOR +
                     "([\\d\\.]*)" + SEPARATOR +     // UTC Time, hhmmss
                     "[A]" + SEPARATOR +
-                    "(.*)" + SEPARATOR +            // Comment,
+                    "(.*)" + SEPARATOR +            // description,
                     "(\\d*)" +                      // Date, ddmmyy
                     END_OF_LINE);
 
@@ -83,10 +75,10 @@ public class MagellanExploristFormat extends BaseNmeaFormat {
             String westOrEast = matcher.group(4);
             String altitude = matcher.group(5);
             String time = matcher.group(6);
-            String comment = toMixedCase(matcher.group(7));
+            String description = toMixedCase(matcher.group(7));
             String date = matcher.group(8);
             return new NmeaPosition(parseDouble(longitude), westOrEast, parseDouble(latitude), northOrSouth,
-                    parseDouble(altitude), null, null, parseDateAndTime(date, time), trim(comment));
+                    parseDouble(altitude), null, null, parseDateAndTime(date, time), trim(description));
         }
 
         throw new IllegalArgumentException("'" + line + "' does not match");
@@ -102,14 +94,14 @@ public class MagellanExploristFormat extends BaseNmeaFormat {
         return ALTITUDE_NUMBER_FORMAT.format(aDouble);
     }
 
-    protected void writePosition(NmeaPosition position, PrintWriter writer, int index) {
+    protected void writePosition(NmeaPosition position, PrintWriter writer) {
         ValueAndOrientation longitudeAsValueAndOrientation = position.getLongitudeAsValueAndOrientation();
         String longitude = formatLongitude(longitudeAsValueAndOrientation.getValue());
         String westOrEast = longitudeAsValueAndOrientation.getOrientation().value();
         ValueAndOrientation latitudeAsValueAndOrientation = position.getLatitudeAsValueAndOrientation();
-        String latitude = formatLatititude(latitudeAsValueAndOrientation.getValue());
+        String latitude = formatLatitude(latitudeAsValueAndOrientation.getValue());
         String northOrSouth = latitudeAsValueAndOrientation.getOrientation().value();
-        String comment = escape(position.getComment(), SEPARATOR, ';');
+        String description = escape(position.getDescription(), SEPARATOR, ';');
         String time = formatTime(position.getTime());
         String date = formatDate(position.getTime());
         String altitude = formatAltitude(position.getElevation());
@@ -117,7 +109,7 @@ public class MagellanExploristFormat extends BaseNmeaFormat {
         String trk = "PMGNTRK" + SEPARATOR +
                 latitude + SEPARATOR + northOrSouth + SEPARATOR + longitude + SEPARATOR + westOrEast + SEPARATOR +
                 altitude + SEPARATOR + "M" + SEPARATOR + time + SEPARATOR + "A" + SEPARATOR +
-                comment + SEPARATOR + date;
+                description + SEPARATOR + date;
         writeSentence(writer, trk);
     }
 

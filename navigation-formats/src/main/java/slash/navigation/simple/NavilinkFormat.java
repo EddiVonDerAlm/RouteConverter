@@ -22,13 +22,8 @@
 package slash.navigation.simple;
 
 import slash.common.type.CompactCalendar;
-import slash.navigation.base.BaseNavigationPosition;
-import slash.navigation.base.NavigationPosition;
-import slash.navigation.base.ParserContext;
-import slash.navigation.base.RouteCharacteristics;
-import slash.navigation.base.SimpleFormat;
-import slash.navigation.base.Wgs84Position;
-import slash.navigation.base.Wgs84Route;
+import slash.navigation.base.*;
+import slash.navigation.common.NavigationPosition;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,11 +31,14 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import static java.lang.Long.parseLong;
+import static java.util.Calendar.*;
+import static slash.common.type.CompactCalendar.createDateFormat;
+import static slash.common.type.CompactCalendar.fromCalendar;
 import static slash.navigation.base.RouteCharacteristics.Track;
 
 /**
@@ -60,11 +58,7 @@ import static slash.navigation.base.RouteCharacteristics.Track;
 public class NavilinkFormat extends SimpleFormat<Wgs84Route> {
     protected static final int HEADER_SIZE = 64;
     protected static final int SBP_RECORD_LENGTH = 32;
-    protected static final SimpleDateFormat TRACK_NAME_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-    static {
-        TRACK_NAME_DATE_FORMAT.setTimeZone(CompactCalendar.UTC);
-    }
+    protected static final String TRACK_NAME_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     public String getExtension() {
         return ".sbp";
@@ -97,7 +91,7 @@ public class NavilinkFormat extends SimpleFormat<Wgs84Route> {
         return newRoute;
     }
 
-    public void read(BufferedReader reader, CompactCalendar startDate, String encoding, ParserContext<Wgs84Route> context) throws IOException {
+    public void read(BufferedReader reader, String encoding, ParserContext<Wgs84Route> context) throws IOException {
         // this format parses the InputStream directly but wants to derive from SimpleFormat to use Wgs84Route
         throw new UnsupportedOperationException();
     }
@@ -121,11 +115,11 @@ public class NavilinkFormat extends SimpleFormat<Wgs84Route> {
         return ((header[2] == (byte) 0xA0) && (header[3] == (byte) 0xA2) && (header[6] == (byte) 0xFD));
     }
 
-    private static final long MONTH_MASK = Long.parseLong("11111111110000000000000000000000", 2);
-    private static final long DAY_MASK = Long.parseLong("00000000001111100000000000000000", 2);
-    private static final long HOUR_MASK = Long.parseLong("00000000000000011111000000000000", 2);
-    private static final long MINUTE_MASK = Long.parseLong("00000000000000000000111111000000", 2);
-    private static final long SECOND_MASK = Long.parseLong("00000000000000000000000000111111", 2);
+    private static final long MONTH_MASK = parseLong("11111111110000000000000000000000", 2);
+    private static final long DAY_MASK = parseLong("00000000001111100000000000000000", 2);
+    private static final long HOUR_MASK = parseLong("00000000000000011111000000000000", 2);
+    private static final long MINUTE_MASK = parseLong("00000000000000000000111111000000", 2);
+    private static final long SECOND_MASK = parseLong("00000000000000000000000000111111", 2);
 
     protected CompactCalendar decodeDateTime(long dateTime) {
         /*
@@ -151,14 +145,13 @@ public class NavilinkFormat extends SimpleFormat<Wgs84Route> {
         int year = 2000 + months / 12;
 
         Calendar calendar = Calendar.getInstance(CompactCalendar.UTC);
-        calendar.set(Calendar.YEAR, year);
-        calendar.set(Calendar.MONTH, month - 1); // Java month starts with 0
-        calendar.set(Calendar.DAY_OF_MONTH, day);
-        calendar.set(Calendar.HOUR_OF_DAY, hour);
-        calendar.set(Calendar.MINUTE, minute);
-        calendar.set(Calendar.SECOND, second);
-
-        return CompactCalendar.fromCalendar(calendar);
+        calendar.set(YEAR, year);
+        calendar.set(MONTH, month - 1); // Java month starts with 0
+        calendar.set(DAY_OF_MONTH, day);
+        calendar.set(HOUR_OF_DAY, hour);
+        calendar.set(MINUTE, minute);
+        calendar.set(SECOND, second);
+        return fromCalendar(calendar);
     }
 
     protected boolean isTrackStart(ByteBuffer buffer) {
@@ -210,7 +203,7 @@ public class NavilinkFormat extends SimpleFormat<Wgs84Route> {
         return position;
     }
 
-    public void read(InputStream source, CompactCalendar startDate, ParserContext<Wgs84Route> context) throws Exception {
+    public void read(InputStream source, ParserContext<Wgs84Route> context) throws Exception {
         byte[] header = new byte[HEADER_SIZE];
         if ((source.read(header) == HEADER_SIZE) && checkHeader(header)) {
             ByteBuffer sbpRecordByteBuffer = ByteBuffer.allocate(SBP_RECORD_LENGTH);
@@ -225,7 +218,7 @@ public class NavilinkFormat extends SimpleFormat<Wgs84Route> {
                 Wgs84Position position = decodePosition(sbpRecordByteBuffer);
                 if ((activeRoute == null) || (isTrackStart(sbpRecordByteBuffer))) {
                     activeRoute = createRoute(Track,
-                            TRACK_NAME_DATE_FORMAT.format(position.getTime().getTime()),
+                            createDateFormat(TRACK_NAME_DATE_FORMAT).format(position.getTime().getTime()),
                             new ArrayList<BaseNavigationPosition>());
                     context.appendRoute(activeRoute);
                 }

@@ -23,14 +23,9 @@ package slash.common.io;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static slash.common.TestCase.assertDoubleEquals;
-import static slash.common.io.Transfer.ceiling;
-import static slash.common.io.Transfer.formatDoubleAsString;
-import static slash.common.io.Transfer.formatDuration;
-import static slash.common.io.Transfer.formatIntAsString;
-import static slash.common.io.Transfer.parseDouble;
-import static slash.common.io.Transfer.roundFraction;
-import static slash.common.io.Transfer.widthInDigits;
+import static slash.common.io.Transfer.*;
 
 public class TransferTest {
     @Test
@@ -92,15 +87,21 @@ public class TransferTest {
         assertEquals(5, widthInDigits(12345));
     }
 
+    private Double parseDoubleAndAssertNotNull(String aDouble) {
+        Double result = parseDouble(aDouble);
+        assertNotNull(result);
+        return result;
+    }
+
     @Test
     public void testParseStringAsDouble() {
-        assertDoubleEquals(1.0, parseDouble("1.0"));
-        assertDoubleEquals(1.0, parseDouble("01.0"));
-        assertDoubleEquals(1.0, parseDouble("1.00"));
+        assertDoubleEquals(1.0, parseDoubleAndAssertNotNull("1.0"));
+        assertDoubleEquals(1.0, parseDoubleAndAssertNotNull("01.0"));
+        assertDoubleEquals(1.0, parseDoubleAndAssertNotNull("1.00"));
 
-        assertDoubleEquals(0.00001, parseDouble("0.00001"));
-        assertDoubleEquals(0.00001, parseDouble("0.1E-4"));
-        assertDoubleEquals(0.000001, parseDouble("0.1E-5"));
+        assertDoubleEquals(0.00001, parseDoubleAndAssertNotNull("0.00001"));
+        assertDoubleEquals(0.00001, parseDoubleAndAssertNotNull("0.1E-4"));
+        assertDoubleEquals(0.000001, parseDoubleAndAssertNotNull("0.1E-5"));
     }
 
     @Test
@@ -110,5 +111,13 @@ public class TransferTest {
         assertEquals("05:05:05", formatDuration((5 * 60 * 60 + 5 * 60 + 5) * 1000));
         assertEquals(formatDuration((25 * 60 * 60 + 5 * 60 + 5) * 1000), "25:05:05");
         assertEquals("125:05:05", formatDuration((125 * 60 * 60 + 5 * 60 + 5) * 1000));
+    }
+
+    @Test
+    public void testEncodeFileName() {
+        String original = ".A/B\\C:D.äöüß";
+        String expected = "%2eA%2fB%5cC%3aD.äöüß";
+        assertEquals(expected, encodeFileName(original));
+        assertEquals(original, decodeUri(expected));
     }
 }

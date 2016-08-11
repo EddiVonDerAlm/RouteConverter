@@ -21,12 +21,8 @@
 package slash.navigation.url;
 
 import org.junit.Test;
-import slash.navigation.base.BaseNavigationFormat;
-import slash.navigation.base.BaseNavigationPosition;
-import slash.navigation.base.BaseRoute;
-import slash.navigation.base.NavigationFormatParser;
-import slash.navigation.base.NavigationPosition;
-import slash.navigation.base.ParserResult;
+import slash.navigation.base.*;
+import slash.navigation.common.NavigationPosition;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,7 +35,7 @@ public class GoogleMapsUrlFormatIT {
 
     private void checkBookmark(String name) throws IOException {
         File source = new File(SAMPLE_PATH + name);
-        NavigationFormatParser parser = new NavigationFormatParser();
+        NavigationFormatParser parser = new NavigationFormatParser(new AllNavigationFormatRegistry());
         ParserResult result = parser.read(source);
         assertNotNull(result);
         assertEquals(GoogleMapsUrlFormat.class, result.getFormat().getClass());
@@ -47,7 +43,7 @@ public class GoogleMapsUrlFormatIT {
         BaseRoute<BaseNavigationPosition, BaseNavigationFormat> route = result.getTheRoute();
         assertEquals(9, route.getPositionCount());
         NavigationPosition position = route.getPositions().get(route.getPositionCount() - 1);
-        assertEquals("W Irlo Bronson Mem Hwy/US-192 W", position.getComment());
+        assertEquals("W Irlo Bronson Mem Hwy/US-192 W", position.getDescription());
         assertNotNull(position.getLongitude());
         assertNotNull(position.getLatitude());
     }

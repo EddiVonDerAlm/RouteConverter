@@ -8,7 +8,12 @@
 
 package slash.navigation.kml.binding22;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlSeeAlso;
+import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
@@ -89,7 +94,7 @@ public abstract class AbstractOverlayType
      *     
      */
     public void setColor(byte[] value) {
-        this.color = ((byte[]) value);
+        this.color = value;
     }
 
     /**
@@ -164,7 +169,7 @@ public abstract class AbstractOverlayType
      */
     public List<Object> getAbstractOverlaySimpleExtensionGroup() {
         if (abstractOverlaySimpleExtensionGroup == null) {
-            abstractOverlaySimpleExtensionGroup = new ArrayList<Object>();
+            abstractOverlaySimpleExtensionGroup = new ArrayList<>();
         }
         return this.abstractOverlaySimpleExtensionGroup;
     }
@@ -193,7 +198,7 @@ public abstract class AbstractOverlayType
      */
     public List<AbstractObjectType> getAbstractOverlayObjectExtensionGroup() {
         if (abstractOverlayObjectExtensionGroup == null) {
-            abstractOverlayObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            abstractOverlayObjectExtensionGroup = new ArrayList<>();
         }
         return this.abstractOverlayObjectExtensionGroup;
     }

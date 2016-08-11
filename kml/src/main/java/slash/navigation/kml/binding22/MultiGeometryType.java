@@ -12,7 +12,12 @@ import slash.navigation.kml.binding22gx.MultiTrackType;
 import slash.navigation.kml.binding22gx.TrackType;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlSchemaType;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -88,7 +93,7 @@ public class MultiGeometryType
      */
     public List<JAXBElement<? extends AbstractGeometryType>> getAbstractGeometryGroup() {
         if (abstractGeometryGroup == null) {
-            abstractGeometryGroup = new ArrayList<JAXBElement<? extends AbstractGeometryType>>();
+            abstractGeometryGroup = new ArrayList<>();
         }
         return this.abstractGeometryGroup;
     }
@@ -117,7 +122,7 @@ public class MultiGeometryType
      */
     public List<Object> getMultiGeometrySimpleExtensionGroup() {
         if (multiGeometrySimpleExtensionGroup == null) {
-            multiGeometrySimpleExtensionGroup = new ArrayList<Object>();
+            multiGeometrySimpleExtensionGroup = new ArrayList<>();
         }
         return this.multiGeometrySimpleExtensionGroup;
     }
@@ -146,7 +151,7 @@ public class MultiGeometryType
      */
     public List<AbstractObjectType> getMultiGeometryObjectExtensionGroup() {
         if (multiGeometryObjectExtensionGroup == null) {
-            multiGeometryObjectExtensionGroup = new ArrayList<AbstractObjectType>();
+            multiGeometryObjectExtensionGroup = new ArrayList<>();
         }
         return this.multiGeometryObjectExtensionGroup;
     }

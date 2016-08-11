@@ -25,10 +25,7 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static slash.common.TestCase.assertDoubleEquals;
 
 public class TourFormatTest {
@@ -53,7 +50,7 @@ public class TourFormatTest {
 
     @Test
     public void testTourPosition() {
-        Map<String, String> nameValues = new HashMap<String, String>();
+        Map<String, String> nameValues = new HashMap<>();
         nameValues.put("Visited", "0");
         TourPosition position = new TourPosition(1489415L, 6886471L, "10117", "Berlin", "Unter den Linden", "7", "Staatsoper unter den Linden", true, nameValues);
         position.put("Assembly", "FalkNavigator");
@@ -61,7 +58,7 @@ public class TourFormatTest {
         assertEquals((Long) 6886471L, position.getY());
         assertDoubleEquals(13.39463, position.getLongitude());
         assertDoubleEquals(52.51718, position.getLatitude());
-        assertEquals("10117 Berlin, Unter den Linden 7, Staatsoper unter den Linden", position.getComment());
+        assertEquals("10117 Berlin, Unter den Linden 7, Staatsoper unter den Linden", position.getDescription());
         assertNull(position.getElevation());
         assertNull(position.getTime());
         assertEquals("0", position.get("Visited"));
@@ -70,9 +67,9 @@ public class TourFormatTest {
     }
 
     @Test
-    public void testSetComment() {
+    public void testSetDescription() {
         TourPosition position = new TourPosition(null, null, "10117", "Berlin", "Unter den Linden", "7", "Staatsoper unter den Linden", false, new HashMap<String, String>());
-        position.setComment("ABC");
-        assertEquals("ABC", position.getComment());
+        position.setDescription("ABC");
+        assertEquals("ABC", position.getDescription());
     }
 }

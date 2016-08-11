@@ -8,7 +8,14 @@
 
 package slash.navigation.kml.binding20;
 
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAnyAttribute;
+import javax.xml.bind.annotation.XmlAnyElement;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 import javax.xml.namespace.QName;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,7 +59,7 @@ public class XAL {
     @XmlAttribute(name = "Version")
     protected String version;
     @XmlAnyAttribute
-    private Map<QName, String> otherAttributes = new HashMap<QName, String>();
+    private Map<QName, String> otherAttributes = new HashMap<>();
 
     /**
      * Gets the value of the addressDetails property.
@@ -78,7 +85,7 @@ public class XAL {
      */
     public List<AddressDetails> getAddressDetails() {
         if (addressDetails == null) {
-            addressDetails = new ArrayList<AddressDetails>();
+            addressDetails = new ArrayList<>();
         }
         return this.addressDetails;
     }
@@ -107,7 +114,7 @@ public class XAL {
      */
     public List<Object> getAny() {
         if (any == null) {
-            any = new ArrayList<Object>();
+            any = new ArrayList<>();
         }
         return this.any;
     }

@@ -9,7 +9,11 @@
 package slash.navigation.kml.binding22beta;
 
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
+import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,7 +76,7 @@ public class DocumentType
      */
     public List<SchemaType> getSchema() {
         if (schema == null) {
-            schema = new ArrayList<SchemaType>();
+            schema = new ArrayList<>();
         }
         return this.schema;
     }
@@ -110,7 +114,7 @@ public class DocumentType
      */
     public List<JAXBElement<? extends AbstractFeatureType>> getAbstractFeatureGroup() {
         if (abstractFeatureGroup == null) {
-            abstractFeatureGroup = new ArrayList<JAXBElement<? extends AbstractFeatureType>>();
+            abstractFeatureGroup = new ArrayList<>();
         }
         return this.abstractFeatureGroup;
     }
