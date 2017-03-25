@@ -17,22 +17,27 @@
 
     Copyright (C) 2007 Christian Pesch. All Rights Reserved.
 */
-package slash.common.helpers;
 
-import java.util.TimeZone;
+package slash.navigation.converter.gui.actions;
 
-import static java.util.Arrays.sort;
+import slash.navigation.gui.actions.FrameAction;
+
+import javax.swing.*;
 
 /**
- * Provides {@link TimeZone} helpers.
+ * {@link Action} that clears the selection of a {@link JTable}.
  *
  * @author Christian Pesch
  */
 
-public class TimeZoneHelper {
-    public static String[] getTimeZoneIds() {
-        String[] ids = TimeZone.getAvailableIDs();
-        sort(ids);
-        return ids;
+public class ClearSelectionAction extends FrameAction {
+    private final JTable table;
+
+    public ClearSelectionAction(JTable table) {
+        this.table = table;
+    }
+
+    public void run() {
+        table.clearSelection();
     }
 }

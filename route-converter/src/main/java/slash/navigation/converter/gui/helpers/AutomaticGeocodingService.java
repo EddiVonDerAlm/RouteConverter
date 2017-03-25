@@ -32,6 +32,8 @@ import java.util.logging.Logger;
 
 import static java.util.Arrays.sort;
 
+import javax.naming.ServiceUnavailableException;
+
 /**
  * A geocoding service that tries to find the best available geocoding service.
  *
@@ -60,7 +62,7 @@ public class AutomaticGeocodingService implements GeocodingService {
         return false;
     }
 
-    public List<NavigationPosition> getPositionsFor(String address) throws IOException {
+    public List<NavigationPosition> getPositionsFor(String address) throws IOException, ServiceUnavailableException {
         IOException lastException = null;
 
         for (GeocodingService service : sortByBestEffort(geocodingServiceFacade.getGeocodingServices())) {
@@ -70,7 +72,7 @@ public class AutomaticGeocodingService implements GeocodingService {
 
                 List<NavigationPosition> positions = service.getPositionsFor(address);
                 if (positions != null) {
-                    log.info("Used " + service.getName() + " to retrieve position for " + address);
+                    log.info("Used " + service.getName() + " to retrieve positions " + positions + "D for " + address);
                     return positions;
                 }
 
@@ -85,7 +87,7 @@ public class AutomaticGeocodingService implements GeocodingService {
             return null;
     }
 
-    public String getAddressFor(NavigationPosition position) throws IOException {
+    public String getAddressFor(NavigationPosition position) throws IOException, ServiceUnavailableException {
         IOException lastException = null;
 
         for (GeocodingService service : sortByBestEffort(geocodingServiceFacade.getGeocodingServices())) {
@@ -122,7 +124,8 @@ public class AutomaticGeocodingService implements GeocodingService {
         static {
             PRIORITY.put("Google Maps", 1);
             PRIORITY.put("Nominatim", 2);
-            PRIORITY.put("GeoNames", 3);
+            PRIORITY.put("Photon", 3);
+            PRIORITY.put("GeoNames", 4);
         }
 
         private int getPriority(GeocodingService geocodingService) {

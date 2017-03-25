@@ -31,6 +31,8 @@ import java.util.prefs.Preferences;
 
 import static java.lang.String.format;
 
+import javax.naming.ServiceUnavailableException;
+
 /**
  * Helps to convert addresses into geographic coordinates.
  *
@@ -40,7 +42,7 @@ import static java.lang.String.format;
 public class GeocodingServiceFacade {
     private static final Logger log = Logger.getLogger(GeocodingServiceFacade.class.getName());
     private static final Preferences preferences = Preferences.userNodeForPackage(GeocodingServiceFacade.class);
-    private static final String GEOCODING_SERVICE = "geocodingService-2.18";
+    private static final String GEOCODING_SERVICE = "geocodingService-2.18"; // versioned preference
 
     private final List<GeocodingService> geocodingServices = new ArrayList<>();
     private GeocodingService preferredGeocodingService;
@@ -90,15 +92,15 @@ public class GeocodingServiceFacade {
         preferences.put(GEOCODING_SERVICE, service.getName());
     }
 
-    public List<NavigationPosition> getPositionsFor(String address) throws IOException {
+    public List<NavigationPosition> getPositionsFor(String address) throws IOException, ServiceUnavailableException {
         return getGeocodingService().getPositionsFor(address);
     }
 
-    public String getAddressFor(NavigationPosition position) throws IOException {
+    public String getAddressFor(NavigationPosition position) throws IOException, ServiceUnavailableException {
         return getGeocodingService().getAddressFor(position);
     }
 
-    public NavigationPosition getPositionFor(String address) throws IOException {
+    public NavigationPosition getPositionFor(String address) throws IOException, ServiceUnavailableException {
         List<NavigationPosition> positions = getPositionsFor(address);
         return positions != null && positions.size() > 0 ? positions.get(0) : null;
     }

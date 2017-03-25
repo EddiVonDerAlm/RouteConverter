@@ -105,6 +105,7 @@ public class Transfer {
     public static String trim(String string, int length) {
         if (string == null)
             return null;
+        string = trim(string);
         return string.substring(0, min(string.length(), length));
     }
 
@@ -270,6 +271,10 @@ public class Transfer {
 
     public static boolean isEmpty(Double aDouble) {
         return aDouble == null || aDouble == 0.0;
+    }
+
+    public static boolean isEmpty(BigDecimal bigDecimal) {
+        return bigDecimal == null || isEmpty(bigDecimal.doubleValue());
     }
 
     public static double toDouble(Double aDouble) {

@@ -23,6 +23,8 @@ package slash.navigation.converter.gui.dialogs;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
+import slash.common.helpers.TimeZoneAndId;
+import slash.common.helpers.TimeZoneAndIds;
 import slash.navigation.babel.BabelFormat;
 import slash.navigation.columbus.ColumbusV1000Device;
 import slash.navigation.common.DegreeFormat;
@@ -44,6 +46,7 @@ import slash.navigation.converter.gui.renderer.MapViewListCellRenderer;
 import slash.navigation.converter.gui.renderer.NumberPatternListCellRenderer;
 import slash.navigation.converter.gui.renderer.NumberingStrategyListCellRenderer;
 import slash.navigation.converter.gui.renderer.RoutingServiceListCellRenderer;
+import slash.navigation.converter.gui.renderer.TimeZoneAndIdListCellRenderer;
 import slash.navigation.converter.gui.renderer.TravelModeListCellRenderer;
 import slash.navigation.converter.gui.renderer.UnitSystemListCellRenderer;
 import slash.navigation.elevation.ElevationService;
@@ -99,7 +102,6 @@ import static slash.common.helpers.LocaleHelper.RUSSIA;
 import static slash.common.helpers.LocaleHelper.SERBIA;
 import static slash.common.helpers.LocaleHelper.SLOVAKIA;
 import static slash.common.helpers.LocaleHelper.SPAIN;
-import static slash.common.helpers.TimeZoneHelper.getTimeZoneIds;
 import static slash.navigation.common.DegreeFormat.Degrees;
 import static slash.navigation.common.DegreeFormat.Degrees_Minutes;
 import static slash.navigation.common.DegreeFormat.Degrees_Minutes_Seconds;
@@ -156,7 +158,7 @@ public class OptionsDialog extends SimpleDialog {
     private JComboBox<NumberPattern> comboboxNumberPattern;
     private JComboBox<NumberingStrategy> comboBoxNumberingStrategy;
     private JComboBox<UnitSystem> comboBoxUnitSystem;
-    private JComboBox<String> comboBoxTimeZone;
+    private JComboBox<TimeZoneAndId> comboBoxTimeZone;
     private JComboBox<DegreeFormat> comboBoxDegreeFormat;
     private JRadioButton radioButtonV1000LocalTime;
     private JRadioButton radioButtonV1000UTC;
@@ -474,16 +476,17 @@ public class OptionsDialog extends SimpleDialog {
             }
         });
 
-        ComboBoxModel<String> timeZoneModel = new DefaultComboBoxModel<>(getTimeZoneIds());
-        timeZoneModel.setSelectedItem(r.getTimeZone().getString());
+        TimeZoneAndIds timeZoneAndIds = TimeZoneAndIds.getInstance();
+        ComboBoxModel<TimeZoneAndId> timeZoneModel = new DefaultComboBoxModel<>(timeZoneAndIds.getTimeZones());
+        timeZoneModel.setSelectedItem(timeZoneAndIds.getTimeZoneAndIdFor(r.getTimeZone().getTimeZone()));
         comboBoxTimeZone.setModel(timeZoneModel);
+        comboBoxTimeZone.setRenderer(new TimeZoneAndIdListCellRenderer());
         comboBoxTimeZone.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() != SELECTED) {
+                if (e.getStateChange() != SELECTED)
                     return;
-                }
-                String timeZoneId = String.valueOf(e.getItem());
-                r.getTimeZone().setString(timeZoneId);
+                TimeZoneAndId timeZoneAndId = TimeZoneAndId.class.cast(e.getItem());
+                r.getTimeZone().setTimeZone(timeZoneAndId.getTimeZone());
             }
         });
 
@@ -729,10 +732,10 @@ public class OptionsDialog extends SimpleDialog {
         panel7.setLayout(new GridLayoutManager(4, 4, new Insets(3, 3, 3, 3), -1, -1));
         panel2.add(panel7, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         final JLabel label7 = new JLabel();
-        this.$$$loadLabelText$$$(label7, ResourceBundle.getBundle("slash/navigation/converter/gui/RouteConverter").getString("columbus-v1000-timezone"));
+        this.$$$loadLabelText$$$(label7, ResourceBundle.getBundle("slash/navigation/converter/gui/RouteConverter").getString("columbus-v1000"));
         panel7.add(label7, new GridConstraints(0, 0, 1, 4, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         final JLabel label8 = new JLabel();
-        this.$$$loadLabelText$$$(label8, ResourceBundle.getBundle("slash/navigation/converter/gui/RouteConverter").getString("columbus-v1000-read-time"));
+        this.$$$loadLabelText$$$(label8, ResourceBundle.getBundle("slash/navigation/converter/gui/RouteConverter").getString("columbus-v1000-timezone-set-to"));
         panel7.add(label8, new GridConstraints(2, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         radioButtonV1000LocalTime = new JRadioButton();
         this.$$$loadButtonText$$$(radioButtonV1000LocalTime, ResourceBundle.getBundle("slash/navigation/converter/gui/RouteConverter").getString("columbus-v1000-local-time"));
