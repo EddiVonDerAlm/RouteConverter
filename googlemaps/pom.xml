@@ -2,26 +2,13 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>googlemaps</artifactId>
     <packaging>jar</packaging>
-    <name>Access to the Google Maps API Geocoding service</name>
+    <name>Access the Google Maps API services</name>
     <parent>
         <groupId>slash.navigation</groupId>
         <artifactId>RouteConverter</artifactId>
-        <version>2.20-SNAPSHOT</version>
+        <version>2.23-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-
-    <properties>
-        <googleMapsApiKey>${routeConverterGoogleMapsApiKey}</googleMapsApiKey>
-    </properties>
-
-    <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
-    </build>
 
     <dependencies>
         <dependency>

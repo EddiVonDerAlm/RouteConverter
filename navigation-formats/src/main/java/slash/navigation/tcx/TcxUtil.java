@@ -30,7 +30,7 @@ import java.io.OutputStream;
 
 import static slash.common.helpers.JAXBHelper.*;
 
-class TcxUtil {
+public class TcxUtil {
     public static final String TCX_1_NAMESPACE_URI = "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v1";
     public static final String TCX_2_NAMESPACE_URI = "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2";
 
@@ -52,7 +52,7 @@ class TcxUtil {
 
 
     public static slash.navigation.tcx.binding1.TrainingCenterDatabaseT unmarshal1(InputStream in) throws JAXBException {
-        slash.navigation.tcx.binding1.TrainingCenterDatabaseT result = null;
+        slash.navigation.tcx.binding1.TrainingCenterDatabaseT result;
         try {
             JAXBElement element = (JAXBElement) newUnmarshaller1().unmarshal(in);
             result = (slash.navigation.tcx.binding1.TrainingCenterDatabaseT) element.getValue();
@@ -62,14 +62,14 @@ class TcxUtil {
         return result;
     }
 
-    public static void marshal1(slash.navigation.tcx.binding1.TrainingCenterDatabaseT trainingCenterDatabaseT, OutputStream out) throws JAXBException {
+    public static void marshal1(slash.navigation.tcx.binding1.TrainingCenterDatabaseT trainingCenterDatabaseT, OutputStream outputStream) throws JAXBException {
         try {
             try {
-                newMarshaller1().marshal(new slash.navigation.tcx.binding1.ObjectFactory().createTrainingCenterDatabase(trainingCenterDatabaseT), out);
+                newMarshaller1().marshal(new slash.navigation.tcx.binding1.ObjectFactory().createTrainingCenterDatabase(trainingCenterDatabaseT), outputStream);
             }
             finally {
-                out.flush();
-                out.close();
+                outputStream.flush();
+                outputStream.close();
             }
         } catch (IOException e) {
             throw new JAXBException("Error while marshalling: " + e, e);
@@ -78,7 +78,7 @@ class TcxUtil {
 
 
     public static slash.navigation.tcx.binding2.TrainingCenterDatabaseT unmarshal2(InputStream in) throws JAXBException {
-        slash.navigation.tcx.binding2.TrainingCenterDatabaseT result = null;
+        slash.navigation.tcx.binding2.TrainingCenterDatabaseT result;
         try {
             JAXBElement element = (JAXBElement) newUnmarshaller2().unmarshal(in);
             result = (slash.navigation.tcx.binding2.TrainingCenterDatabaseT) element.getValue();
@@ -88,14 +88,14 @@ class TcxUtil {
         return result;
     }
 
-    public static void marshal2(slash.navigation.tcx.binding2.TrainingCenterDatabaseT trainingCenterDatabaseT, OutputStream out) throws JAXBException {
+    public static void marshal2(slash.navigation.tcx.binding2.TrainingCenterDatabaseT trainingCenterDatabaseT, OutputStream outputStream) throws JAXBException {
         try {
             try {
-                newMarshaller2().marshal(new slash.navigation.tcx.binding2.ObjectFactory().createTrainingCenterDatabase(trainingCenterDatabaseT), out);
+                newMarshaller2().marshal(new slash.navigation.tcx.binding2.ObjectFactory().createTrainingCenterDatabase(trainingCenterDatabaseT), outputStream);
             }
             finally {
-                out.flush();
-                out.close();
+                outputStream.flush();
+                outputStream.close();
             }
         } catch (IOException e) {
             throw new JAXBException("Error while marshalling: " + e, e);

@@ -22,10 +22,11 @@ package slash.navigation.base;
 import org.junit.Test;
 import slash.navigation.babel.TomTomPoiFormat;
 import slash.navigation.bcr.MTP0809Format;
-import slash.navigation.columbus.ColumbusGpsProfessionalFormat;
-import slash.navigation.columbus.ColumbusGpsStandardFormat;
+import slash.navigation.columbus.ColumbusGpsType1Format;
 import slash.navigation.columbus.ColumbusGpsType2Format;
-import slash.navigation.columbus.GarbleColumbusGpsProfessionalFormat;
+import slash.navigation.columbus.GarbleColumbusGpsType1Format;
+import slash.navigation.csv.CsvCommaFormat;
+import slash.navigation.csv.CsvSemicolonFormat;
 import slash.navigation.nmea.NmeaFormat;
 import slash.navigation.simple.GarbleHaicomLoggerFormat;
 import slash.navigation.simple.HaicomLoggerFormat;
@@ -63,15 +64,17 @@ public class NavigationFormatRegistryTest {
     @Test
     public void testGetReadFormatsSortedByExtensionMultipleResults() {
         List<NavigationFormat> formats = registry.getReadFormatsPreferredByExtension(".csv");
-        assertEquals(HaicomLoggerFormat.class, formats.get(0).getClass());
-        assertEquals(Route66Format.class, formats.get(1).getClass());
-        assertEquals(ColumbusGpsProfessionalFormat.class, formats.get(2).getClass());
-        assertEquals(ColumbusGpsStandardFormat.class, formats.get(3).getClass());
-        assertEquals(ColumbusGpsType2Format.class, formats.get(4).getClass());
-        assertEquals(QstarzQ1000Format.class, formats.get(5).getClass());
-        assertEquals(Iblue747Format.class, formats.get(6).getClass());
-        assertEquals(GarbleColumbusGpsProfessionalFormat.class, formats.get(7).getClass());
-        assertEquals(GarbleHaicomLoggerFormat.class, formats.get(8).getClass());
-        assertEquals(NmeaFormat.class, formats.get(9).getClass());
+        int index = 0;
+        assertEquals(HaicomLoggerFormat.class, formats.get(index++).getClass());
+        assertEquals(Route66Format.class, formats.get(index++).getClass());
+        assertEquals(ColumbusGpsType1Format.class, formats.get(index++).getClass());
+        assertEquals(ColumbusGpsType2Format.class, formats.get(index++).getClass());
+        assertEquals(QstarzQ1000Format.class, formats.get(index++).getClass());
+        assertEquals(Iblue747Format.class, formats.get(index++).getClass());
+        assertEquals(CsvCommaFormat.class, formats.get(index++).getClass());
+        assertEquals(CsvSemicolonFormat.class, formats.get(index++).getClass());
+        assertEquals(GarbleColumbusGpsType1Format.class, formats.get(index++).getClass());
+        assertEquals(GarbleHaicomLoggerFormat.class, formats.get(index++).getClass());
+        assertEquals(NmeaFormat.class, formats.get(index).getClass());
     }
 }

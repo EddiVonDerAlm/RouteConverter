@@ -30,6 +30,12 @@ import slash.navigation.base.Wgs84Route;
 import slash.navigation.bcr.BcrFormat;
 import slash.navigation.bcr.BcrPosition;
 import slash.navigation.bcr.BcrRoute;
+import slash.navigation.csv.CsvFormat;
+import slash.navigation.csv.CsvPosition;
+import slash.navigation.csv.CsvRoute;
+import slash.navigation.excel.ExcelFormat;
+import slash.navigation.excel.ExcelPosition;
+import slash.navigation.excel.ExcelRoute;
 import slash.navigation.gopal.GoPalPosition;
 import slash.navigation.gopal.GoPalRoute;
 import slash.navigation.gopal.GoPalRouteFormat;
@@ -53,6 +59,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static slash.common.type.CompactCalendar.now;
+import static slash.common.type.ISO8601.formatDate;
 import static slash.navigation.base.RouteCharacteristics.Waypoints;
 
 /**
@@ -83,7 +92,7 @@ public class GpxRoute extends BaseRoute<GpxPosition, GpxFormat> {
     }
 
     public GpxRoute(GpxFormat format) {
-        this(format, Waypoints, "?", null, new ArrayList<GpxPosition>());
+        this(format, Waypoints, "?", singletonList("Created at " + formatDate(now())), new ArrayList<GpxPosition>());
     }
 
 
@@ -103,7 +112,7 @@ public class GpxRoute extends BaseRoute<GpxPosition, GpxFormat> {
         return positions;
     }
 
-    public/* for tests */ List<Object> getOrigins() {
+    List<Object> getOrigins() {
         return origins;
     }
 
@@ -141,6 +150,24 @@ public class GpxRoute extends BaseRoute<GpxPosition, GpxFormat> {
         return new BcrRoute(format, getName(), getDescription(), bcrPositions);
     }
 
+    protected CsvRoute asCsvFormat(CsvFormat format) {
+        List<CsvPosition> positions = new ArrayList<>();
+        for (GpxPosition position : getPositions()) {
+            positions.add(position.asCsvPosition());
+        }
+        return new CsvRoute(format, getName(), positions);
+    }
+
+    protected ExcelRoute asExcelFormat(ExcelFormat format) {
+        List<ExcelPosition> excelPositions = new ArrayList<>();
+        ExcelRoute route = new ExcelRoute(format, getName(), excelPositions);
+        for (GpxPosition position : getPositions()) {
+            ExcelPosition excelPosition = route.createPosition(position.getLongitude(), position.getLatitude(), position.getElevation(), position.getSpeed(), position.getTime(), position.getDescription());
+            excelPositions.add(excelPosition);
+        }
+        return route;
+    }
+
     protected GoPalRoute asGoPalRouteFormat(GoPalRouteFormat format) {
         List<GoPalPosition> gopalPositions = new ArrayList<>();
         for (GpxPosition position : positions) {
@@ -161,7 +188,6 @@ public class GpxRoute extends BaseRoute<GpxPosition, GpxFormat> {
         }
         return new Wgs84Route(format, getCharacteristics(), wgs84Positions);
     }
-
 
     protected KmlRoute asKmlFormat(BaseKmlFormat format) {
         List<KmlPosition> kmlPositions = new ArrayList<>();

@@ -52,7 +52,7 @@ class Nmn7Util {
     }
 
     public static Route unmarshal(InputStream in) throws JAXBException {
-        Route result = null;
+        Route result;
         try {
             result = (Route) newUnmarshaller().unmarshal(in);
         } catch (ClassCastException e) {
@@ -61,14 +61,14 @@ class Nmn7Util {
         return result;
     }
 
-    public static void marshal(Route route, OutputStream out) throws JAXBException {
+    public static void marshal(Route route, OutputStream outputStream) throws JAXBException {
         try {
             try {
-                newMarshaller().marshal(new JAXBElement<>(new QName(NMN7_NAMESPACE_URI, "Route"), Route.class, route), out);
+                newMarshaller().marshal(new JAXBElement<>(new QName(NMN7_NAMESPACE_URI, "Route"), Route.class, route), outputStream);
             }
             finally {
-                out.flush();
-                out.close();
+                outputStream.flush();
+                outputStream.close();
             }
         } catch (IOException e) {
             throw new JAXBException("Error while marshalling: " + e, e);

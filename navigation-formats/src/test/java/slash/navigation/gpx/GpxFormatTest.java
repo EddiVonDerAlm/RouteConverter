@@ -21,74 +21,34 @@
 package slash.navigation.gpx;
 
 import org.junit.Test;
-import slash.navigation.gpx.binding11.ExtensionsType;
-import slash.navigation.gpx.binding11.GpxType;
-import slash.navigation.gpx.trackpoint2.TrackPointExtensionT;
-
-import javax.xml.bind.JAXBException;
-import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static slash.common.TestCase.assertDoubleEquals;
-import static slash.navigation.common.NavigationConversion.formatBigDecimal;
-import static slash.navigation.gpx.GpxUtil.toXml;
+import static slash.navigation.gpx.GpxFormat.parseHeading;
+import static slash.navigation.gpx.GpxFormat.parseSpeed;
 
 public class GpxFormatTest {
 
     @Test
-    public void testWritingTrekBuddyExtensions() throws IOException, JAXBException {
-        slash.navigation.gpx.binding11.ObjectFactory gpxFactory = new slash.navigation.gpx.binding11.ObjectFactory();
-        slash.navigation.gpx.trekbuddy.ObjectFactory tbFactory = new slash.navigation.gpx.trekbuddy.ObjectFactory();
-        ExtensionsType extensionsType = gpxFactory.createExtensionsType();
-        extensionsType.getAny().add(tbFactory.createSpeed(formatBigDecimal(123.45, 2)));
-        GpxType gpx = gpxFactory.createGpxType();
-        assertNotNull(gpx);
-        gpx.setExtensions(extensionsType);
-        assertNotNull(gpx);
-        String string = toXml(gpx);
-        assertTrue(string.contains("<nmea:speed>123.45</nmea:speed>"));
-    }
-
-    @Test
-    public void testWritingGarminTrackPointExtensions() throws IOException, JAXBException {
-        slash.navigation.gpx.binding11.ObjectFactory gpxFactory = new slash.navigation.gpx.binding11.ObjectFactory();
-        slash.navigation.gpx.trackpoint2.ObjectFactory trackpoint2Factory = new slash.navigation.gpx.trackpoint2.ObjectFactory();
-        TrackPointExtensionT trackPointExtensionT = trackpoint2Factory.createTrackPointExtensionT();
-        trackPointExtensionT.setSpeed(123.456);
-        ExtensionsType extensionsType = gpxFactory.createExtensionsType();
-        extensionsType.getAny().add(trackpoint2Factory.createTrackPointExtension(trackPointExtensionT));
-        GpxType gpx = gpxFactory.createGpxType();
-        assertNotNull(gpx);
-        gpx.setExtensions(extensionsType);
-        assertNotNull(gpx);
-        String string = toXml(gpx);
-        assertTrue(string.contains("<gpxtpx:speed>123.456</gpxtpx:speed>"));
-    }
-
-    @Test
     public void testExtractSpeed() {
-        Gpx10Format format = new Gpx10Format();
-        assertDoubleEquals(9.0, format.parseSpeed("9Km/h"));
-        assertDoubleEquals(9.0, format.parseSpeed(" 9 Km/h "));
-        assertDoubleEquals(99.0, format.parseSpeed(" 99 Km/h "));
-        assertDoubleEquals(99.9, format.parseSpeed(" 99.9 km/h "));
-        assertDoubleEquals(99.99999, format.parseSpeed(" 99.99999 Km/h "));
-        assertDoubleEquals(9.0, format.parseSpeed("Speed: 9 Km/h "));
-        assertDoubleEquals(9.0, format.parseSpeed("Geschwindigkeit: 9 Km/h "));
-        assertDoubleEquals(9.0, format.parseSpeed("Lat.=54.144422, Long.=12.098487, Alt.=5.000000m, Speed=9Km/h, Course=270deg."));
-        assertDoubleEquals(9.0, format.parseSpeed("1007; Speed 9.0 km/h Distance 15.41 km"));
-        assertDoubleEquals(9.0, format.parseSpeed("egal Speed 9.0 km/h egal"));
-        assertNull(format.parseSpeed("egal"));
+        assertDoubleEquals(9.0, parseSpeed("9Km/h"));
+        assertDoubleEquals(9.0, parseSpeed(" 9 Km/h "));
+        assertDoubleEquals(99.0, parseSpeed(" 99 Km/h "));
+        assertDoubleEquals(99.9, parseSpeed(" 99.9 km/h "));
+        assertDoubleEquals(99.99999, parseSpeed(" 99.99999 Km/h "));
+        assertDoubleEquals(9.0, parseSpeed("Speed: 9 Km/h "));
+        assertDoubleEquals(9.0, parseSpeed("Geschwindigkeit: 9 Km/h "));
+        assertDoubleEquals(9.0, parseSpeed("Lat.=54.144422, Long.=12.098487, Alt.=5.000000m, Speed=9Km/h, Course=270deg."));
+        assertDoubleEquals(9.0, parseSpeed("1007; Speed 9.0 km/h Distance 15.41 km"));
+        assertDoubleEquals(9.0, parseSpeed("egal Speed 9.0 km/h egal"));
+        assertNull(parseSpeed("egal"));
     }
 
     @Test
     public void testExtractHeading() {
-        Gpx10Format format = new Gpx10Format();
-        assertDoubleEquals(270.0, format.parseHeading("Lat.=54.144422, Long.=12.098487, Alt.=5.000000m, Speed=9Km/h, Course=270deg."));
-        assertNull(format.parseHeading("egal"));
+        assertDoubleEquals(270.0, parseHeading("Lat.=54.144422, Long.=12.098487, Alt.=5.000000m, Speed=9Km/h, Course=270deg."));
+        assertNull(parseHeading("egal"));
     }
 
     @Test

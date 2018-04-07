@@ -39,7 +39,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHttpResponse;
 import slash.navigation.rest.ssl.SSLConnectionManagerFactory;
 
-import javax.swing.*;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -170,7 +169,6 @@ public abstract class HttpRequest {
                 InetSocketAddress inetSocketAddress = (InetSocketAddress) address;
                 requestConfigBuilder.setProxy(new HttpHost(inetSocketAddress.getHostName(), inetSocketAddress.getPort()));
                 log.info(format("Using proxy %s for %s", proxy.toString(), method.getURI()));
-                JOptionPane.showMessageDialog(null, format("Using proxy %s for %s", proxy.toString(), method.getURI()));
             }
         }
 

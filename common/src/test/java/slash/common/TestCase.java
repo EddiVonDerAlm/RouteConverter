@@ -63,10 +63,6 @@ public abstract class TestCase extends junit.framework.TestCase {
         }
     }
 
-    public static void assertEquals(long expected, Long was) {
-        assertEquals(new Long(expected), was);
-    }
-
     public static void assertNearBy(double expected, double actual) {
         assertNearBy(expected, actual, 0.000005);
     }
@@ -77,12 +73,12 @@ public abstract class TestCase extends junit.framework.TestCase {
             if (expectedPlusOffset == 0.0)
                 expectedPlusOffset = offset;
             assertTrue(actual + " is not within +" + offset + " of " + expected + " to " + expectedPlusOffset,
-                    actual > 0.0 ? actual < expectedPlusOffset : actual > expectedPlusOffset);
+                    actual >= 0.0 ? actual < expectedPlusOffset : actual > expectedPlusOffset);
             double expectedMinusOffset = expected * (1.0 - offset);
             if (expectedMinusOffset == 0.0)
                 expectedMinusOffset = -offset;
-            assertTrue(actual + " is not within -" + offset + " of " + expected + " to " + expectedMinusOffset,
-                    actual > 0.0 ? actual > expectedMinusOffset : actual < expectedMinusOffset);
+            assertTrue(actual + " is not within -" + offset + " of " + expectedMinusOffset + " to " + expected,
+                    actual >= 0.0 ? actual > expectedMinusOffset : actual < expectedMinusOffset);
         }
     }
 

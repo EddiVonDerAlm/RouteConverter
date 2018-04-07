@@ -70,15 +70,9 @@ public class ReadWriteRoundtripIT {
     }
 
     @Test
-    public void testGarminMapSource5ReadWriteRoundtrip() throws IOException {
-        readWriteRoundtrip(TEST_PATH + "from.mps");
-        readWriteRoundtrip(TEST_PATH + "from10.mps");
-        readWriteRoundtrip(TEST_PATH + "from10trk.mps");
-    }
-
-    @Test
     public void testGarminMapSource6ReadWriteRoundtrip() throws IOException {
-        readWriteRoundtrip(TEST_PATH + "from.gdb");
+        readWriteRoundtrip(TEST_PATH + "from2.gdb");
+        readWriteRoundtrip(TEST_PATH + "from3.gdb");
         readWriteRoundtrip(TEST_PATH + "from10.gdb");
         readWriteRoundtrip(TEST_PATH + "from10trk.gdb");
     }
@@ -202,6 +196,11 @@ public class ReadWriteRoundtripIT {
     }
 
     @Test
+    public void testNavigonCruiserReadWriteRoundtrip() throws IOException {
+        readWriteRoundtrip(TEST_PATH + "from.cruiser");
+    }
+
+    @Test
     public void testNmeaReadWriteRoundtrip() throws IOException {
         readWriteRoundtrip(TEST_PATH + "fromgga.nmea");
         readWriteRoundtrip(TEST_PATH + "fromrmc.nmea");
@@ -296,10 +295,5 @@ public class ReadWriteRoundtripIT {
     public void testViaMichelinReadWriteRoundtrip() throws IOException {
         readWriteRoundtrip(TEST_PATH + "from-poi.xvm");
         readWriteRoundtrip(TEST_PATH + "from-itinerary.xvm");
-    }
-
-    @Test
-    public void testXcsvReadWriteRoundtrip() throws IOException {
-        readWriteRoundtrip(TEST_PATH + "from.xcsv");
     }
 }

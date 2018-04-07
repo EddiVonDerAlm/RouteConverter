@@ -21,22 +21,22 @@
 package slash.navigation.kml;
 
 import slash.common.type.CompactCalendar;
-import slash.navigation.base.BaseRoute;
-import slash.navigation.base.RouteCharacteristics;
-import slash.navigation.base.SimpleFormat;
-import slash.navigation.base.SimpleRoute;
-import slash.navigation.base.Wgs84Position;
-import slash.navigation.base.Wgs84Route;
+import slash.navigation.base.*;
 import slash.navigation.bcr.BcrFormat;
 import slash.navigation.bcr.BcrPosition;
 import slash.navigation.bcr.BcrRoute;
+import slash.navigation.csv.CsvFormat;
+import slash.navigation.csv.CsvPosition;
+import slash.navigation.csv.CsvRoute;
+import slash.navigation.excel.ExcelFormat;
+import slash.navigation.excel.ExcelPosition;
+import slash.navigation.excel.ExcelRoute;
 import slash.navigation.gopal.GoPalPosition;
 import slash.navigation.gopal.GoPalRoute;
 import slash.navigation.gopal.GoPalRouteFormat;
 import slash.navigation.gpx.GpxFormat;
 import slash.navigation.gpx.GpxPosition;
 import slash.navigation.gpx.GpxRoute;
-import slash.navigation.photo.PhotoFormat;
 import slash.navigation.itn.TomTomPosition;
 import slash.navigation.itn.TomTomRoute;
 import slash.navigation.itn.TomTomRouteFormat;
@@ -46,6 +46,7 @@ import slash.navigation.nmea.NmeaRoute;
 import slash.navigation.nmn.NmnFormat;
 import slash.navigation.nmn.NmnPosition;
 import slash.navigation.nmn.NmnRoute;
+import slash.navigation.photo.PhotoFormat;
 import slash.navigation.tcx.TcxFormat;
 import slash.navigation.tcx.TcxRoute;
 
@@ -63,8 +64,7 @@ public class KmlRoute extends BaseRoute<KmlPosition, BaseKmlFormat> {
     private List<String> description;
     private List<KmlPosition> positions;
 
-    public KmlRoute(BaseKmlFormat format, RouteCharacteristics characteristics,
-                    String name, List<String> description, List<KmlPosition> positions) {
+    public KmlRoute(BaseKmlFormat format, RouteCharacteristics characteristics, String name, List<String> description, List<KmlPosition> positions) {
         super(format, characteristics);
         this.name = name;
         this.description = description;
@@ -105,6 +105,24 @@ public class KmlRoute extends BaseRoute<KmlPosition, BaseKmlFormat> {
             bcrPositions.add(kmlPosition.asMTPPosition());
         }
         return new BcrRoute(format, getName(), getDescription(), bcrPositions);
+    }
+
+    protected CsvRoute asCsvFormat(CsvFormat format) {
+        List<CsvPosition> positions = new ArrayList<>();
+        for (KmlPosition position : getPositions()) {
+            positions.add(position.asCsvPosition());
+        }
+        return new CsvRoute(format, getName(), positions);
+    }
+
+    protected ExcelRoute asExcelFormat(ExcelFormat format) {
+        List<ExcelPosition> excelPositions = new ArrayList<>();
+        ExcelRoute route = new ExcelRoute(format, getName(), excelPositions);
+        for (KmlPosition position : getPositions()) {
+            ExcelPosition excelPosition = route.createPosition(position.getLongitude(), position.getLatitude(), position.getElevation(), position.getSpeed(), position.getTime(), position.getDescription());
+            excelPositions.add(excelPosition);
+        }
+        return route;
     }
 
     protected GoPalRoute asGoPalRouteFormat(GoPalRouteFormat format) {

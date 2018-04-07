@@ -6,47 +6,12 @@
     <parent>
         <groupId>slash.navigation</groupId>
         <artifactId>route-converter-build</artifactId>
-        <version>2.20-SNAPSHOT</version>
+        <version>2.23-SNAPSHOT</version>
         <relativePath>../route-converter-build/pom.xml</relativePath>
     </parent>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-dependencies</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>eclipse.swt</groupId>
-                                    <artifactId>win32.win32.x86</artifactId>
-                                    <version>4.5</version>
-                                    <classifier>stripped</classifier>
-                                    <overWrite>false</overWrite>
-                                    <destFileName>swt-windows-32.jar</destFileName>
-                                </artifactItem>
-                                <artifactItem>
-                                    <groupId>eclipse.swt</groupId>
-                                    <artifactId>win32.win32.x86_64</artifactId>
-                                    <version>4.5</version>
-                                    <classifier>stripped</classifier>
-                                    <overWrite>false</overWrite>
-                                    <destFileName>swt-windows-64.jar</destFileName>
-                                </artifactItem>
-                            </artifactItems>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -57,14 +22,14 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <finalName>RouteConverterWindows</finalName>
+                            <outputFile>target/RouteConverterWindows.jar</outputFile>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Specification-Title>${project.name}</Specification-Title>
                                         <Specification-Version>${project.version}-${maven.build.number}</Specification-Version>
                                         <Specification-Vendor>Christian Pesch</Specification-Vendor>
-                                        <Implementation-Version>${maven.build.timestamp}</Implementation-Version>
+                                        <Implementation-Version>${maven.build.timestamp.clone}</Implementation-Version>
                                         <Implementation-Vendor>Windows</Implementation-Vendor>
                                         <Main-Class>slash.navigation.converter.gui.RouteConverter</Main-Class>
                                         <SplashScreen-Image>slash/navigation/converter/gui/RouteConverter.png</SplashScreen-Image>
@@ -78,10 +43,15 @@
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
+                                        <exclude>META-INF/*.inf</exclude>
                                         <exclude>META-INF/*.txt</exclude>
                                         <exclude>META-INF/LICENSE*</exclude>
                                         <exclude>META-INF/NOTICE*</exclude>
+                                        <exclude>META-INF/jb/</exclude>
                                         <exclude>META-INF/maven/</exclude>
+                                        <exclude>META-INF/services/</exclude>
+                                        <exclude>mozilla/*</exclude>
+                                        <exclude>*.html</exclude>
                                         <exclude>external.xpt</exclude>
                                         <exclude>version.txt</exclude>
                                     </excludes>
@@ -110,10 +80,17 @@
                 </executions>
                 <configuration>
                     <archive>target/RouteConverterWindows.jar</archive>
-                    <keystore>${keystorePath}</keystore>
-                    <alias>${keystoreAlias}</alias>
+                    <arguments>
+                        <argument>-certchain</argument>
+                        <argument>${bundlePath}</argument>
+                    </arguments>
+                    <keystore>NONE</keystore>
+                    <tsa>http://time.certum.pl</tsa>
+                    <storetype>PKCS11</storetype>
                     <storepass>${keystorePassword}</storepass>
-                    <keypass>${keyPassword}</keypass>
+                    <providerClass>sun.security.pkcs11.SunPKCS11</providerClass>
+                    <providerArg>${providerArg}</providerArg>
+                    <alias>${alias}</alias>
                     <removeExistingSignatures>true</removeExistingSignatures>
                 </configuration>
             </plugin>
@@ -160,12 +137,12 @@
                             </jre>
                             <versionInfo>
                                 <fileVersion>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${maven.build.number}.0</fileVersion>
-                                <txtFileVersion>${project.version} ${maven.build.number} ${maven.build.timestamp}</txtFileVersion>
+                                <txtFileVersion>${project.version} ${maven.build.number} ${maven.build.timestamp.clone}</txtFileVersion>
                                 <fileDescription>RouteConverter displays, modifies and converts GPS data between over 75 formats</fileDescription>
                                 <copyright>Christian Pesch</copyright>
                                 <productName>RouteConverter</productName>
                                 <productVersion>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${maven.build.number}.0</productVersion>
-                                <txtProductVersion>${project.version} ${maven.build.number} ${maven.build.timestamp}</txtProductVersion>
+                                <txtProductVersion>${project.version} ${maven.build.number} ${maven.build.timestamp.clone}</txtProductVersion>
                                 <internalName>RouteConverter for Windows Executable</internalName>
                                 <originalFilename>RouteConverterWindows.exe</originalFilename>
                             </versionInfo>
@@ -192,16 +169,6 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>javafx8-mapview</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>swt-mapview</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>gpsbabel.gpsbabel</groupId>
-            <artifactId>win32.win32.x86</artifactId>
-            <version>1.4.4</version>
         </dependency>
     </dependencies>
 </project>

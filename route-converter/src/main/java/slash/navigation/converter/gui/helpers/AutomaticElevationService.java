@@ -58,16 +58,13 @@ public class AutomaticElevationService implements ElevationService {
         return false;
     }
 
-    public boolean isSupportsPath() {
-        return false;
-    }
-
     public String getPath() {
-        throw new UnsupportedOperationException();
+        // do not throw UnsupportedOperationException since #isDownload is true to omit (online) suffix in rendering
+        return "";
     }
 
     public void setPath(String path) {
-        throw new UnsupportedOperationException();
+        // do not throw UnsupportedOperationException since #isDownload is true to omit (online) suffix in rendering
     }
 
     public Double getElevationFor(double longitude, double latitude) throws IOException {
@@ -80,7 +77,7 @@ public class AutomaticElevationService implements ElevationService {
 
                 Double elevation = service.getElevationFor(longitude, latitude);
                 if (elevation != null) {
-                    log.info("Used " + service.getName() + " to retrieve elevation " + elevation + " for " + longitude + "/" + latitude);
+                    log.fine("Used " + service.getName() + " to retrieve elevation " + elevation + " for " + longitude + "/" + latitude);
                     return elevation;
                 }
 

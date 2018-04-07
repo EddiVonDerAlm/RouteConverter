@@ -59,11 +59,11 @@ public abstract class TomTomRouteFormat extends TextNavigationFormat<TomTomRoute
     private static final Pattern NAME_PATTERN = Pattern.
             compile("^\"([^\"]*)\"$");
 
-    public static final int START_TYPE = 4;
-    // public static final int END_TYPE_VISITED = 3;
-    public static final int END_TYPE = 2;
-    // public static final int WAYPOINT_VISITED = 1;
-    public static final int WAYPOINT = 0;
+    private static final int START_TYPE = 4;
+    // private static final int END_TYPE_VISITED = 3;
+    private static final int END_TYPE = 2;
+    // private static final int WAYPOINT_VISITED = 1;
+    private static final int WAYPOINT = 0;
 
     public String getExtension() {
         return ".itn";
@@ -90,7 +90,7 @@ public abstract class TomTomRouteFormat extends TextNavigationFormat<TomTomRoute
         return new TomTomRoute(characteristics, name, (List<TomTomPosition>) positions);
     }
 
-    protected abstract boolean isIso885915ButReadWithUtf8(String string);
+    protected abstract boolean isIsoLatin1ButReadWithUtf8(String string);
 
     public void read(BufferedReader reader, String encoding, ParserContext<TomTomRoute> context) throws IOException {
         List<TomTomPosition> positions = new ArrayList<>();
@@ -119,7 +119,7 @@ public abstract class TomTomRouteFormat extends TextNavigationFormat<TomTomRoute
                 else
                     position.setStartDate(startDate);
 
-                if (isIso885915ButReadWithUtf8(position.getDescription()))
+                if (isIsoLatin1ButReadWithUtf8(position.getDescription()))
                     return;
 
                 positions.add(position);

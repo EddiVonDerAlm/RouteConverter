@@ -94,7 +94,9 @@ public class NavigationFormatParser {
     private List<Integer> getPositionCounts(List<BaseRoute> routes) {
         List<Integer> positionCounts = new ArrayList<>();
         for (BaseRoute route : routes)
-            positionCounts.add(route.getPositionCount());
+            // guard against strange effects in tests only
+            if (route != null)
+                positionCounts.add(route.getPositionCount());
         return positionCounts;
     }
 
@@ -135,7 +137,7 @@ public class NavigationFormatParser {
             buffer.close();
         }
 
-        if(context.getRoutes().size() == 0 && firstSuccessfulFormat != null)
+        if(context.getRoutes().size() == 0 && context.getFormats().size() == 0 && firstSuccessfulFormat != null)
             context.addFormat(firstSuccessfulFormat);
     }
 
@@ -403,7 +405,7 @@ public class NavigationFormatParser {
         if (format instanceof TcxFormat)
             routeToWrite.ensureIncreasingTime();
         if (parserCallback != null)
-            parserCallback.preprocess(routeToWrite, format);
+            parserCallback.process(routeToWrite, format);
     }
 
     @SuppressWarnings("unchecked")
@@ -426,7 +428,7 @@ public class NavigationFormatParser {
 
     @SuppressWarnings("unchecked")
     public void write(List<BaseRoute> routes, MultipleRoutesFormat format, File target) throws IOException {
-        log.info("Writing '" + format.getName() + "' with with " + routes.size() + " routes and " +
+        log.info("Writing '" + format.getName() + "' with " + routes.size() + " routes and " +
                 getPositionCounts(routes) + " positions");
 
         List<BaseRoute> routesToWrite = new ArrayList<>(routes.size());

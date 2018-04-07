@@ -35,7 +35,6 @@ import slash.navigation.babel.GeoCachingFormat;
 import slash.navigation.babel.HoluxM241BinaryFormat;
 import slash.navigation.babel.Igo8TrackFormat;
 import slash.navigation.babel.MagellanMapSendFormat;
-import slash.navigation.babel.MicrosoftAutoRouteFormat;
 import slash.navigation.babel.NationalGeographicTopo3Format;
 import slash.navigation.babel.OziExplorerRouteFormat;
 import slash.navigation.babel.OziExplorerTrackFormat;
@@ -45,14 +44,17 @@ import slash.navigation.babel.TourExchangeFormat;
 import slash.navigation.bcr.MTP0607Format;
 import slash.navigation.bcr.MTP0809Format;
 import slash.navigation.columbus.ColumbusGpsBinaryFormat;
-import slash.navigation.columbus.ColumbusGpsProfessionalFormat;
-import slash.navigation.columbus.ColumbusGpsStandardFormat;
+import slash.navigation.columbus.ColumbusGpsType1Format;
 import slash.navigation.columbus.ColumbusGpsType2Format;
-import slash.navigation.columbus.GarbleColumbusGpsProfessionalFormat;
+import slash.navigation.columbus.GarbleColumbusGpsType1Format;
 import slash.navigation.copilot.CoPilot6Format;
 import slash.navigation.copilot.CoPilot7Format;
 import slash.navigation.copilot.CoPilot8Format;
 import slash.navigation.copilot.CoPilot9Format;
+import slash.navigation.csv.CsvCommaFormat;
+import slash.navigation.csv.CsvSemicolonFormat;
+import slash.navigation.excel.MicrosoftExcel2008Format;
+import slash.navigation.excel.MicrosoftExcel97Format;
 import slash.navigation.fpl.GarminFlightPlanFormat;
 import slash.navigation.gopal.GoPal3RouteFormat;
 import slash.navigation.gopal.GoPal5RouteFormat;
@@ -90,6 +92,7 @@ import slash.navigation.nmea.MagellanExploristFormat;
 import slash.navigation.nmea.MagellanRouteFormat;
 import slash.navigation.nmea.NmeaFormat;
 import slash.navigation.nmn.NavigatingPoiWarnerFormat;
+import slash.navigation.nmn.NavigonCruiserFormat;
 import slash.navigation.nmn.Nmn4Format;
 import slash.navigation.nmn.Nmn5Format;
 import slash.navigation.nmn.Nmn6FavoritesFormat;
@@ -179,8 +182,7 @@ public class NavigationFormatRegistry {
         addFormat(Route66Format.class);
         addFormat(KompassFormat.class);
         addFormat(GlopusFormat.class);
-        addFormat(ColumbusGpsProfessionalFormat.class);
-        addFormat(ColumbusGpsStandardFormat.class);
+        addFormat(ColumbusGpsType1Format.class);
         addFormat(ColumbusGpsType2Format.class);
         addFormat(QstarzQ1000Format.class);
         addFormat(Iblue747Format.class);
@@ -206,6 +208,7 @@ public class NavigationFormatRegistry {
         addFormat(WintecWbt201Tk2Format.class);
         addFormat(ColumbusGpsBinaryFormat.class);
         addFormat(NavilinkFormat.class);
+        addFormat(NavigonCruiserFormat.class);
         addFormat(GoRiderGpsFormat.class);
         addFormat(KienzleGpsFormat.class);
         addFormat(GroundTrackFormat.class);
@@ -213,13 +216,16 @@ public class NavigationFormatRegistry {
         addFormat(NavigatingPoiWarnerFormat.class);
         addFormat(NmnRouteFormat.class);
         addFormat(ApeMapFormat.class);
-        addFormat(ZipFormat.class);
         addFormat(PhotoFormat.class);
+        addFormat(MicrosoftExcel97Format.class);
+        addFormat(MicrosoftExcel2008Format.class);
+
+        // kind of meta-format
+        addFormat(ZipFormat.class);
 
         // GPSBabel-based formats
         addFormat(GarminMapSource6Format.class);
         addFormat(GarminMapSource5Format.class);
-        addFormat(MicrosoftAutoRouteFormat.class);
         addFormat(TourExchangeFormat.class);
         addFormat(NationalGeographicTopo3Format.class);
         addFormat(MagellanMapSendFormat.class);
@@ -244,9 +250,11 @@ public class NavigationFormatRegistry {
         addFormat(GoogleMapsUrlFormat.class);
         addFormat(MotoPlanerUrlFormat.class);
         addFormat(UrlFormat.class);
+        addFormat(CsvCommaFormat.class);
+        addFormat(CsvSemicolonFormat.class);
 
         // second try for broken files
-        addFormat(GarbleColumbusGpsProfessionalFormat.class);
+        addFormat(GarbleColumbusGpsType1Format.class);
         addFormat(GarbleNmeaFormat.class);
         addFormat(GarbleHaicomLoggerFormat.class);
         addFormat(GarbleGpx10Format.class);
@@ -277,7 +285,7 @@ public class NavigationFormatRegistry {
         List<NavigationFormat> result = new ArrayList<>();
         for (Class<? extends NavigationFormat> formatClass : formats) {
             try {
-                NavigationFormat format = formatClass.newInstance();
+                NavigationFormat format = formatClass.getDeclaredConstructor().newInstance();
                 if (includeReadableFormats && format.isSupportsReading() && includeReadFormat(format) ||
                         includeWritableFormats && format.isSupportsWriting())
                     result.add(format);

@@ -29,6 +29,12 @@ import slash.navigation.base.Wgs84Route;
 import slash.navigation.bcr.BcrFormat;
 import slash.navigation.bcr.BcrPosition;
 import slash.navigation.bcr.BcrRoute;
+import slash.navigation.csv.CsvFormat;
+import slash.navigation.csv.CsvPosition;
+import slash.navigation.csv.CsvRoute;
+import slash.navigation.excel.ExcelFormat;
+import slash.navigation.excel.ExcelPosition;
+import slash.navigation.excel.ExcelRoute;
 import slash.navigation.gopal.GoPalPosition;
 import slash.navigation.gopal.GoPalRoute;
 import slash.navigation.gopal.GoPalRouteFormat;
@@ -109,6 +115,24 @@ public class GarminFlightPlanRoute extends BaseRoute<GarminFlightPlanPosition, G
             bcrPositions.add(position.asMTPPosition());
         }
         return new BcrRoute(format, getName(), getDescription(), bcrPositions);
+    }
+
+    protected CsvRoute asCsvFormat(CsvFormat format) {
+        List<CsvPosition> positions = new ArrayList<>();
+        for (GarminFlightPlanPosition position : getPositions()) {
+            positions.add(position.asCsvPosition());
+        }
+        return new CsvRoute(format, getName(), positions);
+    }
+
+    protected ExcelRoute asExcelFormat(ExcelFormat format) {
+        List<ExcelPosition> excelPositions = new ArrayList<>();
+        ExcelRoute route = new ExcelRoute(format, getName(), excelPositions);
+        for (GarminFlightPlanPosition position : getPositions()) {
+            ExcelPosition excelPosition = route.createPosition(position.getLongitude(), position.getLatitude(), position.getElevation(), position.getSpeed(), position.getTime(), position.getDescription());
+            excelPositions.add(excelPosition);
+        }
+        return route;
     }
 
     protected GoPalRoute asGoPalRouteFormat(GoPalRouteFormat format) {

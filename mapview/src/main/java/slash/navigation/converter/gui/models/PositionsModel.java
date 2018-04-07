@@ -72,5 +72,4 @@ public interface PositionsModel extends TableModel {
 
     boolean isContinousRange();
     void fireTableRowsUpdated(int firstIndex, int lastIndex, int columnIndex);
-    void setValueIsAdjusting(boolean valueIsAdjusting);
 }

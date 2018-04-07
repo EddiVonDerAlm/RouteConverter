@@ -46,12 +46,13 @@ import static java.lang.Math.abs;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.concurrent.Executors.newSingleThreadExecutor;
 import static javax.swing.JOptionPane.ERROR_MESSAGE;
 import static javax.swing.JOptionPane.showMessageDialog;
 import static javax.swing.SwingUtilities.invokeLater;
 import static javax.swing.event.TableModelEvent.ALL_COLUMNS;
 import static slash.common.helpers.ExceptionHelper.getLocalizedMessage;
+import static slash.common.helpers.ExceptionHelper.printStackTrace;
+import static slash.common.helpers.ThreadHelper.createSingleThreadExecutor;
 import static slash.common.io.Transfer.widthInDigits;
 import static slash.common.type.CompactCalendar.fromMillis;
 import static slash.navigation.base.RouteComments.formatNumberedPosition;
@@ -59,12 +60,7 @@ import static slash.navigation.base.RouteComments.getNumberedPosition;
 import static slash.navigation.common.NumberingStrategy.Absolute_Position_Within_Position_List;
 import static slash.navigation.converter.gui.helpers.PositionHelper.formatElevation;
 import static slash.navigation.converter.gui.helpers.PositionHelper.formatSpeed;
-import static slash.navigation.converter.gui.models.PositionColumns.DATE_TIME_COLUMN_INDEX;
-import static slash.navigation.converter.gui.models.PositionColumns.DESCRIPTION_COLUMN_INDEX;
-import static slash.navigation.converter.gui.models.PositionColumns.ELEVATION_COLUMN_INDEX;
-import static slash.navigation.converter.gui.models.PositionColumns.LATITUDE_COLUMN_INDEX;
-import static slash.navigation.converter.gui.models.PositionColumns.LONGITUDE_COLUMN_INDEX;
-import static slash.navigation.converter.gui.models.PositionColumns.SPEED_COLUMN_INDEX;
+import static slash.navigation.converter.gui.models.PositionColumns.*;
 import static slash.navigation.gui.helpers.JTableHelper.scrollToPosition;
 
 /**
@@ -81,16 +77,20 @@ public class PositionAugmenter {
     private final JTable positionsView;
     private final PositionsModel positionsModel;
 
-    private final ExecutorService executor = newSingleThreadExecutor();
-    private final ElevationServiceFacade elevationServiceFacade = RouteConverter.getInstance().getElevationServiceFacade();
-    private final GeocodingServiceFacade geocodingServiceFacade = RouteConverter.getInstance().getGeocodingServiceFacade();
+    private final ExecutorService executor = createSingleThreadExecutor("AugmentPositions");
+    private final ElevationServiceFacade elevationServiceFacade;
+    private final GeocodingServiceFacade geocodingServiceFacade;
     private static final Object notificationMutex = new Object();
     private boolean running = true;
 
-    public PositionAugmenter(JTable positionsView, PositionsModel positionsModel, JFrame frame) {
+    public PositionAugmenter(JTable positionsView, PositionsModel positionsModel, JFrame frame,
+                             ElevationServiceFacade elevationServiceFacade,
+                             GeocodingServiceFacade geocodingServiceFacade) {
         this.positionsView = positionsView;
         this.positionsModel = positionsModel;
         this.frame = frame;
+        this.elevationServiceFacade = elevationServiceFacade;
+        this.geocodingServiceFacade = geocodingServiceFacade;
     }
 
     public void interrupt() {
@@ -133,7 +133,7 @@ public class PositionAugmenter {
     }
 
     private static class CancelAction extends AbstractAction {
-        private boolean canceled = false;
+        private boolean canceled;
 
         public boolean isCanceled() {
             return canceled;
@@ -182,7 +182,7 @@ public class PositionAugmenter {
                                     // range operations outweights the possible optimization
                                     operation.run(index, position);
                                 } catch (Exception e) {
-                                    log.warning(format("Error while running operation %s on position %d: %s", operation, index, e));
+                                    log.warning(format("Error while running operation %s on position %d: %s, %s", operation, index, e, printStackTrace(e)));
                                     lastException[0] = e;
                                 }
                             }
@@ -383,7 +383,7 @@ public class PositionAugmenter {
                     public void performOnStart() {
                     }
 
-                    public boolean run(int index, NavigationPosition position) throws Exception {
+                    public boolean run(int index, NavigationPosition position) {
                         NavigationPosition predecessor = index > 0 && index < positionsModel.getRowCount() ? positionsModel.getPosition(index - 1) : null;
                         if (predecessor != null) {
                             String previousSpeed = formatSpeed(position.getSpeed());
@@ -409,21 +409,21 @@ public class PositionAugmenter {
             processSpeeds(positionsView, positionsModel, rows, COORDINATE_PREDICATE);
     }
 
-    private int findPredecessorWithTime(PositionsModel positionsModel, int index) {
-        do {
+    int findPredecessorWithTime(PositionsModel positionsModel, int index) {
+        while (index-- > 0) {
             NavigationPosition position = positionsModel.getPosition(index);
             if (position.hasTime())
                 return index;
-        } while (index-- > 0);
+        }
         return -1;
     }
 
-    private int findSuccessorWithTime(PositionsModel positionsModel, int index) {
-        do {
+    int findSuccessorWithTime(PositionsModel positionsModel, int index) {
+        while (index++ < positionsModel.getRowCount() - 1) {
             NavigationPosition position = positionsModel.getPosition(index);
             if (position.hasTime())
                 return index;
-        } while (index++ < positionsModel.getRowCount() - 1);
+        }
         return -1;
     }
 
@@ -437,9 +437,13 @@ public class PositionAugmenter {
             return null;
 
         long timeDelta = abs(predecessor.calculateTime(successor));
+        if (timeDelta == 0)
+            return null;
 
         double distanceToPredecessor = positionsModel.getRoute().getDistance(predecessorIndex, positionIndex);
         double distanceToSuccessor = positionsModel.getRoute().getDistance(positionIndex, successorIndex);
+        if (distanceToPredecessor == 0.0)
+            return null;
         double distanceRatio = distanceToPredecessor / (distanceToPredecessor + distanceToSuccessor);
 
         long time = (long) (predecessor.getTime().getTimeInMillis() + (double) timeDelta * distanceRatio);
@@ -467,7 +471,7 @@ public class PositionAugmenter {
                         successorIndex = findSuccessorWithTime(positionsModel, rows[rows.length-1]);
                     }
 
-                    public boolean run(int index, NavigationPosition position) throws Exception {
+                    public boolean run(int index, NavigationPosition position) {
                         if (predecessorIndex != -1 && successorIndex != -1) {
                             CompactCalendar previousTime = position.getTime();
                             CompactCalendar nextTime = interpolateTime(positionsModel, index, predecessorIndex, successorIndex);
@@ -520,7 +524,7 @@ public class PositionAugmenter {
                     public void performOnStart() {
                     }
 
-                    public boolean run(int index, NavigationPosition position) throws Exception {
+                    public boolean run(int index, NavigationPosition position) {
                         String previousDescription = position.getDescription();
                         int number = numberingStrategy.equals(Absolute_Position_Within_Position_List) ? index : findRelativeIndex(rows, index);
                         String nextDescription = getNumberedPosition(position, number, digitCount, numberPattern);
@@ -567,6 +571,12 @@ public class PositionAugmenter {
                     }
 
                     public int getColumnIndex() {
+                        if(complementDescription && !complementElevation && !complementTime)
+                            return DESCRIPTION_COLUMN_INDEX;
+                        if(!complementDescription && complementElevation && !complementTime)
+                            return ELEVATION_COLUMN_INDEX;
+                        if(!complementDescription && !complementElevation && !complementTime)
+                            return DATE_TIME_COLUMN_INDEX;
                         return ALL_COLUMNS; // might be DESCRIPTION_COLUMN_INDEX, ELEVATION_COLUMN_INDEX, DATE_TIME_COLUMN_INDEX
                     }
 

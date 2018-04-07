@@ -167,7 +167,7 @@ public abstract class RouteComments {
     @SuppressWarnings("unchecked")
     public static void commentRoutePositions(List<? extends BaseRoute> routes) {
         if (routes.size() > 1) {
-            Map<LongitudeAndLatitude, String> comments = new HashMap<>();
+            Map<LongitudeAndLatitude, String> descriptions = new HashMap<>();
             Map<LongitudeAndLatitude, Double> elevations = new HashMap<>();
             Map<LongitudeAndLatitude, CompactCalendar> times = new HashMap<>();
             Map<LongitudeAndLatitude, Double> speeds = new HashMap<>();
@@ -179,8 +179,8 @@ public abstract class RouteComments {
 
                     if (position.getDescription() != null) {
                         LongitudeAndLatitude lal = new LongitudeAndLatitude(position.getLongitude(), position.getLatitude());
-                        if (comments.get(lal) == null) {
-                            comments.put(lal, position.getDescription());
+                        if (descriptions.get(lal) == null) {
+                            descriptions.put(lal, position.getDescription());
                         }
                     }
 
@@ -214,9 +214,9 @@ public abstract class RouteComments {
 
                     if (position.getDescription() == null) {
                         LongitudeAndLatitude lal = new LongitudeAndLatitude(position.getLongitude(), position.getLatitude());
-                        String comment = comments.get(lal);
-                        if (comment != null) {
-                            position.setDescription(comment);
+                        String description = descriptions.get(lal);
+                        if (description != null) {
+                            position.setDescription(description);
                         }
                     }
 
@@ -280,7 +280,7 @@ public abstract class RouteComments {
             "(" + TIME + ") - (.+) - (" + DOUBLE + ") m - (" + DOUBLE + ") (K|k)m - (" + DOUBLE + ") (K|k)m/h( - \\d+)?");
     private static final Pattern TRIPMASTER_LONG_PATTERN = Pattern.compile(
             "(" + TIME + ") - (Start : (.*?)|Finish : (.*?)|" + TRIPMASTER_REASONS + ")(\\s?:\\s.+)? - " +
-            "(" + DOUBLE + ") m - (" + DOUBLE + ") (K|k)m - (" + DOUBLE + ") (K|k)m/h( - \\d+)?");
+                    "(" + DOUBLE + ") m - (" + DOUBLE + ") (K|k)m - (" + DOUBLE + ") (K|k)m/h( - \\d+)?");
     private static final Pattern ROUTECONVERTER_STARTEND_PATTERN = Pattern.compile(
             "((Start|Ende|Finish) : (.+) : (" + DATE + ") (" +  TIME + ")) - (" + DOUBLE + ") m - (" + DOUBLE + ") (K|k)m/h - (" + DOUBLE + ") deg.*");
     private static final Pattern ROUTECONVERTER_INTERMEDIATE_PATTERN = Pattern.compile(

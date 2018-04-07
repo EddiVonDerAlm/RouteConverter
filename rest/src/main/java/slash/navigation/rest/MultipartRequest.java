@@ -27,7 +27,6 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 
 import static org.apache.http.Consts.UTF_8;
 import static org.apache.http.HttpHeaders.ACCEPT;
@@ -44,7 +43,7 @@ import static slash.common.io.Transfer.encodeUriButKeepSlashes;
 abstract class MultipartRequest extends HttpRequest {
     private static final ContentType TEXT_PLAIN_UTF8 = ContentType.create("text/plain", UTF_8);
     private MultipartEntityBuilder builder;
-    private boolean containsFileLargerThan4k = false;
+    private boolean containsFileLargerThan4k;
 
     MultipartRequest(HttpEntityEnclosingRequestBase method, Credentials credentials) {
         super(method, credentials);
@@ -60,17 +59,17 @@ abstract class MultipartRequest extends HttpRequest {
         return (HttpEntityEnclosingRequestBase) getMethod();
     }
 
-    public void addString(String name, String value) throws UnsupportedEncodingException {
+    public void addString(String name, String value) {
         getBuilder().addTextBody(name, value, TEXT_PLAIN_UTF8);
     }
 
-    public void addFile(String name, File value) throws IOException {
+    public void addFile(String name, File value) {
         if (value.exists() && value.length() > 4096)
             containsFileLargerThan4k = true;
         getBuilder().addBinaryBody(name, value, APPLICATION_OCTET_STREAM, encodeUriButKeepSlashes(value.getName()));
     }
 
-    public void addFile(String name, byte[] value) throws IOException {
+    public void addFile(String name, byte[] value) {
         if (value.length > 4096)
             containsFileLargerThan4k = true;
         getBuilder().addBinaryBody(name, value, APPLICATION_OCTET_STREAM, encodeUriButKeepSlashes(name + ".xml"));

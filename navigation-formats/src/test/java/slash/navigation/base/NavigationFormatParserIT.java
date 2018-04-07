@@ -131,12 +131,6 @@ public class NavigationFormatParserIT {
     }
 
     @Test
-    public void testIsValidMicrosoftAutoRoute() throws IOException {
-        read(TEST_PATH + "from.axe");
-        read(TEST_PATH + "large.axe");
-    }
-
-    @Test
     public void testIsValidBcr() throws IOException {
         read(TEST_PATH + "from-mtp0607.bcr");
         read(TEST_PATH + "from-mtp0809.bcr");
@@ -171,7 +165,8 @@ public class NavigationFormatParserIT {
 
     @Test
     public void testIsValidGarminMapSource6() throws IOException {
-        read(TEST_PATH + "from.gdb");
+        read(TEST_PATH + "from2.gdb");
+        read(TEST_PATH + "from3.gdb");
 
         readWaypoints(TEST_PATH + "from10.gdb", 6);
         readRoute(TEST_PATH + "from10.gdb", 3, 1, 2, 3);

@@ -17,7 +17,6 @@
 
     Copyright (C) 2007 Christian Pesch. All Rights Reserved.
 */
-
 package slash.navigation.gui.jarinjar;
 
 import java.io.File;
@@ -31,12 +30,17 @@ import static slash.navigation.gui.jarinjar.JarInJarURLStreamHandler.JAR_IN_JAR_
 
 /**
  * Creates a {@link ClassLoader} that allows to include JARs in the classpath and in the file systems.
+ * Works fine for Java 7 and 8 but not with Java 9 due to the classpath/module changes.
  *
  * @author Christian Pesch, inspired from https://github.com/mchr3k/swtjar/blob/master/src/org/swtjar/SWTLoader.java
  *         and http://stackoverflow.com/questions/1010919/adding-files-to-java-classpath-at-runtime
  */
 public class ClassPathExtender {
-    private final URLClassLoader classLoader = URLClassLoader.class.cast(ClassPathExtender.class.getClassLoader());
+    private final ClassLoader classLoader = ClassLoader.class.cast(ClassPathExtender.class.getClassLoader());
+
+    public ClassPathExtender() {
+        URL.setURLStreamHandlerFactory(new JarInJarURLStreamHandlerFactory(classLoader));
+    }
 
     public ClassLoader getClassLoader() {
         return classLoader;
@@ -49,7 +53,6 @@ public class ClassPathExtender {
     }
 
     public void addJarInJar(String fileName) throws MalformedURLException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        URL.setURLStreamHandlerFactory(new JarInJarURLStreamHandlerFactory(classLoader));
         addURL(new URL(JAR_IN_JAR_PROTOCOL + fileName));
     }
 

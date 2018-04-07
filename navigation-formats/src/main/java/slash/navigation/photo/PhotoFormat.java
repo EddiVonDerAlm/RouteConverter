@@ -58,6 +58,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import static java.io.File.createTempFile;
+import static java.lang.Integer.parseInt;
 import static java.lang.Math.abs;
 import static java.util.Calendar.DAY_OF_MONTH;
 import static java.util.Calendar.HOUR;
@@ -240,7 +241,7 @@ public class PhotoFormat extends SimpleFormat<Wgs84Route> {
         if (exifDirectory == null)
             return null;
         Object fieldValue = exifDirectory.getFieldValue(tag);
-        return fieldValue != null ? new Integer(fieldValue.toString()) : null;
+        return fieldValue != null ? parseInt(fieldValue.toString()) : null;
     }
 
     private RationalNumber parseExifRationalNumber(TiffImageMetadata metadata, TagInfo tag) throws ImageReadException {
@@ -331,7 +332,7 @@ public class PhotoFormat extends SimpleFormat<Wgs84Route> {
         return date;
     }
 
-    private Double parseDirection(TiffDirectory directory) throws ImageReadException {
+    private Double parseDirection(TiffDirectory directory) {
         RationalNumber direction = getFieldValue(directory, GPS_TAG_GPS_IMG_DIRECTION);
         return direction != null ? direction.doubleValue() : null;
     }
@@ -346,7 +347,7 @@ public class PhotoFormat extends SimpleFormat<Wgs84Route> {
         return measurementMode != null && measurementMode.equals(Integer.toString(GPS_TAG_GPS_MEASURE_MODE_VALUE_2_DIMENSIONAL_MEASUREMENT));
     }
 
-    private Double parseDOP(TiffDirectory directory) throws ImageReadException {
+    private Double parseDOP(TiffDirectory directory) {
         RationalNumber dop = getFieldValue(directory, GPS_TAG_GPS_DOP);
         return dop != null ? dop.doubleValue() : null;
     }

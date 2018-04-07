@@ -57,7 +57,7 @@ public class SnapshotCatalog extends BaseDownloadTool {
     private static final String RESET_ARGUMENT = "reset";
 
     private DataSourceManager dataSourceManager;
-    private boolean reset = false;
+    private boolean reset;
 
     public void setReset(boolean reset) {
         this.reset = reset;
@@ -80,8 +80,7 @@ public class SnapshotCatalog extends BaseDownloadTool {
     private List<DataSource> createDataSourceSet(List<Edition> editions) {
         Set<DataSource> result = new HashSet<>();
         for(Edition edition : editions) {
-            for (DataSource dataSource : edition.getDataSources())
-                result.add(dataSource);
+            result.addAll(edition.getDataSources());
         }
         return new ArrayList<>(result);
     }

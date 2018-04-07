@@ -38,8 +38,8 @@ import static java.util.Arrays.asList;
 import static java.util.Arrays.sort;
 import static org.junit.Assert.assertFalse;
 import static slash.common.TestCase.assertEquals;
-import static slash.common.TestCase.assertNotEquals;
 import static slash.common.io.Files.collectFiles;
+import static slash.common.io.Files.getExtension;
 import static slash.navigation.base.NavigationTestCase.*;
 
 public class ReadIT {
@@ -67,7 +67,7 @@ public class ReadIT {
         readFiles(extension, new TestFileCallback() {
             @SuppressWarnings({"unchecked"})
             public void test(File file) throws IOException {
-                ParserResult result = parser.read(file);
+                ParserResult result = parser.read(file, parser.getNavigationFormatRegistry().getReadFormatsPreferredByExtension(getExtension(file.getName())));
                 assertNotNull(result);
                 assertTrue("Cannot read route from " + file, result.isSuccessful());
                 assertNotNull(result.getFormat());
@@ -95,14 +95,14 @@ public class ReadIT {
 
     @AfterClass
     public static void tearDown() throws IOException {
-        PrintStream out = new PrintStream(new FileOutputStream(createTempFile("comments", ".csv")));
+        PrintStream printStream = new PrintStream(new FileOutputStream(createTempFile("comments", ".csv")));
         String[] strings = comments.toArray(new String[comments.size()]);
         sort(strings);
         for (String string : strings) {
-            out.println(string);
+            printStream.println(string);
         }
-        out.flush();
-        out.close();
+        printStream.flush();
+        printStream.close();
     }
 
     @Test
@@ -110,6 +110,10 @@ public class ReadIT {
         readFiles(".bcr");
     }
 
+    @Test
+    public void testNavigionCruiserFilesAreValid() throws IOException {
+        readFiles(".cruiser");
+    }
     @Test
     public void testCsvFilesAreValid() throws IOException {
         // Columbus Gps
@@ -222,12 +226,6 @@ public class ReadIT {
     @Test
     public void testMagicMapsIktFilesAreValid() throws IOException {
         readFiles(".ikt");
-    }
-
-    @Test
-    public void testMicrosoftAutoRouteFilesAreValid() throws IOException {
-        readFiles(".axe");
-        readFiles(".est");
     }
 
     @Test

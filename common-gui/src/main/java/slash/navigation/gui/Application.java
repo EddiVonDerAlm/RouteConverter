@@ -21,15 +21,17 @@
 package slash.navigation.gui;
 
 import slash.navigation.gui.jarinjar.ClassPathExtender;
-import slash.navigation.jnlp.SingleInstance;
-import slash.navigation.jnlp.SingleInstanceCallback;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.EventListener;
+import java.util.EventObject;
+import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
@@ -41,8 +43,6 @@ import static java.util.logging.Level.WARNING;
 import static java.util.logging.Logger.getLogger;
 import static java.util.prefs.Preferences.userNodeForPackage;
 import static javax.swing.SwingUtilities.invokeLater;
-import static slash.common.system.Platform.getBits;
-import static slash.common.system.Platform.getOperationSystem;
 import static slash.navigation.gui.helpers.UIHelper.setLookAndFeel;
 import static slash.navigation.gui.helpers.UIHelper.setUseSystemProxies;
 
@@ -54,7 +54,7 @@ import static slash.navigation.gui.helpers.UIHelper.setUseSystemProxies;
 
 public abstract class Application {
     private static final Logger log = getLogger(SingleFrameApplication.class.getName());
-    private static Application application = null;
+    private static Application application;
     private final List<ExitListener> exitListeners;
     private final ApplicationContext context;
     private Preferences preferences = userNodeForPackage(getClass());
@@ -106,6 +106,7 @@ public abstract class Application {
         for (String bundleName : bundleNames) {
             ResourceBundle bundle = ResourceBundle.getBundle(bundleName);
             if (lastBundle != null)
+                // this is considered an illegal access in Java 9 and later, have to look for alternatives once it's enforced
                 setParentBundle(bundle, lastBundle);
             lastBundle = bundle;
         }
@@ -126,13 +127,6 @@ public abstract class Application {
     private static ClassLoader extendClassPath() {
         ClassPathExtender extender = new ClassPathExtender();
 
-        String swtJar = "swt-" + getOperationSystem() + "-" + getBits() + ".jar";
-        try {
-            extender.addJarInJar(swtJar);
-        } catch (Exception e) {
-            log.info("Cannot extend classpath with SWT from " + swtJar + ": " + e);
-        }
-
         File javaFxJar = new File(System.getProperty("java.home"), "lib/jfxrt.jar");
         if (javaFxJar.exists()) {
             try {
@@ -143,38 +137,6 @@ public abstract class Application {
         }
 
         return extender.getClassLoader();
-    }
-
-    private static void invokeNativeInterfaceMethod(String name) {
-        try {
-            Class<?> clazz = Class.forName("chrriis.dj.nativeswing.swtimpl.NativeInterface");
-            Method method = clazz.getMethod(name);
-            method.invoke(null);
-        } catch (Exception e) {
-            log.info("Cannot invoke NativeInterface#" + name + "(): " + e);
-        }
-    }
-
-    private static void openNativeInterface() {
-        invokeNativeInterfaceMethod("open");
-    }
-
-    private static void runNativeInterfaceEventPump() {
-        invokeNativeInterfaceMethod("runEventPump");
-    }
-
-    private SingleInstance singleInstance;
-
-    private void initializeSingleInstance() {
-        try {
-            singleInstance = new SingleInstance(new SingleInstanceCallback() {
-                public void newActivation(String[] args) {
-                    Application.this.parseNewActivationArgs(args);
-                }
-            });
-        } catch (Throwable t) {
-            // intentionally left empty
-        }
     }
 
     public static <T extends Application> void launch(final Class<T> applicationClass, final String[] bundleNames, final String[] args) {
@@ -190,14 +152,12 @@ public abstract class Application {
 
                     setLookAndFeel();
                     setUseSystemProxies();
-                    openNativeInterface();
                     initializeLocale(userNodeForPackage(applicationClass));
                     ResourceBundle bundle = initializeBundles(bundleNames);
 
                     Application application = create(applicationClass);
                     setInstance(application);
                     application.getContext().setBundle(bundle);
-                    application.initializeSingleInstance();
                     application.startup();
                     application.parseInitialArgs(args);
                 } catch (Exception e) {
@@ -208,7 +168,6 @@ public abstract class Application {
             }
         };
         invokeLater(doCreateAndShowGUI);
-        runNativeInterfaceEventPump();
     }
 
     private static <T extends Application> T create(Class<T> applicationClass) throws Exception {
@@ -261,8 +220,6 @@ public abstract class Application {
     }
 
     void end() {
-        if (singleInstance != null)
-            singleInstance.dispose();
         Runtime.getRuntime().exit(0);
     }
 }

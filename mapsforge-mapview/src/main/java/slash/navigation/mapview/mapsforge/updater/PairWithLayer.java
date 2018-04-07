@@ -29,7 +29,7 @@ import slash.navigation.common.DistanceAndTime;
  * @author Christian Pesch
  */
 
-public class PairWithLayer {
+public class PairWithLayer implements ObjectWithLayer {
     private final NavigationPosition first;
     private final NavigationPosition second;
     private Layer layer;
@@ -74,7 +74,8 @@ public class PairWithLayer {
 
         PairWithLayer that = (PairWithLayer) o;
 
-        return first.equals(that.first) && second.equals(that.second);
+        return first.equals(that.first) && second.equals(that.second) &&
+                (layer != null ? layer.equals(that.layer) : that.layer == null);
     }
 
     public int hashCode() {
@@ -82,5 +83,9 @@ public class PairWithLayer {
         result = 31 * result + second.hashCode();
         result = 31 * result + (layer != null ? layer.hashCode() : 0);
         return result;
+    }
+
+    public String toString() {
+        return getClass().getSimpleName() + "@" + hashCode() + "[first=" + getFirst() + ", second=" + getSecond() + ", layer=" + getLayer() + ", distanceAndTime=" + getDistanceAndTime() + "]";
     }
 }

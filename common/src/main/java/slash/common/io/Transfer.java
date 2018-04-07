@@ -37,6 +37,7 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 
+import static java.lang.Double.isNaN;
 import static java.lang.Double.POSITIVE_INFINITY;
 import static java.lang.Integer.toHexString;
 import static java.lang.Math.*;
@@ -103,9 +104,9 @@ public class Transfer {
     }
 
     public static String trim(String string, int length) {
+        string = trim(string);
         if (string == null)
             return null;
-        string = trim(string);
         return string.substring(0, min(string.length(), length));
     }
 
@@ -113,6 +114,10 @@ public class Transfer {
         string = string.replace('\n', ' ');
         string = string.replace('\r', ' ');
         return string;
+    }
+
+    public static String toLettersAndNumbers(String string) {
+        return string.replaceAll("[^\\w]","");
     }
 
     public static String toMixedCase(String string) {
@@ -145,6 +150,18 @@ public class Transfer {
         return escape(string, escape, replacement, "");
     }
 
+
+    public static boolean isIsoLatin1ButReadWithUtf8(String string) {
+        if (string != null) {
+            for (int i = 0; i < string.length(); i++) {
+                char c = string.charAt(i);
+                if (c == '\ufffd')
+                    return true;
+            }
+        }
+        return false;
+    }
+
     public static Double formatDouble(BigDecimal aBigDecimal) {
         return aBigDecimal != null ? aBigDecimal.doubleValue() : null;
     }
@@ -162,7 +179,7 @@ public class Transfer {
     }
 
     public static String formatDoubleAsString(Double aDouble) {
-        if (aDouble == null)
+        if (aDouble == null || isNaN(aDouble))
             return "0.0";
         return DECIMAL_NUMBER_FORMAT.format(aDouble);
     }
@@ -252,13 +269,12 @@ public class Transfer {
             return null;
     }
 
-    public static long parselong(String string) {
-        Long aLong = parseLong(string);
-        return aLong != null ? aLong : -1;
-    }
-
     public static boolean isEmpty(String string) {
         return string == null || string.length() == 0;
+    }
+
+    public static boolean isEmpty(Short aShort) {
+        return aShort == null || aShort == 0;
     }
 
     public static boolean isEmpty(Integer integer) {
@@ -270,7 +286,7 @@ public class Transfer {
     }
 
     public static boolean isEmpty(Double aDouble) {
-        return aDouble == null || aDouble == 0.0;
+        return aDouble == null || isNaN(aDouble) || aDouble == 0.0;
     }
 
     public static boolean isEmpty(BigDecimal bigDecimal) {
@@ -278,7 +294,7 @@ public class Transfer {
     }
 
     public static double toDouble(Double aDouble) {
-        return aDouble == null ? 0.0 : aDouble;
+        return aDouble == null || isNaN(aDouble) ? 0.0 : aDouble;
     }
 
     public static int[] toArray(List<Integer> integers) {
@@ -368,7 +384,7 @@ public class Transfer {
         return fromMillis(gregorianCalendar.getTimeInMillis());
     }
 
-    private static DatatypeFactory datatypeFactory = null;
+    private static DatatypeFactory datatypeFactory;
 
     private static synchronized DatatypeFactory getDataTypeFactory() throws DatatypeConfigurationException {
         if (datatypeFactory == null) {

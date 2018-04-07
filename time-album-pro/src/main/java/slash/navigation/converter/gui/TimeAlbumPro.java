@@ -22,10 +22,7 @@ package slash.navigation.converter.gui;
 import slash.navigation.base.NavigationFormatRegistry;
 import slash.navigation.columbus.ColumbusNavigationFormatRegistry;
 import slash.navigation.converter.gui.actions.ShowAboutTimeAlbumProAction;
-import slash.navigation.converter.gui.helpers.MapViewImplementation;
 import slash.navigation.gui.actions.SingletonDialogAction;
-
-import static slash.navigation.converter.gui.helpers.MapViewImplementation.EclipseSWT;
 
 /**
  * A graphical user interface for Columbus devices.
@@ -54,10 +51,6 @@ public class TimeAlbumPro extends RouteConverter {
 
     public NavigationFormatRegistry getNavigationFormatRegistry() {
         return navigationFormatRegistry;
-    }
-
-    protected MapViewImplementation getPreferredMapView() {
-        return EclipseSWT;
     }
 
     protected boolean isPointsOfInterestEnabled() {

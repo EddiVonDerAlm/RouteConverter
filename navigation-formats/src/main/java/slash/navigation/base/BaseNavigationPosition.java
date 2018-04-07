@@ -24,6 +24,8 @@ import slash.common.type.CompactCalendar;
 import slash.navigation.bcr.BcrPosition;
 import slash.navigation.common.Bearing;
 import slash.navigation.common.NavigationPosition;
+import slash.navigation.csv.CsvPosition;
+import slash.navigation.excel.ExcelPosition;
 import slash.navigation.fpl.GarminFlightPlanPosition;
 import slash.navigation.gopal.GoPalPosition;
 import slash.navigation.gpx.GpxPosition;
@@ -157,6 +159,25 @@ public abstract class BaseNavigationPosition implements NavigationPosition {
         return asWgs84Position();
     }
 
+    public CsvPosition asCsvPosition() {
+        return new CsvPosition(getLongitude(), getLatitude(), getElevation(), getSpeed(), getTime(), getDescription());
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public CsvPosition asCsvCommaPosition() {
+        return asCsvPosition();
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public CsvPosition asCsvSemicolonPosition() {
+        return asCsvPosition();
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public ExcelPosition asMicrosoftExcelPosition() {
+        return new ExcelPosition(getLongitude(), getLatitude(), getElevation(), getSpeed(), getTime(), getDescription());
+    }
+
     @SuppressWarnings("UnusedDeclaration")
     public GpxPosition asGarbleGpxPosition() {
         return asGpxPosition();
@@ -262,7 +283,7 @@ public abstract class BaseNavigationPosition implements NavigationPosition {
         return asKmlPosition();
     }
 
-    @SuppressWarnings("UnusedDeclaration")
+    @SuppressWarnings({"UnusedDeclaration", "WeakerAccess"})
     public KmlPosition asKmzPosition() {
         return asKmlPosition();
     }
@@ -316,6 +337,11 @@ public abstract class BaseNavigationPosition implements NavigationPosition {
         return asWgs84Position();
     }
 
+    @SuppressWarnings("UnusedDeclaration")
+    public Wgs84Position asNavigonCruiserPosition() {
+        return asWgs84Position();
+    }
+
     public NmeaPosition asNmeaPosition() {
         return new NmeaPosition(getLongitude(), getLatitude(), getElevation(), getSpeed(), getTime(), getDescription());
     }
@@ -344,7 +370,7 @@ public abstract class BaseNavigationPosition implements NavigationPosition {
         return asWgs84Position();
     }
 
-    @SuppressWarnings("UnusedDeclaration")
+    @SuppressWarnings({"UnusedDeclaration", "WeakerAccess"})
     public Wgs84Position asOvlPosition() {
         return asWgs84Position();
     }

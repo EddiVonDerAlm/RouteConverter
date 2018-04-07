@@ -29,7 +29,6 @@ import slash.navigation.maps.MapManager;
 import slash.navigation.maps.RemoteMap;
 
 import javax.swing.*;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -102,7 +101,7 @@ public class DownloadMapsAction extends FrameAction {
                         r.getElevationServiceFacade().getElevationService().downloadElevationData(selectedBoundingBoxes);
 
                     mapManager.scanMaps();
-                } catch (final IOException e) {
+                } catch (final Exception e) {
                     invokeLater(new Runnable() {
                         public void run() {
                             JFrame frame = r.getFrame();

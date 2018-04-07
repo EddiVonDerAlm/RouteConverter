@@ -25,6 +25,12 @@ import slash.navigation.base.*;
 import slash.navigation.bcr.BcrFormat;
 import slash.navigation.bcr.BcrPosition;
 import slash.navigation.bcr.BcrRoute;
+import slash.navigation.csv.CsvFormat;
+import slash.navigation.csv.CsvPosition;
+import slash.navigation.csv.CsvRoute;
+import slash.navigation.excel.ExcelFormat;
+import slash.navigation.excel.ExcelPosition;
+import slash.navigation.excel.ExcelRoute;
 import slash.navigation.gopal.GoPalPosition;
 import slash.navigation.gopal.GoPalRoute;
 import slash.navigation.gopal.GoPalRouteFormat;
@@ -73,7 +79,7 @@ public class KlickTelRoute extends BaseRoute<Wgs84Position, KlickTelRouteFormat>
         return new KDRoute.RouteOptions();
     }
 
-    public KlickTelRoute(String name, KDRoute.RouteOptions options, List<Wgs84Position> positions) {
+    KlickTelRoute(String name, KDRoute.RouteOptions options, List<Wgs84Position> positions) {
         super(new KlickTelRouteFormat(), Route);
         this.options = options;
         this.positions = positions;
@@ -118,6 +124,24 @@ public class KlickTelRoute extends BaseRoute<Wgs84Position, KlickTelRouteFormat>
             bcrPositions.add(position.asMTPPosition());
         }
         return new BcrRoute(format, getName(), getDescription(), bcrPositions);
+    }
+
+    protected CsvRoute asCsvFormat(CsvFormat format) {
+        List<CsvPosition> positions = new ArrayList<>();
+        for (Wgs84Position position : getPositions()) {
+            positions.add(position.asCsvPosition());
+        }
+        return new CsvRoute(format, getName(), positions);
+    }
+
+    protected ExcelRoute asExcelFormat(ExcelFormat format) {
+        List<ExcelPosition> excelPositions = new ArrayList<>();
+        ExcelRoute route = new ExcelRoute(format, getName(), excelPositions);
+        for (Wgs84Position position : getPositions()) {
+            ExcelPosition excelPosition = route.createPosition(position.getLongitude(), position.getLatitude(), position.getElevation(), position.getSpeed(), position.getTime(), position.getDescription());
+            excelPositions.add(excelPosition);
+        }
+        return route;
     }
 
     protected GoPalRoute asGoPalRouteFormat(GoPalRouteFormat format) {

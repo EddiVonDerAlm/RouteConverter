@@ -26,8 +26,7 @@ import slash.navigation.bcr.BcrRoute;
 import slash.navigation.bcr.MTP0607Format;
 import slash.navigation.bcr.MTP0809Format;
 import slash.navigation.columbus.ColumbusGpsBinaryFormat;
-import slash.navigation.columbus.ColumbusGpsProfessionalFormat;
-import slash.navigation.columbus.ColumbusGpsStandardFormat;
+import slash.navigation.columbus.ColumbusGpsType1Format;
 import slash.navigation.columbus.ColumbusGpsType2Format;
 import slash.navigation.common.BoundingBox;
 import slash.navigation.common.NavigationPosition;
@@ -35,6 +34,14 @@ import slash.navigation.copilot.CoPilot6Format;
 import slash.navigation.copilot.CoPilot7Format;
 import slash.navigation.copilot.CoPilot8Format;
 import slash.navigation.copilot.CoPilot9Format;
+import slash.navigation.csv.CsvCommaFormat;
+import slash.navigation.csv.CsvFormat;
+import slash.navigation.csv.CsvRoute;
+import slash.navigation.csv.CsvSemicolonFormat;
+import slash.navigation.excel.MicrosoftExcel2008Format;
+import slash.navigation.excel.MicrosoftExcel97Format;
+import slash.navigation.excel.ExcelFormat;
+import slash.navigation.excel.ExcelRoute;
 import slash.navigation.fpl.GarminFlightPlanFormat;
 import slash.navigation.fpl.GarminFlightPlanPosition;
 import slash.navigation.fpl.GarminFlightPlanRoute;
@@ -48,10 +55,9 @@ import slash.navigation.gpx.Gpx10Format;
 import slash.navigation.gpx.Gpx11Format;
 import slash.navigation.gpx.GpxFormat;
 import slash.navigation.gpx.GpxRoute;
-import slash.navigation.itn.TomTom95RouteFormat;
-import slash.navigation.photo.PhotoFormat;
 import slash.navigation.itn.TomTom5RouteFormat;
 import slash.navigation.itn.TomTom8RouteFormat;
+import slash.navigation.itn.TomTom95RouteFormat;
 import slash.navigation.itn.TomTomRoute;
 import slash.navigation.itn.TomTomRouteFormat;
 import slash.navigation.klicktel.KlickTelRoute;
@@ -80,6 +86,8 @@ import slash.navigation.nmea.MagellanRouteFormat;
 import slash.navigation.nmea.NmeaFormat;
 import slash.navigation.nmea.NmeaRoute;
 import slash.navigation.nmn.NavigatingPoiWarnerFormat;
+import slash.navigation.nmn.NavigonCruiserFormat;
+import slash.navigation.nmn.NavigonCruiserRoute;
 import slash.navigation.nmn.Nmn4Format;
 import slash.navigation.nmn.Nmn5Format;
 import slash.navigation.nmn.Nmn6FavoritesFormat;
@@ -91,6 +99,7 @@ import slash.navigation.nmn.NmnRouteFormat;
 import slash.navigation.nmn.NmnUrlFormat;
 import slash.navigation.ovl.OvlFormat;
 import slash.navigation.ovl.OvlRoute;
+import slash.navigation.photo.PhotoFormat;
 import slash.navigation.simple.ApeMapFormat;
 import slash.navigation.simple.GlopusFormat;
 import slash.navigation.simple.GoRiderGpsFormat;
@@ -181,36 +190,28 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
 
     public abstract int getPositionCount();
 
-    private void move(int index, int upOrDown) {
+    public void top(int index, int topOffset) {
         List<P> positions = getPositions();
         P move = positions.get(index);
-        P replace = positions.get(index + upOrDown);
-        positions.set(index + upOrDown, move);
-        positions.set(index, replace);
+        for (int i = index; i > topOffset; i--)
+            positions.set(i, positions.get(i - 1));
+        positions.set(topOffset, move);
     }
 
-    public void top(int index, int topOffset) {
-        while (index > topOffset) {
-            up(index, index - 1);
-            index--;
-        }
-    }
-
-    public void down(int fromIndex, int toIndex) {
-        while (fromIndex < toIndex)
-            move(fromIndex++, +1);
-    }
-
-    public void up(int fromIndex, int toIndex) {
-        while (fromIndex > toIndex)
-            move(fromIndex--, -1);
+    public void move(int firstIndex, int secondIndex) {
+        List<P> positions = getPositions();
+        P from = positions.get(firstIndex);
+        P to = positions.get(secondIndex);
+        positions.set(firstIndex, to);
+        positions.set(secondIndex, from);
     }
 
     public void bottom(int index, int bottomOffset) {
-        while (index < getPositionCount() - 1 - bottomOffset) {
-            down(index, index + 1);
-            index++;
-        }
+        List<P> positions = getPositions();
+        P move = positions.get(index);
+        for (int i = index; i < getPositionCount() - 1 - bottomOffset; i++)
+            positions.set(i, positions.get(i + 1));
+        positions.set(getPositionCount() - 1 - bottomOffset, move);
     }
 
     public abstract void add(int index, P position);
@@ -451,6 +452,18 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         return result;
     }
 
+    public double getDistanceDifference(int index) {
+        List<P> positions = getPositions();
+        NavigationPosition previous = index > 0 ? positions.get(index - 1) : null;
+        NavigationPosition current = index < positions.size() ? positions.get(index) : null;
+        if (previous != null && current != null) {
+            Double distance = previous.calculateDistance(current);
+            if (distance != null)
+                return distance;
+        }
+        return 0;
+    }
+
     public long[] getTimesFromStart(int startIndex, int endIndex) {
         long[] result = new long[endIndex - startIndex + 1];
         List<P> positions = getPositions();
@@ -531,7 +544,7 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         return result;
     }
 
-    public double getElevationDelta(int index) {
+    public double getElevationDifference(int index) {
         List<P> positions = getPositions();
         NavigationPosition previous = index > 0 ? positions.get(index - 1) : null;
         NavigationPosition current = index < positions.size() ? positions.get(index) : null;
@@ -579,6 +592,10 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
 
     protected abstract BcrRoute asBcrFormat(BcrFormat format);
 
+    protected abstract CsvRoute asCsvFormat(CsvFormat format);
+
+    protected abstract ExcelRoute asExcelFormat(ExcelFormat format);
+
     protected abstract GoPalRoute asGoPalRouteFormat(GoPalRouteFormat format);
 
     protected abstract GpxRoute asGpxFormat(GpxFormat format);
@@ -612,17 +629,10 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
     }
 
     @SuppressWarnings("UnusedDeclaration")
-    public SimpleRoute asColumbusGpsStandardFormat() {
-        if (getFormat() instanceof ColumbusGpsStandardFormat)
+    public SimpleRoute asColumbusGpsType1Format() {
+        if (getFormat() instanceof ColumbusGpsType1Format)
             return (SimpleRoute) this;
-        return asSimpleFormat(new ColumbusGpsStandardFormat());
-    }
-
-    @SuppressWarnings("UnusedDeclaration")
-    public SimpleRoute asColumbusGpsProfessionalFormat() {
-        if (getFormat() instanceof ColumbusGpsProfessionalFormat)
-            return (SimpleRoute) this;
-        return asSimpleFormat(new ColumbusGpsProfessionalFormat());
+        return asSimpleFormat(new ColumbusGpsType1Format());
     }
 
     @SuppressWarnings("UnusedDeclaration")
@@ -658,6 +668,34 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         if (getFormat() instanceof CoPilot9Format)
             return (SimpleRoute) this;
         return asSimpleFormat(new CoPilot9Format());
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public CsvRoute asCsvCommaFormat() {
+        if (getFormat() instanceof CsvCommaFormat)
+            return (CsvRoute) this;
+        return asCsvFormat(new CsvCommaFormat());
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public CsvRoute asCsvSemicolonFormat() {
+        if (getFormat() instanceof CsvSemicolonFormat)
+            return (CsvRoute) this;
+        return asCsvFormat(new CsvSemicolonFormat());
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public ExcelRoute asMicrosoftExcel97Format() {
+        if (getFormat() instanceof MicrosoftExcel97Format)
+            return (ExcelRoute) this;
+        return asExcelFormat(new MicrosoftExcel97Format());
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public ExcelRoute asMicrosoftExcel2008Format() {
+        if (getFormat() instanceof MicrosoftExcel2008Format)
+            return (ExcelRoute) this;
+        return asExcelFormat(new MicrosoftExcel2008Format());
     }
 
     @SuppressWarnings("UnusedDeclaration")
@@ -923,6 +961,18 @@ public abstract class BaseRoute<P extends BaseNavigationPosition, F extends Base
         if (getFormat() instanceof MTP0809Format)
             return (BcrRoute) this;
         return asBcrFormat(new MTP0809Format());
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public NavigonCruiserRoute asNavigonCruiserFormat() {
+        if (getFormat() instanceof NavigonCruiserFormat)
+            return (NavigonCruiserRoute) this;
+
+        List<Wgs84Position> wgs84Positions = new ArrayList<>();
+        for (P position : getPositions()) {
+            wgs84Positions.add(position.asWgs84Position());
+        }
+        return new NavigonCruiserRoute(getName(), wgs84Positions);
     }
 
     @SuppressWarnings("UnusedDeclaration")

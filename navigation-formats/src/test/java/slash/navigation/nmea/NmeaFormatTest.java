@@ -232,7 +232,7 @@ public class NmeaFormatTest {
         assertDoubleEquals(9.0567266667, position.getLongitude());
         assertDoubleEquals(-48.6239566667, position.getLatitude());
         assertDoubleEquals(16.76, position.getElevation());
-        assertEquals(new Integer(8), position.getSatellites());
+        assertEquals(Integer.valueOf(8), position.getSatellites());
         String actual = DateFormat.getDateTimeInstance().format(position.getTime().getTime());
         CompactCalendar expectedCal = calendar(1970, 1, 1, 13, 4, 41, 89);
         String expected = DateFormat.getDateTimeInstance().format(expectedCal.getTime());
@@ -251,7 +251,7 @@ public class NmeaFormatTest {
         assertDoubleEquals(8.8429466667, position.getLongitude());
         assertDoubleEquals(48.954852, position.getLatitude());
         assertDoubleEquals(265.2, position.getElevation());
-        assertEquals(new Integer(12), position.getSatellites());
+        assertEquals(Integer.valueOf(12), position.getSatellites());
         String actual = DateFormat.getDateTimeInstance().format(position.getTime().getTime());
         CompactCalendar expectedCal = calendar(1970, 1, 1, 16, 26, 22, 0);
         String expected = DateFormat.getDateTimeInstance().format(expectedCal.getTime());
@@ -308,7 +308,7 @@ public class NmeaFormatTest {
         assertNull(position.getDescription());
         assertDoubleEquals(0.73, position.getHdop());
         assertDoubleEquals(73.9, position.getElevation());
-        assertEquals(new Integer(17), position.getSatellites());
+        assertEquals(Integer.valueOf(17), position.getSatellites());
     }
 
     @Test
@@ -543,6 +543,16 @@ public class NmeaFormatTest {
         position = format.parsePosition("$GPRMC,062801.724,A,2608.6661,S,02758.8546,E,0.00,,160907,,,A*6B");
         assertDoubleEquals(27.98091, position.getLongitude());
         assertDoubleEquals(-26.144435, position.getLatitude());
+    }
+
+    @Test
+    public void testFiveCharacterDateProblem() {
+        NmeaPosition position = format.parsePosition("$GPRMC,141159.000,A,4706.0698,N,00719.6955,E,12.42,242.10,41217,,,A*64");
+        String actual = DateFormat.getDateTimeInstance().format(position.getTime().getTime());
+        CompactCalendar expectedCal = calendar(2017, 12, 4, 14, 11, 59);
+        String expected = DateFormat.getDateTimeInstance().format(expectedCal.getTime());
+        assertEquals(expected, actual);
+        assertEquals(expectedCal, position.getTime());
     }
 
     @Test

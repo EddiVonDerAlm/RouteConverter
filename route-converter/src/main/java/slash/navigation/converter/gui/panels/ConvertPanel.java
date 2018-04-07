@@ -19,175 +19,24 @@
 */
 package slash.navigation.converter.gui.panels;
 
-import static java.awt.event.InputEvent.SHIFT_DOWN_MASK;
-import static java.awt.event.ItemEvent.SELECTED;
-import static java.awt.event.KeyEvent.CTRL_DOWN_MASK;
-import static java.awt.event.KeyEvent.VK_DELETE;
-import static java.awt.event.KeyEvent.VK_DOWN;
-import static java.awt.event.KeyEvent.VK_END;
-import static java.awt.event.KeyEvent.VK_HOME;
-import static java.awt.event.KeyEvent.VK_UP;
-import static java.lang.Integer.MAX_VALUE;
-import static java.lang.String.format;
-import static java.util.Collections.singletonList;
-
-import static javax.help.CSH.setHelpIDString;
-import static javax.swing.DropMode.ON;
-import static javax.swing.JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT;
-import static javax.swing.JFileChooser.APPROVE_OPTION;
-import static javax.swing.JFileChooser.FILES_ONLY;
-import static javax.swing.JOptionPane.ERROR_MESSAGE;
-import static javax.swing.JOptionPane.NO_OPTION;
-import static javax.swing.JOptionPane.YES_NO_CANCEL_OPTION;
-import static javax.swing.JOptionPane.YES_NO_OPTION;
-import static javax.swing.JOptionPane.YES_OPTION;
-import static javax.swing.JOptionPane.showConfirmDialog;
-import static javax.swing.JOptionPane.showMessageDialog;
-import static javax.swing.KeyStroke.getKeyStroke;
-import static javax.swing.SwingUtilities.invokeAndWait;
-import static javax.swing.SwingUtilities.invokeLater;
-import static javax.swing.event.TableModelEvent.ALL_COLUMNS;
-
-import static slash.common.helpers.ExceptionHelper.getLocalizedMessage;
-import static slash.common.helpers.PreferencesHelper.count;
-import static slash.common.io.Files.calculateConvertFileName;
-import static slash.common.io.Files.createGoPalFileName;
-import static slash.common.io.Files.createReadablePath;
-import static slash.common.io.Files.createTargetFiles;
-import static slash.common.io.Files.findExistingPath;
-import static slash.common.io.Files.getExtension;
-import static slash.common.io.Files.printArrayToDialogString;
-import static slash.common.io.Files.reverse;
-import static slash.common.io.Files.shortenPath;
-import static slash.common.io.Files.toFile;
-import static slash.common.io.Files.toUrls;
-import static slash.feature.client.Feature.hasFeature;
-import static slash.navigation.base.NavigationFormatParser.getNumberOfFilesToWriteFor;
-import static slash.navigation.base.RouteCharacteristics.Route;
-import static slash.navigation.base.RouteCharacteristics.Track;
-import static slash.navigation.converter.gui.dnd.PositionSelection.POSITION_FLAVOR;
-import static slash.navigation.converter.gui.helpers.ExternalPrograms.startMail;
-import static slash.navigation.converter.gui.models.LocalActionConstants.POSITIONS;
-import static slash.navigation.converter.gui.models.PositionColumns.PHOTO_COLUMN_INDEX;
-import static slash.navigation.gui.events.Range.allButEveryNthAndFirstAndLast;
-import static slash.navigation.gui.events.Range.revert;
-import static slash.navigation.gui.helpers.JMenuHelper.findMenu;
-import static slash.navigation.gui.helpers.JMenuHelper.findMenuComponent;
-import static slash.navigation.gui.helpers.JMenuHelper.registerAction;
-import static slash.navigation.gui.helpers.JMenuHelper.registerKeyStroke;
-import static slash.navigation.gui.helpers.JTableHelper.calculateRowHeight;
-import static slash.navigation.gui.helpers.JTableHelper.isFirstToLastRow;
-import static slash.navigation.gui.helpers.JTableHelper.scrollToPosition;
-import static slash.navigation.gui.helpers.JTableHelper.selectAndScrollToPosition;
-import static slash.navigation.gui.helpers.UIHelper.createJFileChooser;
-import static slash.navigation.gui.helpers.UIHelper.startWaitCursor;
-import static slash.navigation.gui.helpers.UIHelper.stopWaitCursor;
-
-import java.awt.*;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URL;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.logging.Logger;
-import java.util.prefs.Preferences;
-
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.ListDataEvent;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.filechooser.FileFilter;
-
 import com.bulenkov.iconloader.IconLoader;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
-
 import slash.navigation.babel.BabelException;
-import slash.navigation.base.BaseRoute;
-import slash.navigation.base.FormatAndRoutes;
-import slash.navigation.base.MultipleRoutesFormat;
-import slash.navigation.base.NavigationFormat;
-import slash.navigation.base.NavigationFormatParser;
-import slash.navigation.base.NavigationFormatParserListener;
-import slash.navigation.base.NavigationFormatRegistry;
-import slash.navigation.base.ParserCallback;
-import slash.navigation.base.ParserResult;
-import slash.navigation.base.RouteCharacteristics;
+import slash.navigation.base.*;
 import slash.navigation.common.DistanceAndTime;
 import slash.navigation.common.NavigationPosition;
 import slash.navigation.common.SimpleNavigationPosition;
 import slash.navigation.converter.gui.RouteConverter;
-import slash.navigation.converter.gui.actions.AddAddressToPositionsAction;
-import slash.navigation.converter.gui.actions.AddCoordinatesToPositionsAction;
-import slash.navigation.converter.gui.actions.AddElevationToPositionsAction;
-import slash.navigation.converter.gui.actions.AddNumberToPositionsAction;
-import slash.navigation.converter.gui.actions.AddPositionAction;
-import slash.navigation.converter.gui.actions.AddPositionListAction;
-import slash.navigation.converter.gui.actions.AddSpeedToPositionsAction;
-import slash.navigation.converter.gui.actions.AddTimeToPositionsAction;
-import slash.navigation.converter.gui.actions.BottomAction;
-import slash.navigation.converter.gui.actions.CopyAction;
-import slash.navigation.converter.gui.actions.CutAction;
-import slash.navigation.converter.gui.actions.DeletePositionAction;
-import slash.navigation.converter.gui.actions.DeletePositionListAction;
-import slash.navigation.converter.gui.actions.DownAction;
-import slash.navigation.converter.gui.actions.ExportPositionListAction;
-import slash.navigation.converter.gui.actions.ImportPositionListAction;
-import slash.navigation.converter.gui.actions.NewFileAction;
-import slash.navigation.converter.gui.actions.OpenAction;
-import slash.navigation.converter.gui.actions.PasteAction;
-import slash.navigation.converter.gui.actions.RenamePositionListAction;
-import slash.navigation.converter.gui.actions.SaveAction;
-import slash.navigation.converter.gui.actions.SaveAsAction;
-import slash.navigation.converter.gui.actions.SelectAllAction;
-import slash.navigation.converter.gui.actions.ClearSelectionAction;
-import slash.navigation.converter.gui.actions.SplitPositionListAction;
-import slash.navigation.converter.gui.actions.TopAction;
-import slash.navigation.converter.gui.actions.UpAction;
+import slash.navigation.converter.gui.actions.*;
 import slash.navigation.converter.gui.dialogs.CompleteFlightPlanDialog;
+import slash.navigation.converter.gui.dialogs.MaximumPositionCountDialog;
 import slash.navigation.converter.gui.dnd.ClipboardInteractor;
 import slash.navigation.converter.gui.dnd.PanelDropHandler;
 import slash.navigation.converter.gui.dnd.PositionSelection;
-import slash.navigation.converter.gui.helpers.AbstractDocumentListener;
-import slash.navigation.converter.gui.helpers.AbstractListDataListener;
-import slash.navigation.converter.gui.helpers.LengthCalculator;
-import slash.navigation.converter.gui.helpers.MergePositionListMenu;
-import slash.navigation.converter.gui.helpers.NavigationFormatFileFilter;
-import slash.navigation.converter.gui.helpers.PositionsTableHeaderMenu;
-import slash.navigation.converter.gui.helpers.PositionsTablePopupMenu;
-import slash.navigation.converter.gui.models.CharacteristicsModel;
-import slash.navigation.converter.gui.models.ElevationToJLabelAdapter;
-import slash.navigation.converter.gui.models.FormatAndRoutesModel;
-import slash.navigation.converter.gui.models.FormatAndRoutesModelImpl;
-import slash.navigation.converter.gui.models.FormatToJLabelAdapter;
-import slash.navigation.converter.gui.models.LengthToJLabelAdapter;
-import slash.navigation.converter.gui.models.OverlayPositionsModel;
-import slash.navigation.converter.gui.models.PositionListsToJLabelAdapter;
-import slash.navigation.converter.gui.models.PositionTableColumn;
-import slash.navigation.converter.gui.models.PositionsCountToJLabelAdapter;
-import slash.navigation.converter.gui.models.PositionsModel;
-import slash.navigation.converter.gui.models.PositionsSelectionModel;
-import slash.navigation.converter.gui.models.PositionsTableColumnModel;
-import slash.navigation.converter.gui.models.RecentFormatsModel;
-import slash.navigation.converter.gui.models.RecentUrlsModel;
-import slash.navigation.converter.gui.models.UrlDocument;
+import slash.navigation.converter.gui.helpers.*;
+import slash.navigation.converter.gui.models.*;
 import slash.navigation.converter.gui.renderer.DescriptionColumnTableCellEditor;
 import slash.navigation.converter.gui.renderer.RouteCharacteristicsListCellRenderer;
 import slash.navigation.converter.gui.renderer.RouteListCellRenderer;
@@ -212,6 +61,61 @@ import slash.navigation.nmn.Nmn7Format;
 import slash.navigation.nmn.NmnFormat;
 import slash.navigation.simple.GoRiderGpsFormat;
 import slash.navigation.simple.HaicomLoggerFormat;
+
+import javax.swing.*;
+import javax.swing.event.*;
+import javax.swing.filechooser.FileFilter;
+import java.awt.*;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
+import java.text.MessageFormat;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.logging.Logger;
+import java.util.prefs.Preferences;
+
+import static java.awt.event.ItemEvent.SELECTED;
+import static java.awt.event.KeyEvent.*;
+import static java.lang.Integer.MAX_VALUE;
+import static java.lang.String.format;
+import static java.util.Collections.singletonList;
+import static javax.help.CSH.setHelpIDString;
+import static javax.swing.DropMode.ON;
+import static javax.swing.JFileChooser.APPROVE_OPTION;
+import static javax.swing.JFileChooser.FILES_ONLY;
+import static javax.swing.JOptionPane.*;
+import static javax.swing.KeyStroke.getKeyStroke;
+import static javax.swing.SwingUtilities.invokeAndWait;
+import static javax.swing.SwingUtilities.invokeLater;
+import static javax.swing.event.TableModelEvent.ALL_COLUMNS;
+import static slash.common.helpers.ExceptionHelper.getLocalizedMessage;
+import static slash.common.helpers.ExceptionHelper.printStackTrace;
+import static slash.common.helpers.PreferencesHelper.count;
+import static slash.common.helpers.ThreadHelper.createSingleThreadExecutor;
+import static slash.common.io.Files.*;
+import static slash.feature.client.Feature.hasFeature;
+import static slash.navigation.base.NavigationFormatParser.getNumberOfFilesToWriteFor;
+import static slash.navigation.base.RouteCharacteristics.Route;
+import static slash.navigation.base.RouteCharacteristics.Track;
+import static slash.navigation.converter.gui.dnd.PositionSelection.POSITION_FLAVOR;
+import static slash.navigation.converter.gui.helpers.ExternalPrograms.startMail;
+import static slash.navigation.converter.gui.models.LocalActionConstants.POSITIONS;
+import static slash.navigation.converter.gui.models.PositionColumns.PHOTO_COLUMN_INDEX;
+import static slash.navigation.gui.events.Range.allButEveryNthAndFirstAndLast;
+import static slash.navigation.gui.events.Range.revert;
+import static slash.navigation.gui.helpers.JMenuHelper.*;
+import static slash.navigation.gui.helpers.JTableHelper.*;
+import static slash.navigation.gui.helpers.UIHelper.*;
+import static slash.navigation.gui.helpers.WindowHelper.handleOutOfMemoryError;
 
 /**
  * The convert panel of the route converter user interface.
@@ -587,10 +491,7 @@ public class ConvertPanel implements PanelInTab {
         // start with a non-existent file
         if (copy.size() == 0) {
             newFile();
-            return;
-        }
-
-        if (copy.size() > 0) {
+        } else {
             openPositionList(copy);
         }
     }
@@ -633,6 +534,8 @@ public class ConvertPanel implements PanelInTab {
         openPositionList(urls, getNavigationFormatRegistry().getReadFormatsPreferredByExtension(getExtension(urls)));
     }
 
+    private final ExecutorService openExecutor = createSingleThreadExecutor("OpenPositionList");
+
     @SuppressWarnings("unchecked")
     public void openPositionList(final List<URL> urls, final List<NavigationFormat> formats) {
         final RouteConverter r = RouteConverter.getInstance();
@@ -642,7 +545,7 @@ public class ConvertPanel implements PanelInTab {
         preferences.put(READ_PATH_PREFERENCE, path);
 
         startWaitCursor(r.getFrame().getRootPane());
-        new Thread(new Runnable() {
+        openExecutor.execute(new Runnable() {
             public void run() {
                 NavigationFormatParser parser = new NavigationFormatParser(getNavigationFormatRegistry());
                 NavigationFormatParserListener listener = new NavigationFormatParserListener() {
@@ -675,7 +578,6 @@ public class ConvertPanel implements PanelInTab {
                         invokeLater(new Runnable() {
                             public void run() {
                                 formatAndRoutesModel.setRoutes(new FormatAndRoutes(format, result.getAllRoutes()));
-                                comboBoxChoosePositionList.setModel(formatAndRoutesModel);
                                 urlModel.setString(path);
                                 recentUrlsModel.addUrl(url);
 
@@ -700,7 +602,7 @@ public class ConvertPanel implements PanelInTab {
                 } catch (BabelException e) {
                     r.handleBabelError(e);
                 } catch (OutOfMemoryError e) {
-                    r.handleOutOfMemoryError();
+                    handleOutOfMemoryError(e);
                 } catch (FileNotFoundException e) {
                     r.handleFileNotFound(path);
                 } catch (Throwable t) {
@@ -714,13 +616,12 @@ public class ConvertPanel implements PanelInTab {
                     });
                 }
             }
-        }, "UrlOpener").start();
+        });
     }
 
     private void appendPositionList(final int row, final List<URL> urls) {
         final RouteConverter r = RouteConverter.getInstance();
-
-        new Thread(new Runnable() {
+        openExecutor.execute(new Runnable() {
             public void run() {
                 try {
                     for (URL url : urls) {
@@ -767,13 +668,13 @@ public class ConvertPanel implements PanelInTab {
                 } catch (BabelException e) {
                     r.handleBabelError(e);
                 } catch (OutOfMemoryError e) {
-                    r.handleOutOfMemoryError();
+                    handleOutOfMemoryError(e);
                 } catch (Throwable t) {
                     log.severe("Append error: " + t);
                     r.handleOpenError(t, urls);
                 }
             }
-        }, "UrlAppender").start();
+        });
     }
 
     @SuppressWarnings("unchecked")
@@ -849,17 +750,25 @@ public class ConvertPanel implements PanelInTab {
         boolean duplicateFirstPosition = format instanceof NmnFormat && !(format instanceof Nmn7Format) || format instanceof CoPilotFormat;
         BaseRoute route = formatAndRoutesModel.getSelectedRoute();
         int fileCount = getNumberOfFilesToWriteFor(route, format, duplicateFirstPosition);
+
         if (fileCount > 1) {
-            int confirm = showConfirmDialog(r.getFrame(),
-                    MessageFormat.format(RouteConverter.getBundle().getString("save-confirm-split"),
-                            shortenPath(file.getPath(), 60), route.getPositionCount(), format.getName(),
-                            format.getMaximumPositionCount(), fileCount),
-                    r.getFrame().getTitle(), YES_NO_CANCEL_OPTION
-            );
-            switch (confirm) {
-                case YES_OPTION:
+            int order = route.getPositionCount() / format.getMaximumPositionCount() + 1;
+            int reducedPositionCount = route.getPositionCount() / order;
+
+            MaximumPositionCountDialog dialog = new MaximumPositionCountDialog(file, route.getPositionCount(), fileCount, reducedPositionCount, format);
+            dialog.pack();
+            dialog.restoreLocation();
+            dialog.setVisible(true);
+
+            switch (dialog.getResult()) {
+                case Split:
                     break;
-                case NO_OPTION:
+                case Reduce:
+                    r.selectAllButEveryNthPosition(order);
+                    r.getContext().getActionManager().run("delete-position");
+                    fileCount = 1;
+                    break;
+                case Ignore:
                     fileCount = 1;
                     break;
                 default:
@@ -896,7 +805,7 @@ public class ConvertPanel implements PanelInTab {
             } else {
                 boolean duplicateFirstPosition = preferences.getBoolean(DUPLICATE_FIRST_POSITION_PREFERENCE, true);
                 ParserCallback parserCallback = new ParserCallback() {
-                    public void preprocess(BaseRoute route, NavigationFormat format) {
+                    public void process(BaseRoute route, NavigationFormat format) {
                         if (format instanceof GarminFlightPlanFormat) {
                             GarminFlightPlanRoute garminFlightPlanRoute = (GarminFlightPlanRoute) route;
                             completeGarminFlightPlan(garminFlightPlanRoute);
@@ -923,8 +832,7 @@ public class ConvertPanel implements PanelInTab {
                 }
             }
         } catch (Throwable t) {
-            t.printStackTrace();
-            log.severe(format("Error saving %s in %s: %s", files[0], format, t));
+            log.severe(format("Error saving %s in %s: %s, %s", files[0], format, t, printStackTrace(t)));
 
             String source = urlModel.getShortUrl();
             // if there is no source a new file is saved

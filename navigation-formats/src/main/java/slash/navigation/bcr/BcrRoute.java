@@ -26,6 +26,12 @@ import slash.navigation.base.SimpleFormat;
 import slash.navigation.base.SimpleRoute;
 import slash.navigation.base.Wgs84Position;
 import slash.navigation.base.Wgs84Route;
+import slash.navigation.csv.CsvFormat;
+import slash.navigation.csv.CsvPosition;
+import slash.navigation.csv.CsvRoute;
+import slash.navigation.excel.ExcelFormat;
+import slash.navigation.excel.ExcelPosition;
+import slash.navigation.excel.ExcelRoute;
 import slash.navigation.gopal.GoPalPosition;
 import slash.navigation.gopal.GoPalRoute;
 import slash.navigation.gopal.GoPalRouteFormat;
@@ -63,7 +69,7 @@ import static slash.navigation.bcr.BcrFormat.ROUTE_NAME;
 import static slash.navigation.bcr.BcrFormat.ROUTE_TITLE;
 
 /**
- * A Map&Guide Tourenplaner Route (.bcr) route.
+ * A Map &amp; Guide Tourenplaner Route (.bcr) route.
  *
  * @author Christian Pesch
  */
@@ -169,6 +175,24 @@ public class BcrRoute extends BaseRoute<BcrPosition, BcrFormat> {
     protected BcrRoute asBcrFormat(BcrFormat format) {
         List<BcrPosition> bcrPositions = new ArrayList<>(getPositions());
         return new BcrRoute(format, getName(), getDescription(), bcrPositions);
+    }
+
+    protected CsvRoute asCsvFormat(CsvFormat format) {
+        List<CsvPosition> positions = new ArrayList<>();
+        for (BcrPosition position : getPositions()) {
+            positions.add(position.asCsvPosition());
+        }
+        return new CsvRoute(format, getName(), positions);
+    }
+
+    protected ExcelRoute asExcelFormat(ExcelFormat format) {
+        List<ExcelPosition> excelPositions = new ArrayList<>();
+        ExcelRoute route = new ExcelRoute(format, getName(), excelPositions);
+        for (BcrPosition position : getPositions()) {
+            ExcelPosition excelPosition = route.createPosition(position.getLongitude(), position.getLatitude(), position.getElevation(), position.getSpeed(), position.getTime(), position.getDescription());
+            excelPositions.add(excelPosition);
+        }
+        return route;
     }
 
     protected GoPalRoute asGoPalRouteFormat(GoPalRouteFormat format) {

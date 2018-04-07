@@ -2,11 +2,11 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>download-tools</artifactId>
     <packaging>jar</packaging>
-    <name>Tools to generate datasources for download files</name>
+    <name>Tools to generate DataSources for Downloads</name>
     <parent>
         <groupId>slash.navigation</groupId>
         <artifactId>RouteConverter</artifactId>
-        <version>2.20-SNAPSHOT</version>
+        <version>2.23-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -39,10 +39,22 @@
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
+                                        <exclude>META-INF/*.inf</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.txt</exclude>
+                                        <exclude>META-INF/DEPENDENCIES*</exclude>
                                         <exclude>META-INF/LICENSE*</exclude>
                                         <exclude>META-INF/NOTICE*</exclude>
+                                        <exclude>META-INF/jb/</exclude>
                                         <exclude>META-INF/maven/</exclude>
+                                        <exclude>META-INF/services/</exclude>
+                                        <exclude>META-INF/versions/</exclude>
+                                        <exclude>mozilla/*</exclude>
+                                        <exclude>*.html</exclude>
+                                        <exclude>external.xpt</exclude>
+                                        <exclude>version.txt</exclude>
+
                                     </excludes>
                                 </filter>
                             </filters>
@@ -72,10 +84,21 @@
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
+                                        <exclude>META-INF/*.inf</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.txt</exclude>
+                                        <exclude>META-INF/DEPENDENCIES*</exclude>
                                         <exclude>META-INF/LICENSE*</exclude>
                                         <exclude>META-INF/NOTICE*</exclude>
+                                        <exclude>META-INF/jb/</exclude>
                                         <exclude>META-INF/maven/</exclude>
+                                        <exclude>META-INF/services/</exclude>
+                                        <exclude>META-INF/versions/</exclude>
+                                        <exclude>mozilla/*</exclude>
+                                        <exclude>*.html</exclude>
+                                        <exclude>external.xpt</exclude>
+                                        <exclude>version.txt</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
@@ -105,10 +128,21 @@
                                 <filter>
                                     <artifact>*:*</artifact>
                                     <excludes>
+                                        <exclude>META-INF/*.inf</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.txt</exclude>
+                                        <exclude>META-INF/DEPENDENCIES*</exclude>
                                         <exclude>META-INF/LICENSE*</exclude>
                                         <exclude>META-INF/NOTICE*</exclude>
+                                        <exclude>META-INF/jb/</exclude>
                                         <exclude>META-INF/maven/</exclude>
+                                        <exclude>META-INF/services/</exclude>
+                                        <exclude>META-INF/versions/</exclude>
+                                        <exclude>mozilla/*</exclude>
+                                        <exclude>*.html</exclude>
+                                        <exclude>external.xpt</exclude>
+                                        <exclude>version.txt</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
@@ -123,7 +157,6 @@
         <dependency>
             <groupId>commons-cli</groupId>
             <artifactId>commons-cli</artifactId>
-            <version>1.3.1</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
